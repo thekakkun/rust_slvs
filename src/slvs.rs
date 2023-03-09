@@ -5,10 +5,10 @@
 pub mod bindings {
     include!("../bindings.rs");
 }
-pub mod parameter;
+// pub mod parameter;
 
-pub struct Group(pub bindings::Slvs_hGroup);
+// pub struct Group(pub bindings::Slvs_hGroup);
 
-pub struct System {
-    param: Vec<parameter::Param>,
-}
+// pub struct System {
+//     param: Vec<parameter::Param>,
+// }
