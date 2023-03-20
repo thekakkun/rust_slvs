@@ -1,0 +1,66 @@
+extern crate bindgen;
+
+use std::env;
+use std::path::PathBuf;
+
+use bindgen::CargoCallbacks;
+
+fn main() {
+    let libdir_path = PathBuf::from("solvespace")
+        .canonicalize()
+        .expect("Cannot canonicalize path.");
+
+    let headers_path = libdir_path.join("include/slvs.h");
+    let headers_path_str = headers_path.to_str().expect("Path is not a valid string.");
+    let lib_path = libdir_path.join("build").join("bin");
+
+    // let obj_path = libdir_path.join("build/slvs.o");
+    // let lib_path = libdir_path.join("build/libslvs.a");
+
+    println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
+    println!("cargo:rustc-link-lib=slvs");
+    println!("cargo:rustc-link-lib=mimalloc");
+    println!("cargo:rustc-link-lib=gomp");
+    println!("cargo:rustc-link-lib=stdc++");
+    println!("cargo:rerun-if-changed={}", headers_path_str);
+
+    // if !std::process::Command::new("clang++")
+    //     .arg("-c")
+    //     .arg("-o")
+    //     .arg(&obj_path)
+    //     .arg(libdir_path.join("src/lib.cpp"))
+    //     .output()
+    //     .expect("Could not spawn `clang`.")
+    //     .status
+    //     .success()
+    // {
+    //     panic!("Could not compile object file.");
+    // }
+
+    // if !std::process::Command::new("ar")
+    //     .arg("rcs")
+    //     .arg(lib_path)
+    //     .arg(obj_path)
+    //     .output()
+    //     .expect("Could not spawn `ar`.")
+    //     .status
+    //     .success()
+    // {
+    //     panic!("Could not emit library file.");
+    // }
+
+    let bindings = bindgen::Builder::default()
+        .clang_arg("-x")
+        .clang_arg("c++")
+        .clang_arg("-std=c++11")
+        .opaque_type("std::.*")
+        .header(headers_path_str)
+        .parse_callbacks(Box::new(CargoCallbacks))
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
+    bindings
+        .write_to_file(out_path)
+        .expect("Couldn't write bindings.");
+}

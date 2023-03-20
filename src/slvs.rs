@@ -3,12 +3,5 @@
 #![allow(non_snake_case)]
 
 pub mod bindings {
-    include!("../bindings.rs");
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
-// pub mod parameter;
-
-// pub struct Group(pub bindings::Slvs_hGroup);
-
-// pub struct System {
-//     param: Vec<parameter::Param>,
-// }

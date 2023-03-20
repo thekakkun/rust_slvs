@@ -3,6 +3,7 @@ use slvs::bindings;
 
 fn main() {
     let g: bindings::Slvs_hGroup = 1;
+
     let x1 = bindings::Slvs_Param {
         h: 1,
         group: g,
@@ -91,9 +92,17 @@ fn main() {
         result: 0,
     };
 
-    unsafe {bindings::Slvs_Solve(&mut sys, g)}
+    unsafe { bindings::Slvs_Solve(&mut sys, g) }
 
     if sys.result == bindings::SLVS_RESULT_OKAY.try_into().unwrap() {
-        println!("solved okay");
+        print!(
+            "okay; now at ({} {} {})\n             ({} {} {})\n",
+            param_list[0].val,
+            param_list[1].val,
+            param_list[2].val,
+            param_list[3].val,
+            param_list[4].val,
+            param_list[5].val
+        )
     }
 }
