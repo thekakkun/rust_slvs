@@ -1,7 +1,9 @@
 pub mod slvs;
 use slvs::bindings;
 
-fn main() {
+fn example_3d() {
+    println!("Running 3D example");
+
     let g: bindings::Slvs_hGroup = 1;
 
     let x1 = bindings::Slvs_Param {
@@ -30,6 +32,8 @@ fn main() {
         param: [1, 2, 3, 0],
     };
 
+    println!("  Created point 1 at: ({}, {}, {})", x1.val, y1.val, z1.val);
+
     let x2 = bindings::Slvs_Param {
         h: 4,
         group: g,
@@ -56,6 +60,8 @@ fn main() {
         param: [4, 5, 6, 0],
     };
 
+    println!("  Created point 2 at: ({}, {}, {})", x2.val, y2.val, z2.val);
+
     let c1 = bindings::Slvs_Constraint {
         h: 1,
         group: g,
@@ -71,6 +77,8 @@ fn main() {
         other: 0,
         other2: 0,
     };
+
+    println!("  Constraint created: Distance between points should be 30.0 units");
 
     let mut param_list = vec![x1, y1, z1, x2, y2, z2];
     let mut entity_list = vec![p1, p2];
@@ -95,14 +103,20 @@ fn main() {
     unsafe { bindings::Slvs_Solve(&mut sys, g) }
 
     if sys.result == bindings::SLVS_RESULT_OKAY.try_into().unwrap() {
-        print!(
-            "okay; now at ({} {} {})\n             ({} {} {})\n",
-            param_list[0].val,
-            param_list[1].val,
-            param_list[2].val,
-            param_list[3].val,
-            param_list[4].val,
-            param_list[5].val
-        )
+        println!("  Constraints solved");
+        println!(
+            "    Point 1 now at : ({:.3}, {:.3}, {:.3})",
+            param_list[0].val, param_list[1].val, param_list[2].val
+        );
+        println!(
+            "    Point 2 now at : ({:.3}, {:.3}, {:.3})",
+            param_list[3].val, param_list[4].val, param_list[5].val
+        );
+    } else {
+        println!("  Solve failed");
     }
+}
+
+fn main() {
+    example_3d();
 }

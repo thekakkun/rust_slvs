@@ -14,15 +14,15 @@ fn main() {
     let headers_path_str = headers_path.to_str().expect("Path is not a valid string.");
     let lib_path = libdir_path.join("build").join("bin");
 
-    // let obj_path = libdir_path.join("build/slvs.o");
-    // let lib_path = libdir_path.join("build/libslvs.a");
-
     println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
     println!("cargo:rustc-link-lib=slvs");
     println!("cargo:rustc-link-lib=mimalloc");
     println!("cargo:rustc-link-lib=gomp");
     println!("cargo:rustc-link-lib=stdc++");
     println!("cargo:rerun-if-changed={}", headers_path_str);
+
+    // let obj_path = libdir_path.join("build/slvs.o");
+    // let lib_path = libdir_path.join("build/libslvs.a");
 
     // if !std::process::Command::new("clang++")
     //     .arg("-c")
