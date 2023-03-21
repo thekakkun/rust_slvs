@@ -3,6 +3,7 @@
 #![allow(non_snake_case)]
 
 use self::{constraint::Constraint, entity::Entity, parameter::Param};
+use wasm_bindgen::prelude::*;
 
 mod constraint;
 mod entity;
@@ -28,6 +29,7 @@ pub fn solve() {
     // unsafe { bindings::Slvs_Solve(sys, hg) };
 }
 
+#[wasm_bindgen]
 pub fn example_3d() -> f64 {
     println!("Running 3D example");
 

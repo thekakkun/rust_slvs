@@ -15,9 +15,14 @@ fn main() {
     let lib_path = libdir_path.join("build").join("bin");
 
     println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
-    println!("cargo:rustc-link-search={}", PathBuf::from("/usr/lib/gcc/x86_64-linux-gnu/11").to_str().unwrap());
     println!("cargo:rustc-link-lib=static=slvs");
     println!("cargo:rustc-link-lib=static=mimalloc");
+    println!(
+        "cargo:rustc-link-search={}",
+        PathBuf::from("/usr/lib/gcc/x86_64-linux-gnu/11")
+            .to_str()
+            .unwrap()
+    );
     println!("cargo:rustc-link-lib=static=gomp");
     println!("cargo:rustc-link-lib=static=stdc++");
     println!("cargo:rerun-if-changed={}", headers_path_str);
@@ -51,11 +56,13 @@ fn main() {
     // }
 
     let bindings = bindgen::Builder::default()
+        .header(headers_path_str)
+        .opaque_type("std::.*")
         .clang_arg("-x")
         .clang_arg("c++")
         .clang_arg("-std=c++11")
-        .opaque_type("std::.*")
-        .header(headers_path_str)
+        .clang_arg("--target=wasm32-unknown-unknown")
+        .clang_arg("-I/usr/include/")
         .parse_callbacks(Box::new(CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
