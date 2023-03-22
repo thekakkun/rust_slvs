@@ -15,16 +15,10 @@ fn main() {
     let lib_path = libdir_path.join("build").join("bin");
 
     println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
-    println!("cargo:rustc-link-lib=static=slvs");
-    println!("cargo:rustc-link-lib=static=mimalloc");
-    println!(
-        "cargo:rustc-link-search={}",
-        PathBuf::from("/usr/lib/gcc/x86_64-linux-gnu/11")
-            .to_str()
-            .unwrap()
-    );
-    println!("cargo:rustc-link-lib=static=stdc++");
-    println!("cargo:rustc-link-lib=static=gomp");
+    println!("cargo:rustc-link-lib=slvs");
+    println!("cargo:rustc-link-lib=mimalloc");
+    println!("cargo:rustc-link-lib=stdc++");
+    println!("cargo:rustc-link-lib=gomp");
     println!("cargo:rerun-if-changed={}", headers_path_str);
 
     // let obj_path = libdir_path.join("build/slvs.o");
