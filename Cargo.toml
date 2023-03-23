@@ -2,6 +2,19 @@
 name = "rust_slvs"
 version = "0.1.0"
 edition = "2021"
+exclude = [
+    "/solvespace/*",
+]
+include = [
+    "/solvespace/build/bin/libslvs.a",
+    "/solvespace/build/bin/libmimalloc.a",
+    "/solvespace/include/slvs.h",
+    "/src/*",
+    "/.gitignore",
+    "/.gitmodules",
+    "/build.rs",
+    "/README.md",
+]
 
 [build-dependencies]
 bindgen = "0.64.0"
