@@ -3,18 +3,22 @@ use std::path::PathBuf;
 
 extern crate bindgen;
 use bindgen::CargoCallbacks;
+use cmake::Config;
 
 fn main() {
     let libdir_path = PathBuf::from("solvespace")
         .canonicalize()
         .expect("Cannot canonicalize path.");
 
+    let dst = Config::new("solvespace").build();
+    println!("cargo:warning={}", dst.display());
+
     cc::Build::new()
         .cpp(true)
         .flag("-DLIBRARY")
         .include(libdir_path.join("src"))
         .include(libdir_path.join("include"))
-        .include(libdir_path.join("build/src"))
+        .include(dst.join("build/src"))
         .include(libdir_path.join("extlib/eigen"))
         .include(libdir_path.join("extlib/mimalloc/include"))
         .flag("-Wno-unused-parameter")
