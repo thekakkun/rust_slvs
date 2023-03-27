@@ -1,8 +1,7 @@
-extern crate bindgen;
-
 use std::env;
 use std::path::PathBuf;
 
+extern crate bindgen;
 use bindgen::CargoCallbacks;
 
 fn main() {

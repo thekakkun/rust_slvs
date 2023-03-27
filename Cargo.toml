@@ -6,9 +6,12 @@ exclude = [
     "/solvespace/*",
 ]
 include = [
-    "/solvespace/build/bin/libslvs.a",
-    "/solvespace/build/bin/libmimalloc.a",
+    "/solvespace/build/src/config.h",
     "/solvespace/include/slvs.h",
+    "/solvespace/src/*",
+    "/solvespace/extlib/eigen/*",
+    "/solvespace/extlib/mimalloc/include/*",
+    "/solvespace/extlib/mimalloc/src/*",
     "/src/*",
     "/.gitignore",
     "/.gitmodules",
