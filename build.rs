@@ -12,7 +12,7 @@ fn main() {
 
     let headers_path = libdir_path.join("include/slvs.h");
     let headers_path_str = headers_path.to_str().expect("Path is not a valid string.");
-    let lib_path = libdir_path.join("build").join("bin");
+    let lib_path = libdir_path.join("build/bin");
 
     println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
     println!("cargo:rustc-link-lib=slvs");
