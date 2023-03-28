@@ -17,10 +17,15 @@ fn main() {
 
     println!(
         "cargo:rustc-link-search=native={}",
-        dst.join("build/bin").display()
+        dst.join("build/bin/Release").display()
+    );
+    println!(
+        "cargo:rustc-link-search={}",
+        PathBuf::from(r"C:\Windows\System32").to_str().unwrap()
     );
     println!("cargo:rustc-link-lib=slvs");
-    println!("cargo:rustc-link-lib=mimalloc");
+    println!("cargo:rustc-link-lib=mimalloc-static");
+    println!("cargo:rustc-link-lib=shell32");
 
     // cc::Build::new()
     //     .cpp(true)
