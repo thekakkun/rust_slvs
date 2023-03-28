@@ -4,11 +4,10 @@ use std::path::PathBuf;
 extern crate bindgen;
 use bindgen::CargoCallbacks;
 use cmake::Config;
+use dunce::canonicalize;
 
 fn main() {
-    let libdir_path = PathBuf::from("solvespace")
-        .canonicalize()
-        .expect("Cannot canonicalize path.");
+    let libdir_path = canonicalize(PathBuf::from("solvespace")).expect("Cannot canonicalize path.");
 
     let dst = Config::new("solvespace")
         .profile("Release")
@@ -34,9 +33,10 @@ fn main() {
     //     .include(libdir_path.join("include"))
     //     .include(dst.join("build/src"))
     //     .include(libdir_path.join("extlib/eigen"))
+    //     .include(libdir_path.join("src/SYSTEM"))
     //     .include(libdir_path.join("extlib/mimalloc/include"))
-    //     .flag("-Wno-unused-parameter")
-    //     .flag("-Wno-missing-field-initializers")
+    //     .flag_if_supported("-Wno-unused-parameter")
+    //     .flag_if_supported("-Wno-missing-field-initializers")
     //     .files(
     //         [
     //             "src/util.cpp",
