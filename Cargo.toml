@@ -2,8 +2,26 @@
 name = "rust_slvs"
 version = "0.1.0"
 edition = "2021"
+exclude = [
+    "solvespace/**"
+]
+include = [
+    "solvespace/extlib/eigen/Eigen/**",
+    "solvespace/extlib/mimalloc/include/**",
+    "solvespace/extlib/mimalloc/src/**",
+    "solvespace/include/**",
+    "solvespace/src/**",
+    ".gitignore",
+    ".gitmodules",
+    "README.md",
+    "build.rs",
+    "src/**",
+    "src/entity.rs",
+    "src/lib.rs",
+    "src/main.rs",
+    "src/parameter.rs",
+]
 
 [build-dependencies]
 bindgen = "0.64.0"
 cc = "1.0.79"
-cmake = "0.1.49"
