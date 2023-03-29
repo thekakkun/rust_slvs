@@ -3,26 +3,17 @@ use std::path::PathBuf;
 
 extern crate bindgen;
 use bindgen::CargoCallbacks;
-use cmake::Config;
 
 fn main() {
     let libdir_path = PathBuf::from("solvespace")
         .canonicalize()
         .expect("Cannot canonicalize path.");
 
-    // This is really just to create a config.h file.
-    // Would really like to be able to remove this, since it adds unnecessary steps/files to the package.
-    let dst = Config::new("solvespace")
-        .profile("Release")
-        .build_target("slvs")
-        .build();
-
     cc::Build::new()
         .cpp(true)
         .flag_if_supported("-DLIBRARY")
         .include(libdir_path.join("src"))
         .include(libdir_path.join("include"))
-        .include(dst.join("build/src"))
         .include(libdir_path.join("extlib/eigen"))
         .include(libdir_path.join("extlib/mimalloc/include"))
         .flag_if_supported("-Wno-unused-parameter")
