@@ -1,10 +1,32 @@
 # rust_slvs
 
-[Rust](https://www.rust-lang.org/) binding for [Solvespace](https://github.com/solvespace/solvespace/).
+[Rust](https://www.rust-lang.org/) binding for [SolveSpace](https://github.com/solvespace/solvespace/)'s geometric constraint solver library.
 
-## Prerequisites
+## Using rust_slvs
 
-### SolveSpace library
+### Prerequisites
+
+- [A C compiler](https://github.com/rust-lang/cc-rs#c-support)
+
+  Needed to compile SolveSpace using the [cc library](https://docs.rs/cc/latest/cc/).
+
+### Use as a library
+
+1. Add the crate to your `Cargo.toml`.
+
+   ```toml
+   [dependencies]
+   rust_slvs = { git = "https://github.com/thekakkun/rust_slvs.git" }
+   ```
+
+2. You may need to create a Cargo configuration file (`.cargo/config.toml`) so that all submodules can be downloaded.
+
+   ```toml
+   [net]
+   git-fetch-with-cli = true  # use the `git` executable for git operations
+   ```
+
+### To Build
 
 1. Check out any necessary submodules
 
@@ -12,10 +34,8 @@
    git submodule update --init --recursive
    ```
 
-2. Follow build instructions for [SolveSpace](https://github.com/solvespace/solvespace/#building-on-linux)
-
-   On the make step, Specify the target as `slvs` so that only the static library is built.
+2. Run the build command
 
    ```shell
-   make slvs
+   cargo build
    ```
