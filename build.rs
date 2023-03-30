@@ -3,21 +3,51 @@ use std::path::PathBuf;
 
 extern crate bindgen;
 use bindgen::CargoCallbacks;
+use dunce::canonicalize;
 
 fn main() {
-    let libdir_path = PathBuf::from("solvespace")
-        .canonicalize()
-        .expect("Cannot canonicalize path.");
+    let libdir_path = canonicalize(PathBuf::from("solvespace")).expect("Cannot canonicalize path.");
+    let target = env::var("TARGET").unwrap();
 
-    cc::Build::new()
+    // Build solvespace library
+    let mut slvs_cfg = cc::Build::new();
+
+    // Things necessary for Windows but not Linux, dunno about building on Mac OS.
+    if target.contains("windows") {
+        println!(
+            "cargo:rustc-link-search={}",
+            PathBuf::from(r"C:\Windows\System32").to_str().unwrap()
+        );
+        println!("cargo:rustc-link-lib=shell32");
+
+        slvs_cfg.define("_CRT_SECURE_NO_DEPRECATE", None);
+        slvs_cfg.define("_CRT_SECURE_NO_WARNINGS", None);
+        slvs_cfg.define("_SCL_SECURE_NO_WARNINGS", None);
+        slvs_cfg.define("WINVER", "0x0501");
+        slvs_cfg.define("_WIN32_WINNT", "0x0501");
+        slvs_cfg.define("_WIN32_IE", "_WIN32_WINNT");
+        slvs_cfg.define("ISOLATION_AWARE_ENABLED", None);
+        slvs_cfg.define("WIN32", None);
+        slvs_cfg.define("WIN32_LEAN_AND_MEAN", None);
+        slvs_cfg.define("UNICODE", None);
+        slvs_cfg.define("_UNICODE", None);
+        slvs_cfg.define("NOMINMAX", None);
+        slvs_cfg.define("_USE_MATH_DEFINES", None);
+    }
+
+    slvs_cfg
         .cpp(true)
-        .flag_if_supported("-DLIBRARY")
-        .include(libdir_path.join("src"))
-        .include(libdir_path.join("include"))
-        .include(libdir_path.join("extlib/eigen"))
-        .include(libdir_path.join("extlib/mimalloc/include"))
-        .flag_if_supported("-Wno-unused-parameter")
-        .flag_if_supported("-Wno-missing-field-initializers")
+        .define("LIBRARY", None)
+        .includes(
+            [
+                "src",
+                "include",
+                "extlib/eigen",
+                "src/SYSTEM",
+                "extlib/mimalloc/include",
+            ]
+            .map(|file| libdir_path.join(PathBuf::from(file))),
+        )
         .files(
             [
                 "src/util.cpp",
@@ -29,12 +59,17 @@ fn main() {
                 "src/platform/platform.cpp",
                 "src/lib.cpp",
             ]
-            .map(|file| libdir_path.join(file)),
+            .map(|file| libdir_path.join(PathBuf::from(file))),
         )
+        .flag_if_supported("-Wno-unused-parameter")
+        .flag_if_supported("-Wno-missing-field-initializers")
         .compile("slvs");
 
-    cc::Build::new()
-        .include(libdir_path.join("extlib/mimalloc/include"))
+    // Build mimalloc
+    let mut mimalloc_cfg = cc::Build::new();
+
+    mimalloc_cfg
+        .include(libdir_path.join(PathBuf::from("extlib/mimalloc/include")))
         .files(
             [
                 "extlib/mimalloc/src/stats.c",
@@ -52,13 +87,19 @@ fn main() {
                 "extlib/mimalloc/src/options.c",
                 "extlib/mimalloc/src/init.c",
             ]
-            .map(|file| libdir_path.join(file)),
+            .map(|file| libdir_path.join(PathBuf::from(file))),
         )
         .compile("mimalloc");
 
+    // Generate bindings to library header
     let bindings = bindgen::Builder::default()
         .opaque_type("std::.*")
-        .header(libdir_path.join("include/slvs.h").to_str().unwrap())
+        .header(
+            libdir_path
+                .join(PathBuf::from("include/slvs.h"))
+                .to_str()
+                .unwrap(),
+        )
         .clang_arg("-x")
         .clang_arg("c++")
         .clang_arg("-std=c++11")
