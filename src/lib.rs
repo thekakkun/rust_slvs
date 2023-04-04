@@ -24,7 +24,27 @@ pub struct System {
     result: i32,
 }
 
+impl Default for System {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl System {
+    pub fn new() -> Self {
+        Self {
+            groups: Elements::<Group>::new(),
+            params: Elements::<Param>::new(),
+            entities: Elements::<Entity>::new(),
+            constraints: Elements::<Constraint>::new(),
+            dragged: [0, 0, 0, 0],
+            calculateFaileds: true,
+            failed: Vec::new(),
+            dof: 0,
+            result: 0,
+        }
+    }
+
     pub fn add_group(&mut self) -> Weak<Group> {
         self.groups.add(Group::default())
     }
