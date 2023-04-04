@@ -7,17 +7,18 @@ use std::{
     ops::RangeFrom,
     rc::{Rc, Weak},
 };
-// pub trait Handle {
-//     fn get_handle(&self) -> u32;
-//     fn set_handle(&mut self, h: u32);
-// }
 
-pub(crate) struct Elements<T> {
+pub trait Handle {
+    fn get_handle(&self) -> u32;
+    fn set_handle(&mut self, h: u32);
+}
+
+pub struct Elements<T: Handle> {
     list: Vec<Rc<T>>,
     h_gen: RangeFrom<u32>,
 }
 
-impl<T> Elements<T> {
+impl<T: Handle> Elements<T> {
     pub fn new() -> Self {
         Self {
             list: Vec::new(),
@@ -25,8 +26,8 @@ impl<T> Elements<T> {
         }
     }
 
-    pub fn add(&mut self, element: T) -> Weak<T> {
-        // element.set_handle(self.h_gen.next().unwrap());
+    pub fn add(&mut self, mut element: T) -> Weak<T> {
+        element.set_handle(self.h_gen.next().unwrap());
 
         let element_ref = Rc::from(element);
         self.list.push(Rc::clone(&element_ref));

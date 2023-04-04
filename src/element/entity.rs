@@ -1,8 +1,8 @@
-use std::rc::{Rc, Weak};
+use std::rc::Weak;
 
 use crate::bindings;
 
-use super::{group::Group, param::Param, Elements};
+use super::{group::Group, param::Param, Handle};
 
 enum EntityType {
     Undefined,
@@ -18,7 +18,7 @@ enum EntityType {
     ArcOfCircle = bindings::SLVS_E_ARC_OF_CIRCLE as isize,
 }
 
-pub(crate) struct Entity {
+pub struct Entity {
     h: u32,
     group: Weak<Group>,
     type_: EntityType,
@@ -29,15 +29,15 @@ pub(crate) struct Entity {
     param: [Option<Weak<Param>>; 4],
 }
 
-// impl Handle for Entity {
-//     fn get_handle(&self) -> u32 {
-//         self.h
-//     }
+impl Handle for Entity {
+    fn get_handle(&self) -> u32 {
+        self.h
+    }
 
-//     fn set_handle(&mut self, h: u32) {
-//         self.h = h;
-//     }
-// }
+    fn set_handle(&mut self, h: u32) {
+        self.h = h;
+    }
+}
 
 impl Default for Entity {
     fn default() -> Self {
@@ -54,18 +54,16 @@ impl Default for Entity {
     }
 }
 
-impl Elements<Entity> {
-    pub fn add_point_3d(
-        &mut self,
+impl Entity {
+    pub fn new_point_3d(
         group: &Weak<Group>,
         x: &Weak<Param>,
         y: &Weak<Param>,
         z: &Weak<Param>,
-    ) -> Weak<Entity> {
-        let new_point_3d = Rc::new(Entity {
-            h: self.h_gen.next().unwrap(),
+    ) -> Self {
+        Entity {
             group: Weak::clone(group),
-            type_: EntityType::PointIn2d,
+            type_: EntityType::PointIn3d,
             param: [
                 Some(Weak::clone(x)),
                 Some(Weak::clone(y)),
@@ -73,33 +71,56 @@ impl Elements<Entity> {
                 None,
             ],
             ..Default::default()
-        });
-
-        self.list.push(Rc::clone(&new_point_3d));
-        Rc::downgrade(&new_point_3d)
-    }
-
-    pub fn add_point_2d(
-        &mut self,
-        group: &Weak<Group>,
-        x: &Weak<Param>,
-        y: &Weak<Param>,
-        z: &Weak<Param>,
-    ) -> Weak<Entity> {
-        let new_point_2d = Rc::new(Entity {
-            h: self.h_gen.next().unwrap(),
-            group: Weak::clone(group),
-            type_: EntityType::PointIn2d,
-            param: [
-                Some(Weak::clone(x)),
-                Some(Weak::clone(y)),
-                Some(Weak::clone(z)),
-                None,
-            ],
-            ..Default::default()
-        });
-
-        self.list.push(Rc::clone(&new_point_2d));
-        Rc::downgrade(&new_point_2d)
+        }
     }
 }
+
+// impl Elements<Entity> {
+//     pub fn add_point_3d(
+//         &mut self,
+//         group: &Weak<Group>,
+//         x: &Weak<Param>,
+//         y: &Weak<Param>,
+//         z: &Weak<Param>,
+//     ) -> Weak<Entity> {
+//         let new_point_3d = Rc::new(Entity {
+//             h: self.h_gen.next().unwrap(),
+//             group: Weak::clone(group),
+//             type_: EntityType::PointIn2d,
+//             param: [
+//                 Some(Weak::clone(x)),
+//                 Some(Weak::clone(y)),
+//                 Some(Weak::clone(z)),
+//                 None,
+//             ],
+//             ..Default::default()
+//         });
+
+//         self.list.push(Rc::clone(&new_point_3d));
+//         Rc::downgrade(&new_point_3d)
+//     }
+
+//     pub fn add_point_2d(
+//         &mut self,
+//         group: &Weak<Group>,
+//         x: &Weak<Param>,
+//         y: &Weak<Param>,
+//         z: &Weak<Param>,
+//     ) -> Weak<Entity> {
+//         let new_point_2d = Rc::new(Entity {
+//             h: self.h_gen.next().unwrap(),
+//             group: Weak::clone(group),
+//             type_: EntityType::PointIn2d,
+//             param: [
+//                 Some(Weak::clone(x)),
+//                 Some(Weak::clone(y)),
+//                 Some(Weak::clone(z)),
+//                 None,
+//             ],
+//             ..Default::default()
+//         });
+
+//         self.list.push(Rc::clone(&new_point_2d));
+//         Rc::downgrade(&new_point_2d)
+//     }
+// }

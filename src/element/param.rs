@@ -1,33 +1,39 @@
-use std::rc::{Rc, Weak};
+use std::rc::Weak;
 
-use super::{group::Group, Elements};
+use super::{group::Group, Handle};
 
-pub(crate) struct Param {
+pub struct Param {
     h: u32,
     group: Weak<Group>,
     val: f64,
 }
 
-// impl Handle for Param {
-//     fn get_handle(&self) -> u32 {
-//         self.h
-//     }
+impl Default for Param {
+    fn default() -> Self {
+        Self {
+            h: 0,
+            group: Weak::new(),
+            val: 0.0,
+        }
+    }
+}
 
-//     fn set_handle(&mut self, h: u32) {
-//         self.h = h;
-//     }
-// }
+impl Param {
+    pub fn new(group: &Weak<Group>, val: f64) -> Self {
+        Self {
+            group: Weak::clone(group),
+            val,
+            ..Default::default()
+        }
+    }
+}
 
+impl Handle for Param {
+    fn get_handle(&self) -> u32 {
+        self.h
+    }
 
-impl Elements<Param> {
-    // pub fn add(&mut self, group: &Weak<Group>, val: f64) -> Weak<Param> {
-    //     let new_param = Rc::new(Param {
-    //         h: self.h_gen.next().unwrap(),
-    //         group: Weak::clone(group),
-    //         val,
-    //     });
-
-    //     self.list.push(Rc::clone(&new_param));
-    //     Rc::downgrade(&new_param)
-    // }
+    fn set_handle(&mut self, h: u32) {
+        self.h = h;
+    }
 }

@@ -1,17 +1,14 @@
-pub(crate) struct Group(pub u32);
+use super::Handle;
 
-impl Group {
-    pub(crate) fn new(h: u32) -> Self {
-        Self(h)
+#[derive(Default)]
+pub struct Group(pub u32);
+
+impl Handle for Group {
+    fn get_handle(&self) -> u32 {
+        self.0
+    }
+
+    fn set_handle(&mut self, h: u32) {
+        self.0 = h;
     }
 }
-
-// impl Handle for Group {
-//     fn get_handle(&self) -> u32 {
-//         self.0
-//     }
-
-//     fn set_handle(&mut self, h: u32) {
-//         self.0 = h;
-//     }
-// }

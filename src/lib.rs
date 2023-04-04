@@ -2,6 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::rc::Weak;
+
 use element::{constraint::Constraint, entity::Entity, group::Group, param::Param, Elements};
 
 mod element;
@@ -10,16 +12,31 @@ pub mod bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-struct System {
+pub struct System {
     groups: Elements<Group>,
     params: Elements<Param>,
     entities: Elements<Entity>,
     constraints: Elements<Constraint>,
     dragged: [u32; 4],
     calculateFaileds: bool,
-    failed: Vec<bindings::Slvs_hConstraint>,
+    failed: Vec<Weak<Constraint>>,
     dof: i32,
     result: i32,
+}
+
+impl System {
+    pub fn add_group(&mut self) -> Weak<Group> {
+        self.groups.add(Group::default())
+    }
+
+    pub fn add_point_3d(&mut self, group: &Weak<Group>, x: f64, y: f64, z: f64) -> Weak<Entity> {
+        let x_param = self.params.add(Param::new(group, x));
+        let y_param = self.params.add(Param::new(group, y));
+        let z_param = self.params.add(Param::new(group, z));
+
+        self.entities
+            .add(Entity::new_point_3d(group, &x_param, &y_param, &z_param))
+    }
 }
 
 pub fn solve() {
