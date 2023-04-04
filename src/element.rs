@@ -1,37 +1,35 @@
+pub mod constraint;
+pub mod entity;
 pub mod group;
 pub mod param;
 
-use std::ops::RangeFrom;
+use std::{
+    ops::RangeFrom,
+    rc::{Rc, Weak},
+};
+// pub trait Handle {
+//     fn get_handle(&self) -> u32;
+//     fn set_handle(&mut self, h: u32);
+// }
 
-use self::group::Group;
-
-pub struct Elements<T> {
-    list: Vec<T>,
-    handle_gen: RangeFrom<u32>,
+pub(crate) struct Elements<T> {
+    list: Vec<Rc<T>>,
+    h_gen: RangeFrom<u32>,
 }
 
 impl<T> Elements<T> {
     pub fn new() -> Self {
         Self {
             list: Vec::new(),
-            handle_gen: (1..), // handle 0 is reserved for internal use, start from 1
+            h_gen: (1..), // handle 0 is reserved for internal use, start from 1
         }
     }
-}
 
-impl Elements<group::Group> {
-    pub fn add(&mut self) {
-        self.list
-            .push(group::Group::new(self.handle_gen.next().unwrap()));
-    }
-}
+    pub fn add(&mut self, element: T) -> Weak<T> {
+        // element.set_handle(self.h_gen.next().unwrap());
 
-impl Elements<param::Param> {
-    pub fn add(&mut self, group: Group, val: f64) {
-        self.list.push(param::Param::new(
-            self.handle_gen.next().unwrap(),
-            group.into(),
-            val,
-        ))
+        let element_ref = Rc::from(element);
+        self.list.push(Rc::clone(&element_ref));
+        Rc::downgrade(&element_ref)
     }
 }

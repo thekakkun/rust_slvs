@@ -1,4 +1,4 @@
-use super::bindings;
+use crate::bindings;
 
 pub struct Constraint {
     h: bindings::Slvs_hConstraint,
@@ -15,3 +15,13 @@ pub struct Constraint {
     other: i32,
     other2: i32,
 }
+
+// impl Handle for Constraint {
+//     fn get_handle(&self) -> u32 {
+//         self.h
+//     }
+
+//     fn set_handle(&mut self, h: u32) {
+//         self.h = h;
+//     }
+// }

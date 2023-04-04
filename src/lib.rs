@@ -2,20 +2,19 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use self::{constraint::Constraint, entity::Entity, parameter::Param};
+use element::{constraint::Constraint, entity::Entity, group::Group, param::Param, Elements};
 
-mod constraint;
-mod entity;
-mod parameter;
+mod element;
 
 pub mod bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-pub struct System {
-    param: Vec<Param>,
-    entity: Vec<Entity>,
-    constraint: Vec<Constraint>,
+struct System {
+    groups: Elements<Group>,
+    params: Elements<Param>,
+    entities: Elements<Entity>,
+    constraints: Elements<Constraint>,
     dragged: [u32; 4],
     calculateFaileds: bool,
     failed: Vec<bindings::Slvs_hConstraint>,
