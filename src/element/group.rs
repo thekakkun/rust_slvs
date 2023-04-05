@@ -1,14 +1,9 @@
-use super::Handle;
+use crate::bindings;
 
-#[derive(Default)]
-pub struct Group(pub u32);
+pub struct Group(bindings::Slvs_hGroup);
 
-impl Handle for Group {
-    fn get_handle(&self) -> u32 {
-        self.0
-    }
-
-    fn set_handle(&mut self, h: u32) {
-        self.0 = h;
+impl From<bindings::Slvs_hGroup> for Group {
+    fn from(value: bindings::Slvs_hGroup) -> Self {
+        Group(value)
     }
 }
