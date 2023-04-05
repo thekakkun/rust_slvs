@@ -29,7 +29,7 @@ impl From<ParamH> for binding::Slvs_hParam {
 impl binding::Slvs_Param {
     fn new(group: GroupH, val: f64) -> Self {
         Self {
-            h: ParamH::default().into(),
+            h: ParamH::new().into(),
             group: group.into(),
             val,
         }

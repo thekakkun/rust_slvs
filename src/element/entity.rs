@@ -7,7 +7,7 @@ use super::group::GroupH;
 static NEXT_ENTITY_H: AtomicU32 = AtomicU32::new(1);
 
 #[derive(Clone, Copy)]
-pub struct EntityH(binding::Slvs_hEntity);
+pub struct EntityH(pub binding::Slvs_hEntity);
 
 impl EntityH {
     fn new() -> Self {
@@ -52,7 +52,7 @@ impl binding::Slvs_Entity {
         param: [Option<EntityH>; 4],
     ) -> Self {
         Self {
-            h: EntityH::default().into(),
+            h: EntityH::new().into(),
             group: group.into(),
             type_: type_ as i32,
             wrkpl: wrkpl.unwrap_or(EntityH(0)).into(),

@@ -1,29 +1,97 @@
-use crate::bindings;
+use std::sync::atomic::{AtomicU32, Ordering};
 
-use super::Handle;
+use crate::binding;
 
-pub struct Constraint {
-    h: bindings::Slvs_hConstraint,
-    group: bindings::Slvs_hGroup,
-    type_: i32,
-    wrkpl: bindings::Slvs_hEntity,
-    valA: f64,
-    ptA: bindings::Slvs_hEntity,
-    ptB: bindings::Slvs_hEntity,
-    entityA: bindings::Slvs_hEntity,
-    entityB: bindings::Slvs_hEntity,
-    entityC: bindings::Slvs_hEntity,
-    entityD: bindings::Slvs_hEntity,
-    other: i32,
-    other2: i32,
+use super::{entity::EntityH, group::GroupH};
+
+static NEXT_CONSTRAINT_H: AtomicU32 = AtomicU32::new(1);
+
+pub struct ConstraintH(binding::Slvs_hConstraint);
+
+impl ConstraintH {
+    fn new() -> Self {
+        Self(NEXT_CONSTRAINT_H.fetch_add(1, Ordering::SeqCst))
+    }
 }
 
-impl Handle for Constraint {
-    fn get_handle(&self) -> u32 {
-        self.h
+impl Default for ConstraintH {
+    fn default() -> Self {
+        Self::new()
     }
+}
 
-    fn set_handle(&mut self, h: u32) {
-        self.h = h;
+impl From<ConstraintH> for binding::Slvs_hConstraint {
+    fn from(value: ConstraintH) -> Self {
+        value.0
+    }
+}
+
+enum ConstraintType {
+    Undefined,
+    pointsCoincident = binding::SLVS_C_POINTS_COINCIDENT as isize,
+    PtPtDistance = binding::SLVS_C_PT_PT_DISTANCE as isize,
+    PtPlaneDistance = binding::SLVS_C_PT_PLANE_DISTANCE as isize,
+    PtLineDistance = binding::SLVS_C_PT_LINE_DISTANCE as isize,
+    PtFaceDistance = binding::SLVS_C_PT_FACE_DISTANCE as isize,
+    PtInPlane = binding::SLVS_C_PT_IN_PLANE as isize,
+    PtOnLine = binding::SLVS_C_PT_ON_LINE as isize,
+    PtOnFace = binding::SLVS_C_PT_ON_FACE as isize,
+    EqualLengthLines = binding::SLVS_C_EQUAL_LENGTH_LINES as isize,
+    LengthRatio = binding::SLVS_C_LENGTH_RATIO as isize,
+    EqLenPtLineD = binding::SLVS_C_EQ_LEN_PT_LINE_D as isize,
+    EqPtLnDistances = binding::SLVS_C_EQ_PT_LN_DISTANCES as isize,
+    EqualAngle = binding::SLVS_C_EQUAL_ANGLE as isize,
+    EqualLineArcLen = binding::SLVS_C_EQUAL_LINE_ARC_LEN as isize,
+    Symmetric = binding::SLVS_C_SYMMETRIC as isize,
+    SymmetricHoriz = binding::SLVS_C_SYMMETRIC_HORIZ as isize,
+    SymmetricVert = binding::SLVS_C_SYMMETRIC_VERT as isize,
+    SymmetricLine = binding::SLVS_C_SYMMETRIC_LINE as isize,
+    AtMidpoint = binding::SLVS_C_AT_MIDPOINT as isize,
+    Horizontal = binding::SLVS_C_HORIZONTAL as isize,
+    Vertical = binding::SLVS_C_VERTICAL as isize,
+    Diameter = binding::SLVS_C_DIAMETER as isize,
+    PtOnCircle = binding::SLVS_C_PT_ON_CIRCLE as isize,
+    SameOrientation = binding::SLVS_C_SAME_ORIENTATION as isize,
+    Angle = binding::SLVS_C_ANGLE as isize,
+    Parallel = binding::SLVS_C_PARALLEL as isize,
+    Perpendicular = binding::SLVS_C_PERPENDICULAR as isize,
+    ArcLineTangent = binding::SLVS_C_ARC_LINE_TANGENT as isize,
+    CubicLineTangent = binding::SLVS_C_CUBIC_LINE_TANGENT as isize,
+    EqualRadius = binding::SLVS_C_EQUAL_RADIUS as isize,
+    ProjPtDistance = binding::SLVS_C_PROJ_PT_DISTANCE as isize,
+    WhereDragged = binding::SLVS_C_WHERE_DRAGGED as isize,
+    CurveCurveTangent = binding::SLVS_C_CURVE_CURVE_TANGENT as isize,
+    LengthDifference = binding::SLVS_C_LENGTH_DIFFERENCE as isize,
+    ArcArcLenRatio = binding::SLVS_C_ARC_ARC_LEN_RATIO as isize,
+    ArcLineLenRatio = binding::SLVS_C_ARC_LINE_LEN_RATIO as isize,
+    ArcArcDifference = binding::SLVS_C_ARC_ARC_DIFFERENCE as isize,
+    ArcLineDifference = binding::SLVS_C_ARC_LINE_DIFFERENCE as isize,
+}
+
+impl binding::Slvs_Constraint {
+    fn new(
+        group: GroupH,
+        type_: ConstraintType,
+        wrkpl: Option<EntityH>,
+        valA: f64,
+        pt: [Option<EntityH>; 2],
+        entity: [Option<EntityH>; 4],
+        other: [bool; 2],
+    ) -> Self {
+        Self {
+            h: ConstraintH::new().into(),
+            group: group.into(),
+            type_: type_ as i32,
+            wrkpl: wrkpl.unwrap_or(EntityH(0)).into(),
+            valA,
+            ptA: pt[0].unwrap_or(EntityH(0)).into(),
+            ptB: pt[1].unwrap_or(EntityH(0)).into(),
+            entityA: entity[0].unwrap_or(EntityH(0)).into(),
+            entityB: entity[1].unwrap_or(EntityH(0)).into(),
+            entityC: entity[2].unwrap_or(EntityH(0)).into(),
+            entityD: entity[3].unwrap_or(EntityH(0)).into(),
+            other: other[0].into(),
+            other2: other[1].into(),
+        }
     }
 }
