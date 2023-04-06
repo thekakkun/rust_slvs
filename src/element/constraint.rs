@@ -2,32 +2,9 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::binding;
 
-use super::{entity::EntityH, group::GroupH};
-
 static NEXT_CONSTRAINT_H: AtomicU32 = AtomicU32::new(1);
 
-pub struct ConstraintH(binding::Slvs_hConstraint);
-
-impl ConstraintH {
-    fn new() -> Self {
-        Self(NEXT_CONSTRAINT_H.fetch_add(1, Ordering::SeqCst))
-    }
-}
-
-impl Default for ConstraintH {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl From<ConstraintH> for binding::Slvs_hConstraint {
-    fn from(value: ConstraintH) -> Self {
-        value.0
-    }
-}
-
 enum ConstraintType {
-    Undefined,
     pointsCoincident = binding::SLVS_C_POINTS_COINCIDENT as isize,
     PtPtDistance = binding::SLVS_C_PT_PT_DISTANCE as isize,
     PtPlaneDistance = binding::SLVS_C_PT_PLANE_DISTANCE as isize,
@@ -68,30 +45,53 @@ enum ConstraintType {
     ArcLineDifference = binding::SLVS_C_ARC_LINE_DIFFERENCE as isize,
 }
 
-impl binding::Slvs_Constraint {
+pub type Constraint = binding::Slvs_Constraint;
+
+impl Constraint {
     fn new(
-        group: GroupH,
+        group: binding::Slvs_hGroup,
         type_: ConstraintType,
-        wrkpl: Option<EntityH>,
+        wrkpl: Option<binding::Slvs_hEntity>,
         valA: f64,
-        pt: [Option<EntityH>; 2],
-        entity: [Option<EntityH>; 4],
+        pt: [Option<binding::Slvs_hEntity>; 2],
+        entity: [Option<binding::Slvs_hEntity>; 4],
         other: [bool; 2],
     ) -> Self {
         Self {
-            h: ConstraintH::new().into(),
-            group: group.into(),
+            h: NEXT_CONSTRAINT_H.fetch_add(1, Ordering::SeqCst),
+            group,
             type_: type_ as i32,
-            wrkpl: wrkpl.unwrap_or(EntityH(0)).into(),
+            wrkpl: wrkpl.unwrap_or(0),
             valA,
-            ptA: pt[0].unwrap_or(EntityH(0)).into(),
-            ptB: pt[1].unwrap_or(EntityH(0)).into(),
-            entityA: entity[0].unwrap_or(EntityH(0)).into(),
-            entityB: entity[1].unwrap_or(EntityH(0)).into(),
-            entityC: entity[2].unwrap_or(EntityH(0)).into(),
-            entityD: entity[3].unwrap_or(EntityH(0)).into(),
+            ptA: pt[0].unwrap_or(0),
+            ptB: pt[1].unwrap_or(0),
+            entityA: entity[0].unwrap_or(0),
+            entityB: entity[1].unwrap_or(0),
+            entityC: entity[2].unwrap_or(0),
+            entityD: entity[3].unwrap_or(0),
             other: other[0].into(),
             other2: other[1].into(),
         }
     }
 }
+
+// #[derive(Clone, Copy)]
+// pub struct ConstraintH(binding::Slvs_hConstraint);
+
+// impl ConstraintH {
+//     fn new() -> Self {
+//         Self(NEXT_CONSTRAINT_H.fetch_add(1, Ordering::SeqCst))
+//     }
+// }
+
+// impl Default for ConstraintH {
+//     fn default() -> Self {
+//         Self::new()
+//     }
+// }
+
+// impl From<ConstraintH> for binding::Slvs_hConstraint {
+//     fn from(value: ConstraintH) -> Self {
+//         value.0
+//     }
+// }

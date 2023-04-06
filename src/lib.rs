@@ -2,14 +2,19 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::rc::Weak;
-
 use element::{constraint::Constraint, entity::Entity, group::Group, param::Param, Elements};
 
 mod element;
 
-pub mod bindings {
+mod binding {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
+
+enum Result {
+    Okay = binding::SLVS_RESULT_OKAY as isize,
+    Inconsistent = binding::SLVS_RESULT_INCONSISTENT as isize,
+    DidntConverge = binding::SLVS_RESULT_DIDNT_CONVERGE as isize,
+    TooManyUnknowns = binding::SLVS_RESULT_TOO_MANY_UNKNOWNS as isize,
 }
 
 pub struct System {
@@ -19,9 +24,38 @@ pub struct System {
     constraints: Elements<Constraint>,
     dragged: [u32; 4],
     calculateFaileds: bool,
-    failed: Vec<Weak<Constraint>>,
+    failed: Vec<binding::Slvs_hConstraint>,
     dof: i32,
-    result: i32,
+    result: Result,
+}
+
+impl System {
+    pub fn new() -> Self {
+        Self {
+            groups: Elements::<Group>::default(),
+            params: Elements::<Param>::default(),
+            entities: Elements::<Entity>::default(),
+            constraints: Elements::<Constraint>::default(),
+            dragged: [0; 4],
+            calculateFaileds: true,
+            failed: Vec::<binding::Slvs_hConstraint>::new(),
+            dof: 0,
+            result: Result::Okay,
+        }
+    }
+
+    pub fn add_point_3d(&mut self, group: Group, x: f64, y: f64, z: f64) -> Entity {
+        let x_param = self.params.add(Param::new(group, x));
+        let y_param = self.params.add(Param::new(group, y));
+        let z_param = self.params.add(Param::new(group, z));
+
+        self.entities.add(Entity::new_point_3d(
+            group.into(),
+            x_param.into(),
+            y_param.into(),
+            z_param.into(),
+        ))
+    }
 }
 
 impl Default for System {
@@ -30,36 +64,13 @@ impl Default for System {
     }
 }
 
-impl System {
-    pub fn new() -> Self {
-        Self {
-            groups: Elements::<Group>::new(),
-            params: Elements::<Param>::new(),
-            entities: Elements::<Entity>::new(),
-            constraints: Elements::<Constraint>::new(),
-            dragged: [0, 0, 0, 0],
-            calculateFaileds: true,
-            failed: Vec::new(),
-            dof: 0,
-            result: 0,
-        }
-    }
+//     pub fn add_group(&mut self) -> Weak<Group> {
+//         self.groups.add(Group::default())
+//     }
 
-    pub fn add_group(&mut self) -> Weak<Group> {
-        self.groups.add(Group::default())
-    }
+// }
 
-    pub fn add_point_3d(&mut self, group: &Weak<Group>, x: f64, y: f64, z: f64) -> Weak<Entity> {
-        let x_param = self.params.add(Param::new(group, x));
-        let y_param = self.params.add(Param::new(group, y));
-        let z_param = self.params.add(Param::new(group, z));
-
-        self.entities
-            .add(Entity::new_point_3d(group, &x_param, &y_param, &z_param))
-    }
-}
-
-pub fn solve() {
+pub fn solve(sys: System, h: Group) {
     unimplemented!();
     // unsafe { bindings::Slvs_Solve(sys, hg) };
 }
@@ -67,28 +78,28 @@ pub fn solve() {
 pub fn example_3d() -> f64 {
     println!("Running 3D example");
 
-    let g: bindings::Slvs_hGroup = 1;
+    let g: binding::Slvs_hGroup = 1;
 
-    let x1 = bindings::Slvs_Param {
+    let x1 = binding::Slvs_Param {
         h: 1,
         group: g,
         val: 10.0,
     };
-    let y1 = bindings::Slvs_Param {
+    let y1 = binding::Slvs_Param {
         h: 2,
         group: g,
         val: 10.0,
     };
-    let z1 = bindings::Slvs_Param {
+    let z1 = binding::Slvs_Param {
         h: 3,
         group: g,
         val: 10.0,
     };
-    let p1 = bindings::Slvs_Entity {
+    let p1 = binding::Slvs_Entity {
         h: 101,
         group: g,
-        type_: bindings::SLVS_E_POINT_IN_3D as i32,
-        wrkpl: bindings::SLVS_FREE_IN_3D,
+        type_: binding::SLVS_E_POINT_IN_3D as i32,
+        wrkpl: binding::SLVS_FREE_IN_3D,
         point: [0; 4],
         normal: 0,
         distance: 0,
@@ -97,26 +108,26 @@ pub fn example_3d() -> f64 {
 
     println!("  Created point 1 at: ({}, {}, {})", x1.val, y1.val, z1.val);
 
-    let x2 = bindings::Slvs_Param {
+    let x2 = binding::Slvs_Param {
         h: 4,
         group: g,
         val: 20.0,
     };
-    let y2 = bindings::Slvs_Param {
+    let y2 = binding::Slvs_Param {
         h: 5,
         group: g,
         val: 20.0,
     };
-    let z2 = bindings::Slvs_Param {
+    let z2 = binding::Slvs_Param {
         h: 6,
         group: g,
         val: 20.0,
     };
-    let p2 = bindings::Slvs_Entity {
+    let p2 = binding::Slvs_Entity {
         h: 102,
         group: g,
-        type_: bindings::SLVS_E_POINT_IN_3D as i32,
-        wrkpl: bindings::SLVS_FREE_IN_3D,
+        type_: binding::SLVS_E_POINT_IN_3D as i32,
+        wrkpl: binding::SLVS_FREE_IN_3D,
         point: [0; 4],
         normal: 0,
         distance: 0,
@@ -125,11 +136,11 @@ pub fn example_3d() -> f64 {
 
     println!("  Created point 2 at: ({}, {}, {})", x2.val, y2.val, z2.val);
 
-    let c1 = bindings::Slvs_Constraint {
+    let c1 = binding::Slvs_Constraint {
         h: 1,
         group: g,
-        type_: bindings::SLVS_C_PT_PT_DISTANCE as i32,
-        wrkpl: bindings::SLVS_FREE_IN_3D,
+        type_: binding::SLVS_C_PT_PT_DISTANCE as i32,
+        wrkpl: binding::SLVS_FREE_IN_3D,
         valA: 30.0,
         ptA: 101,
         ptB: 102,
@@ -148,7 +159,7 @@ pub fn example_3d() -> f64 {
     let mut constraint_list = vec![c1];
     let mut failed_list = vec![0; 50];
 
-    let mut sys = bindings::Slvs_System {
+    let mut sys = binding::Slvs_System {
         param: param_list.as_mut_ptr(),
         params: param_list.len() as i32,
         entity: entity_list.as_mut_ptr(),
@@ -163,9 +174,9 @@ pub fn example_3d() -> f64 {
         result: 0,
     };
 
-    unsafe { bindings::Slvs_Solve(&mut sys, g) }
+    unsafe { binding::Slvs_Solve(&mut sys, g) }
 
-    if sys.result == bindings::SLVS_RESULT_OKAY.try_into().unwrap() {
+    if sys.result == binding::SLVS_RESULT_OKAY.try_into().unwrap() {
         println!("  Constraints solved");
         println!(
             "    Point 1 now at : ({:.3}, {:.3}, {:.3})",
