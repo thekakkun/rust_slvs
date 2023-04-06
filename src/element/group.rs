@@ -24,3 +24,25 @@ impl From<GroupH> for binding::Slvs_hGroup {
         value.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::binding;
+
+    use super::GroupH;
+
+    #[test]
+    fn incremental_handle_generated() {
+        // handle starts from 1
+        let mut g = GroupH::new();
+        assert_eq!(binding::Slvs_hGroup::from(g), 1);
+
+        // increments to 2
+        g = GroupH::new();
+        assert_eq!(binding::Slvs_hGroup::from(g), 2);
+
+        // increments to 3
+        g = GroupH::new();
+        assert_eq!(binding::Slvs_hGroup::from(g), 3);
+    }
+}
