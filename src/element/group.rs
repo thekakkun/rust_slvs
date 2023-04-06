@@ -2,9 +2,11 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::binding;
 
+use super::Elements;
+
 static NEXT_GROUP_H: AtomicU32 = AtomicU32::new(1);
 
-#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct GroupH(binding::Slvs_hGroup);
 
 impl GroupH {
@@ -22,6 +24,14 @@ impl Default for GroupH {
 impl From<GroupH> for binding::Slvs_hGroup {
     fn from(value: GroupH) -> Self {
         value.0
+    }
+}
+
+impl Elements<GroupH> {
+    pub fn add(&mut self) -> GroupH {
+        let new_group = GroupH::new();
+        self.0.push(new_group);
+        new_group
     }
 }
 
