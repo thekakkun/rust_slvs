@@ -6,11 +6,11 @@ static NEXT_GROUP_H: AtomicU32 = AtomicU32::new(1);
 
 #[derive(Clone, Copy)]
 pub struct Group {
-    h: binding::Slvs_hGroup,
+    pub h: binding::Slvs_hGroup,
 }
 
 impl Group {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             h: NEXT_GROUP_H.fetch_add(1, Ordering::SeqCst),
         }

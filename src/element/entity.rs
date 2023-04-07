@@ -4,7 +4,7 @@ use crate::binding;
 
 static NEXT_ENTITY_H: AtomicU32 = AtomicU32::new(1);
 
-enum EntityType {
+pub(crate) enum EntityType {
     PointIn3d = binding::SLVS_E_POINT_IN_3D as isize,
     PointIn2d = binding::SLVS_E_POINT_IN_2D as isize,
     NormalIn3d = binding::SLVS_E_NORMAL_IN_3D as isize,
@@ -20,7 +20,7 @@ enum EntityType {
 pub type Entity = binding::Slvs_Entity;
 
 impl Entity {
-    fn new(
+    pub(crate) fn new(
         group: binding::Slvs_hGroup,
         type_: EntityType,
         wrkpl: Option<binding::Slvs_hEntity>,
@@ -69,6 +69,11 @@ impl Entity {
     }
 }
 
+impl From<Entity> for binding::Slvs_hEntity {
+    fn from(value: Entity) -> Self {
+        value.h
+    }
+}
 // #[derive(Clone, Copy)]
 // pub struct EntityH(pub binding::Slvs_hEntity);
 

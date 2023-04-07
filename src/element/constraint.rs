@@ -4,7 +4,7 @@ use crate::binding;
 
 static NEXT_CONSTRAINT_H: AtomicU32 = AtomicU32::new(1);
 
-enum ConstraintType {
+pub(crate)enum ConstraintType {
     pointsCoincident = binding::SLVS_C_POINTS_COINCIDENT as isize,
     PtPtDistance = binding::SLVS_C_PT_PT_DISTANCE as isize,
     PtPlaneDistance = binding::SLVS_C_PT_PLANE_DISTANCE as isize,
@@ -48,7 +48,7 @@ enum ConstraintType {
 pub type Constraint = binding::Slvs_Constraint;
 
 impl Constraint {
-    fn new(
+    pub(crate) fn new(
         group: binding::Slvs_hGroup,
         type_: ConstraintType,
         wrkpl: Option<binding::Slvs_hEntity>,
