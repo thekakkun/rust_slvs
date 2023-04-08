@@ -74,24 +74,3 @@ impl Constraint {
         }
     }
 }
-
-// #[derive(Clone, Copy)]
-// pub struct ConstraintH(binding::Slvs_hConstraint);
-
-// impl ConstraintH {
-//     fn new() -> Self {
-//         Self(NEXT_CONSTRAINT_H.fetch_add(1, Ordering::SeqCst))
-//     }
-// }
-
-// impl Default for ConstraintH {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-// impl From<ConstraintH> for binding::Slvs_hConstraint {
-//     fn from(value: ConstraintH) -> Self {
-//         value.0
-//     }
-// }

@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::sync::atomic::Ordering;
+use std::{any::Any, sync::atomic::Ordering};
 
 use element::{
     constraint::{Constraint, ConstraintType},
@@ -19,22 +19,46 @@ mod binding {
 }
 
 #[derive(Clone, Copy)]
-enum SolveResult {
-    Okay = binding::SLVS_RESULT_OKAY as isize,
+enum FailReason {
+    None,
     Inconsistent = binding::SLVS_RESULT_INCONSISTENT as isize,
     DidntConverge = binding::SLVS_RESULT_DIDNT_CONVERGE as isize,
     TooManyUnknowns = binding::SLVS_RESULT_TOO_MANY_UNKNOWNS as isize,
 }
 
-impl From<i32> for SolveResult {
-    fn from(value: i32) -> Self {
+impl TryFrom<i32> for FailReason {
+    type Error = &'static str;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            0 => Self::Okay,
-            1 => Self::Inconsistent,
-            2 => Self::DidntConverge,
-            3 => Self::TooManyUnknowns,
-            _ => Self::TooManyUnknowns, // Is this okay? Shouldn't happen, but...
+            0 => Ok(FailReason::None),
+            1 => Ok(FailReason::Inconsistent),
+            2 => Ok(FailReason::DidntConverge),
+            3 => Ok(FailReason::TooManyUnknowns),
+            _ => Err("Failure can only take values 0, 1, 2, or 3."),
         }
+    }
+}
+
+pub struct SolveResult {
+    failed: Vec<Handle>,
+    dof: i32,
+    reason: FailReason,
+}
+
+impl SolveResult {
+    pub fn new() -> Self {
+        Self {
+            failed: Vec::<Handle>::new(),
+            dof: 0,
+            reason: FailReason::None,
+        }
+    }
+}
+
+impl Default for SolveResult {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -43,11 +67,9 @@ pub struct System {
     params: Vec<Param>,
     entities: Vec<Entity>,
     constraints: Vec<Constraint>,
-    dragged: [u32; 4],
+    dragged: [binding::Slvs_hParam; 4],
     calculateFaileds: bool,
-    failed: Vec<Handle>,
-    dof: i32,
-    result: SolveResult,
+    solve_result: SolveResult,
 }
 
 impl System {
@@ -59,10 +81,33 @@ impl System {
             constraints: Vec::<Constraint>::new(),
             dragged: [0; 4],
             calculateFaileds: true,
-            failed: Vec::<Handle>::new(),
-            dof: 0,
-            result: SolveResult::Okay,
+            solve_result: SolveResult::new(),
         }
+    }
+
+    pub fn get<T>(&self, element: Handle) -> Option<Box<dyn Any>> {
+        todo!();
+        match element {
+            Handle::Group(h) => Some(Box::new(Handle::Group(h))),
+            Handle::Param(h) => {
+                todo!();
+                // self.params.iter().find(|&&p| p.h == h).map(|&p| Box::new(p))
+            }
+            Handle::Entity(h) => todo!(),
+            Handle::Constraint(h) => todo!(),
+        }
+    }
+
+    pub fn set_dragged(&mut self, entity: Handle) {
+        if let Handle::Entity(entity_h) = entity {
+            if let Some(entity) = self.entities.iter().find(|&&e| e.h == entity_h) {
+                self.dragged = entity.param;
+            }
+        }
+    }
+
+    pub fn clear_dragged(&mut self) {
+        self.dragged = [0; 4];
     }
 
     // I want this to return a result.
@@ -73,42 +118,35 @@ impl System {
             entity: self.entities.as_mut_ptr(),
             entities: self.entities.len() as i32,
             constraint: self.constraints.as_mut_ptr(),
-            constraints: self.entities.len() as i32,
+            constraints: self.constraints.len() as i32,
             dragged: self.dragged,
             calculateFaileds: self.calculateFaileds as i32,
-            failed: Vec::with_capacity(self.entities.len()).as_mut_ptr(),
-            faileds: self.entities.len() as i32,
-            dof: self.dof,
-            result: self.result as i32,
+            failed: Vec::with_capacity(self.constraints.len()).as_mut_ptr(),
+            faileds: self.constraints.len() as i32,
+            dof: self.solve_result.dof,
+            result: self.solve_result.reason as i32,
         };
+
+        let failed_constraints: Vec<Handle>;
+
         unsafe {
             binding::Slvs_Solve(&mut slvs_system, group.into());
 
-            // self.params.replace(Vec::from_raw_parts(
-            //     slvs_system.param,
-            //     slvs_system.params.try_into().unwrap(),
-            //     slvs_system.params.try_into().unwrap(),
-            // ));
-            // self.entities.replace(Vec::from_raw_parts(
-            //     slvs_system.entity,
-            //     slvs_system.entities.try_into().unwrap(),
-            //     slvs_system.entities.try_into().unwrap(),
-            // ));
-            // self.constraints.replace(Vec::from_raw_parts(
-            //     slvs_system.constraint,
-            //     slvs_system.constraints.try_into().unwrap(),
-            //     slvs_system.constraints.try_into().unwrap(),
-            // ));
-            // self.failed = Vec::from_raw_parts(
-            //     slvs_system.failed,
-            //     slvs_system.faileds.try_into().unwrap(),
-            //     slvs_system.faileds.try_into().unwrap(),
-            // );
+            failed_constraints = Vec::from_raw_parts(
+                slvs_system.failed,
+                slvs_system.faileds.try_into().unwrap(),
+                slvs_system.faileds.try_into().unwrap(),
+            )
+            .into_iter()
+            .map(Handle::Constraint)
+            .collect();
         };
-        self.dragged = slvs_system.dragged;
-        self.calculateFaileds = slvs_system.calculateFaileds != 0;
-        self.dof = slvs_system.dof;
-        self.result = slvs_system.result.into();
+
+        self.solve_result = SolveResult {
+            failed: failed_constraints,
+            dof: slvs_system.dof,
+            reason: slvs_system.result.try_into().unwrap(),
+        };
     }
 }
 
@@ -235,177 +273,17 @@ mod tests {
         let constraint = sys
             .distance(g, None, 30.0, p1, p2)
             .expect("Should be Handle::Constraint");
+        sys.set_dragged(p2);
 
         sys.solve(g);
+
+        println!(
+            "p1: ({:.3}, {:.3}, {:.3})",
+            sys.params[0].val, sys.params[1].val, sys.params[2].val
+        );
+        println!(
+            "p2: ({:.3}, {:.3}, {:.3})",
+            sys.params[3].val, sys.params[4].val, sys.params[5].val
+        );
     }
-}
-
-// impl From<binding::Slvs_System> for System {
-//     fn from(value: binding::Slvs_System) -> Self {
-//         unsafe {
-//             Self {
-//                 params: RefCell::from(Vec::from_raw_parts(
-//                     value.param,
-//                     value.params.try_into().unwrap(),
-//                     value.params.try_into().unwrap(),
-//                 )),
-//                 entities: RefCell::from(Vec::from_raw_parts(
-//                     value.entity,
-//                     value.entities.try_into().unwrap(),
-//                     value.entities.try_into().unwrap(),
-//                 )),
-//                 constraints: RefCell::from(Vec::from_raw_parts(
-//                     value.constraint,
-//                     value.constraints.try_into().unwrap(),
-//                     value.constraints.try_into().unwrap(),
-//                 )),
-//                 dragged: value.dragged,
-//                 calculateFaileds: value.calculateFaileds != 0,
-//                 failed: Vec::from_raw_parts(
-//                     value.failed,
-//                     value.faileds.try_into().unwrap(),
-//                     value.faileds.try_into().unwrap(),
-//                 ),
-//                 dof: value.dof,
-//                 result: value.result.into(),
-//             }
-//         }
-//     }
-// }
-
-// impl From<System> for binding::Slvs_System {
-//     fn from(value: System) -> Self {
-//         Self {
-//             param: value.params.borrow_mut().as_mut_ptr(),
-//             params: value.params.borrow().len() as i32,
-//             entity: value.entities.borrow_mut().as_mut_ptr(),
-//             entities: value.entities.borrow().len() as i32,
-//             constraint: value.constraints.borrow_mut().as_mut_ptr(),
-//             constraints: value.entities.borrow().len() as i32,
-//             dragged: value.dragged,
-//             calculateFaileds: value.calculateFaileds as i32,
-//             failed: Vec::with_capacity(value.entities.borrow().len()).as_mut_ptr(),
-//             faileds: value.entities.borrow().len() as i32,
-//             dof: value.dof,
-//             result: value.result as i32,
-//         }
-//     }
-// // }
-
-pub fn example_3d() -> f64 {
-    println!("Running 3D example");
-
-    let g: binding::Slvs_hGroup = 1;
-
-    let x1 = binding::Slvs_Param {
-        h: 1,
-        group: g,
-        val: 10.0,
-    };
-    let y1 = binding::Slvs_Param {
-        h: 2,
-        group: g,
-        val: 10.0,
-    };
-    let z1 = binding::Slvs_Param {
-        h: 3,
-        group: g,
-        val: 10.0,
-    };
-    let p1 = binding::Slvs_Entity {
-        h: 101,
-        group: g,
-        type_: binding::SLVS_E_POINT_IN_3D as i32,
-        wrkpl: binding::SLVS_FREE_IN_3D,
-        point: [0; 4],
-        normal: 0,
-        distance: 0,
-        param: [1, 2, 3, 0],
-    };
-
-    println!("  Created point 1 at: ({}, {}, {})", x1.val, y1.val, z1.val);
-
-    let x2 = binding::Slvs_Param {
-        h: 4,
-        group: g,
-        val: 20.0,
-    };
-    let y2 = binding::Slvs_Param {
-        h: 5,
-        group: g,
-        val: 20.0,
-    };
-    let z2 = binding::Slvs_Param {
-        h: 6,
-        group: g,
-        val: 20.0,
-    };
-    let p2 = binding::Slvs_Entity {
-        h: 102,
-        group: g,
-        type_: binding::SLVS_E_POINT_IN_3D as i32,
-        wrkpl: binding::SLVS_FREE_IN_3D,
-        point: [0; 4],
-        normal: 0,
-        distance: 0,
-        param: [4, 5, 6, 0],
-    };
-
-    println!("  Created point 2 at: ({}, {}, {})", x2.val, y2.val, z2.val);
-
-    let c1 = binding::Slvs_Constraint {
-        h: 1,
-        group: g,
-        type_: binding::SLVS_C_PT_PT_DISTANCE as i32,
-        wrkpl: binding::SLVS_FREE_IN_3D,
-        valA: 30.0,
-        ptA: 101,
-        ptB: 102,
-        entityA: 0,
-        entityB: 0,
-        entityC: 0,
-        entityD: 0,
-        other: 0,
-        other2: 0,
-    };
-
-    println!("  Constraint created: Distance between points should be 30.0 units");
-
-    let mut param_list = vec![x1, y1, z1, x2, y2, z2];
-    let mut entity_list = vec![p1, p2];
-    let mut constraint_list = vec![c1];
-    let mut failed_list = vec![0; 50];
-
-    let mut sys = binding::Slvs_System {
-        param: param_list.as_mut_ptr(),
-        params: param_list.len() as i32,
-        entity: entity_list.as_mut_ptr(),
-        entities: entity_list.len() as i32,
-        constraint: constraint_list.as_mut_ptr(),
-        constraints: constraint_list.len() as i32,
-        dragged: [4, 5, 6, 0],
-        calculateFaileds: 1,
-        failed: failed_list.as_mut_ptr(),
-        faileds: failed_list.len() as i32,
-        dof: 0,
-        result: 0,
-    };
-
-    unsafe { binding::Slvs_Solve(&mut sys, g) }
-
-    if sys.result == binding::SLVS_RESULT_OKAY.try_into().unwrap() {
-        println!("  Constraints solved");
-        println!(
-            "    Point 1 now at : ({:.3}, {:.3}, {:.3})",
-            param_list[0].val, param_list[1].val, param_list[2].val
-        );
-        println!(
-            "    Point 2 now at : ({:.3}, {:.3}, {:.3})",
-            param_list[3].val, param_list[4].val, param_list[5].val
-        );
-    } else {
-        println!("  Solve failed");
-    };
-
-    param_list[0].val
 }

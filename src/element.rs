@@ -41,8 +41,6 @@ impl From<Handle> for u32 {
     }
 }
 
-// pub(crate) type Elements<T> = Vec<T>;
-
 pub(crate) trait PushReturn<T: Copy + Into<Handle>> {
     fn push_return(&mut self, element: T) -> Handle;
 }
@@ -56,22 +54,3 @@ where
         element.into()
     }
 }
-
-// pub(crate) struct Elements<T>(pub(crate) Vec<T>);
-
-// impl<T> Elements<T> {
-//     fn new() -> Self {
-//         Elements(Vec::new())
-//     }
-
-//     pub(crate) fn add(&mut self, element: T) -> &T {
-//         self.0.push(element);
-//         self.0.last().unwrap()
-//     }
-// }
-
-// impl<T> Default for Elements<T> {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
