@@ -94,6 +94,9 @@ fn main() {
     // Generate bindings to library header
     let bindings = bindgen::Builder::default()
         .opaque_type("std::.*")
+        .allowlist_var("SLVS_.*")
+        .allowlist_type("Slvs_.*")
+        .allowlist_function("Slvs_.*")
         .header(
             libdir_path
                 .join(PathBuf::from("include/slvs.h"))
