@@ -51,29 +51,54 @@ impl Entity {
         }
     }
 
-    pub(crate) fn new_point_3d(
-        group: binding::Slvs_hGroup,
-        x: binding::Slvs_hParam,
-        y: binding::Slvs_hParam,
-        z: binding::Slvs_hParam,
-    ) -> Self {
-        Entity::new(
-            group,
-            EntityType::PointIn3d,
-            None,
-            [None; 4],
-            None,
-            None,
-            [Some(x), Some(y), Some(z), None],
-        )
-    }
+    // pub(crate) fn new_point_3d(
+    //     group: binding::Slvs_hGroup,
+    //     x: binding::Slvs_hParam,
+    //     y: binding::Slvs_hParam,
+    //     z: binding::Slvs_hParam,
+    // ) -> Self {
+    //     Entity::new(
+    //         group,
+    //         EntityType::PointIn3d,
+    //         None,
+    //         [None; 4],
+    //         None,
+    //         None,
+    //         [Some(x), Some(y), Some(z), None],
+    //     )
+    // }
 }
 
-impl From<Entity> for binding::Slvs_hEntity {
-    fn from(value: Entity) -> Self {
-        value.h
-    }
-}
+// #[derive(Clone, Copy, Debug)]
+// pub struct EntityH(binding::Slvs_hEntity);
+
+// impl EntityH {
+//     pub(crate) fn new() -> Self {
+//         Self(NEXT_ENTITY_H.fetch_add(1, Ordering::SeqCst))
+//     }
+// }
+
+// impl From<Entity> for EntityH {
+//     fn from(value: Entity) -> Self {
+//         Self(value.h)
+//     }
+// }
+// impl From<Handle> for EntityH {
+//     fn from(value: Handle) -> Self {
+//         if let Handle::Entity(h) = value {
+//             h
+//         } else {
+//             panic!("Only Handle::Entity can be converted into EntityH")
+//         }
+//     }
+// }
+
+// impl From<EntityH> for u32 {
+//     fn from(value: EntityH) -> Self {
+//         value.0
+//     }
+// }
+
 // #[derive(Clone, Copy)]
 // pub struct EntityH(pub binding::Slvs_hEntity);
 
