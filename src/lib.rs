@@ -18,7 +18,7 @@ mod binding {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum FailReason {
     None,
     Inconsistent = binding::SLVS_RESULT_INCONSISTENT as isize,
@@ -193,7 +193,7 @@ impl System {
         }
     }
 
-    pub fn add_line_3D(
+    pub fn add_line_3d(
         &mut self,
         group: Handle,
         pt_a: Handle,
@@ -219,7 +219,7 @@ impl System {
 
 // Interface to interact with constraints
 impl System {
-    pub fn distance(
+    pub fn constrain_distance(
         &mut self,
         group: Handle,
         wrkpl: Option<Handle>,
@@ -253,8 +253,7 @@ impl Default for System {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::System;
+    use crate::{FailReason, System};
 
     #[test]
     fn solve_3d_demo() {
@@ -267,23 +266,26 @@ mod tests {
         let p2 = sys
             .add_point_3d(g, 20.0, 20.0, 20.0)
             .expect("Should be Handle::Entity");
-        let l = sys
-            .add_line_3D(g, p1, p2)
+        sys.add_line_3d(g, p1, p2)
             .expect("Should be Handle::Entity");
-        let constraint = sys
-            .distance(g, None, 30.0, p1, p2)
+        sys.constrain_distance(g, None, 30.0, p1, p2)
             .expect("Should be Handle::Constraint");
+
         sys.set_dragged(p2);
-
         sys.solve(g);
+        sys.clear_dragged();
 
-        println!(
-            "p1: ({:.3}, {:.3}, {:.3})",
-            sys.params[0].val, sys.params[1].val, sys.params[2].val
-        );
-        println!(
-            "p2: ({:.3}, {:.3}, {:.3})",
-            sys.params[3].val, sys.params[4].val, sys.params[5].val
-        );
+        assert_eq!(FailReason::None, sys.solve_result.reason);
+
+        if let FailReason::None = sys.solve_result.reason {
+            println!(
+                "p1: ({:.3}, {:.3}, {:.3})",
+                sys.params[0].val, sys.params[1].val, sys.params[2].val
+            );
+            println!(
+                "p2: ({:.3}, {:.3}, {:.3})",
+                sys.params[3].val, sys.params[4].val, sys.params[5].val
+            );
+        }
     }
 }
