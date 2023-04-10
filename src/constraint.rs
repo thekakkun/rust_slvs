@@ -1,6 +1,7 @@
 use crate::{binding, entity::Entity};
 
-pub struct Constraint(pub u32);
+#[derive(Clone, Copy)]
+pub struct Constraint(pub(super) u32);
 
 impl From<Constraint> for binding::Slvs_hConstraint {
     fn from(value: Constraint) -> Self {
@@ -64,25 +65,25 @@ pub trait AsConstraint {
     fn other(&self) -> [bool; 2];
 }
 
-pub struct PtPtDistance<'a> {
-    val: f64,
-    wrkpl: Option<&'a Entity>,
-    pt_a: &'a Entity,
-    pt_b: &'a Entity,
+pub struct PtPtDistance {
+    pub val: f64,
+    pub wrkpl: Option<Entity>,
+    pub pt_a: Entity,
+    pub pt_b: Entity,
 }
 
-impl AsConstraint for PtPtDistance<'_> {
+impl AsConstraint for PtPtDistance {
     fn type_(&self) -> ConstraintType {
         ConstraintType::PtPtDistance
     }
     fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
-        self.wrkpl.map(|e| (*e).into())
+        self.wrkpl.map(|e| e.into())
     }
     fn valA(&self) -> f64 {
         self.val
     }
     fn pt(&self) -> [Option<binding::Slvs_hEntity>; 2] {
-        [Some((*self.pt_a).into()), Some((*self.pt_b).into())]
+        [Some(self.pt_a.into()), Some(self.pt_b.into())]
     }
     fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4] {
         [None; 4]

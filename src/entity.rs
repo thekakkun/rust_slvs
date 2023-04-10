@@ -1,7 +1,7 @@
 use crate::binding;
 
 #[derive(Clone, Copy)]
-pub struct Entity(pub u32);
+pub struct Entity(pub(super) u32);
 
 impl From<Entity> for binding::Slvs_hEntity {
     fn from(value: Entity) -> Self {
@@ -32,9 +32,9 @@ pub trait AsEntity {
 }
 
 pub struct PointIn3d {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl AsEntity for PointIn3d {
@@ -63,12 +63,12 @@ impl AsEntity for PointIn3d {
     }
 }
 
-pub struct LineSegment<'a> {
-    pt_a: &'a Entity,
-    pt_b: &'a Entity,
+pub struct LineSegment {
+    pub pt_a: Entity,
+    pub pt_b: Entity,
 }
 
-impl AsEntity for LineSegment<'_> {
+impl AsEntity for LineSegment {
     fn type_(&self) -> EntityType {
         EntityType::LineSegment
     }
@@ -76,12 +76,7 @@ impl AsEntity for LineSegment<'_> {
         None
     }
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [
-            Some((*self.pt_a).into()),
-            Some((*self.pt_b).into()),
-            None,
-            None,
-        ]
+        [Some(self.pt_a.into()), Some(self.pt_b.into()), None, None]
     }
     fn normal(&self) -> Option<binding::Slvs_hEntity> {
         None
