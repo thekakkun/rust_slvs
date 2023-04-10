@@ -1,9 +1,10 @@
 use crate::binding;
 
-// pub type Param = binding::Slvs_Param;
+#[derive(Clone, Copy)]
+pub struct Param(pub u32);
 
-impl From<binding::Slvs_Param> for binding::Slvs_hParam {
-    fn from(value: binding::Slvs_Param) -> Self {
-        value.h
+impl From<Param> for binding::Slvs_hParam {
+    fn from(value: Param) -> Self {
+        value.0
     }
 }

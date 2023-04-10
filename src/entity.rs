@@ -1,8 +1,11 @@
 use crate::binding;
 
-impl From<binding::Slvs_Entity> for binding::Slvs_hEntity {
-    fn from(value: binding::Slvs_Entity) -> Self {
-        value.h
+#[derive(Clone, Copy)]
+pub struct Entity(pub u32);
+
+impl From<Entity> for binding::Slvs_hEntity {
+    fn from(value: Entity) -> Self {
+        value.0
     }
 }
 
@@ -60,9 +63,9 @@ impl AsEntity for PointIn3d {
     }
 }
 
-struct LineSegment<'a> {
-    pt_a: &'a binding::Slvs_Entity,
-    pt_b: &'a binding::Slvs_Entity,
+pub struct LineSegment<'a> {
+    pt_a: &'a Entity,
+    pt_b: &'a Entity,
 }
 
 impl AsEntity for LineSegment<'_> {
