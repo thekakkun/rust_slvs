@@ -1,3 +1,10 @@
-use std::sync::atomic::AtomicU32;
+use crate::binding;
 
-pub(crate) static NEXT_GROUP_H: AtomicU32 = AtomicU32::new(1);
+#[derive(Clone, Copy)]
+pub struct Group(pub u32);
+
+impl From<Group> for binding::Slvs_hGroup {
+    fn from(value: Group) -> Self {
+        value.0
+    }
+}
