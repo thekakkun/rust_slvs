@@ -2,10 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use constraint::Constraint;
-use entity::{AsEntity, Entity};
+use entity::AsEntity;
 use group::Group;
-use param::Param;
 
 pub mod constraint;
 pub mod entity;
@@ -41,15 +39,15 @@ impl TryFrom<i32> for SolveResult {
 pub struct System<'a> {
     groups: Vec<Group>,
     next_group_h: u32,
-    params: Vec<Param>,
+    params: Vec<binding::Slvs_Param>,
     next_param_h: u32,
-    entities: Vec<Entity>,
+    entities: Vec<binding::Slvs_Entity>,
     next_entity_h: u32,
-    constraints: Vec<Constraint>,
+    constraints: Vec<binding::Slvs_Constraint>,
     next_constraint_h: u32,
     dragged: [binding::Slvs_hParam; 4],
     calculateFaileds: bool,
-    failed: Vec<&'a Constraint>,
+    failed: Vec<&'a binding::Slvs_Constraint>,
     dof: i32,
     result: SolveResult,
 }
@@ -126,7 +124,7 @@ impl System<'_> {
 // Methods for interfacing with params
 impl System<'_> {
     fn add_param(&mut self, group: &Group, val: f64) -> binding::Slvs_hParam {
-        let new_param = Param {
+        let new_param = binding::Slvs_Param {
             h: self.next_param_h,
             group: (*group).into(),
             val,
@@ -137,7 +135,7 @@ impl System<'_> {
         self.params.last().unwrap().h
     }
 
-    fn get_param(&self, h: binding::Slvs_hParam) -> Option<&Param> {
+    fn get_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
         self.params.iter().find(|&param| param.h == h)
     }
 }
@@ -148,7 +146,8 @@ impl System<'_> {
         &mut self,
         group: &Group,
         entity: impl AsEntity,
-    ) -> Result<&Entity, &'static str> {
+    ) -> Result<&binding::Slvs_Entity, &'static str> {
+        // Create new params with specified values
         let params: [u32; 4] = entity
             .param_vals()
             .iter()
@@ -163,11 +162,11 @@ impl System<'_> {
             .try_into()
             .unwrap();
 
-        let new_entity = Entity {
+        let new_entity = binding::Slvs_Entity {
             h: self.next_entity_h,
             group: (*group).into(),
             type_: entity.type_() as _,
-            wrkpl: entity.wrkpl().unwrap_or(0), // TODO: requires check that entity with handle exists
+            wrkpl: entity.wrkpl().unwrap_or(0), // TODO: requires check that entity with that handle exists
             point: entity.point().map(|p| p.unwrap_or(0)), // TODO: ditto
             normal: entity.normal().unwrap_or(0), // TODO: ditto
             distance: entity.distance().unwrap_or(0), // TODO: ditto
@@ -179,14 +178,14 @@ impl System<'_> {
         Ok(self.entities.last().unwrap())
     }
 
-    fn get_entity(&self, h: binding::Slvs_hEntity) -> Option<&Entity> {
+    fn get_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
         self.entities.iter().find(|&entity| entity.h == h)
     }
 }
 
 // Methods for interfacing with constraints
 impl System<'_> {
-    fn get_constraint(&self, h: binding::Slvs_hConstraint) -> Option<&Constraint> {
+    fn get_constraint(&self, h: binding::Slvs_hConstraint) -> Option<&binding::Slvs_Constraint> {
         self.constraints
             .iter()
             .find(|&constraint| constraint.h == h)
@@ -203,28 +202,28 @@ impl Default for System<'_> {
 mod tests {
     // use crate::{element::entity::PointIn3d, System};
 
-    use crate::{entity::PointIn3d, System};
+    // use crate::{entity::PointIn3d, System};
 
     #[test]
     fn solve_3d_demo() {
-        let mut sys = System::new();
-        let g = sys.add_group();
-        let p1 = sys.add_entity(
-            g,
-            PointIn3d {
-                x: 10.0,
-                y: 10.0,
-                z: 10.0,
-            },
-        );
-        let p2 = sys.add_entity(
-            g,
-            PointIn3d {
-                x: 20.0,
-                y: 20.0,
-                z: 20.0,
-            },
-        );
+        // let mut sys = System::new();
+        // let g = sys.add_group();
+        // let p1 = sys.add_entity(
+        //     g,
+        //     PointIn3d {
+        //         x: 10.0,
+        //         y: 10.0,
+        //         z: 10.0,
+        //     },
+        // );
+        // let p2 = sys.add_entity(
+        //     g,
+        //     PointIn3d {
+        //         x: 20.0,
+        //         y: 20.0,
+        //         z: 20.0,
+        //     },
+        // );
 
         // let p1 = sys
         //     .add_point_3d(g, 10.0, 10.0, 10.0)

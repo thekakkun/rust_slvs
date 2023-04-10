@@ -1,11 +1,9 @@
 use crate::binding;
 
-use super::entity::Entity;
+// pub type Constraint = binding::Slvs_Constraint;
 
-pub type Constraint = binding::Slvs_Constraint;
-
-impl From<Constraint> for binding::Slvs_hConstraint {
-    fn from(value: Constraint) -> Self {
+impl From<binding::Slvs_Constraint> for binding::Slvs_hConstraint {
+    fn from(value: binding::Slvs_Constraint) -> Self {
         value.h
     }
 }
@@ -62,9 +60,9 @@ pub trait AsConstraint {
 
 pub struct PtPtDistance<'a> {
     val: f64,
-    wrkpl: Option<&'a Entity>,
-    pt_a: &'a Entity,
-    pt_b: &'a Entity,
+    wrkpl: Option<&'a binding::Slvs_Entity>,
+    pt_a: &'a binding::Slvs_Entity,
+    pt_b: &'a binding::Slvs_Entity,
 }
 
 impl AsConstraint for PtPtDistance<'_> {
