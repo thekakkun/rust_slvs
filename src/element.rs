@@ -3,9 +3,6 @@
 // use self::{constraint::Constraint, entity::Entity, param::Param};
 
 pub mod constraint;
-pub mod entity;
-
-
 
 // #[derive(Clone, Copy, Debug)]
 // pub enum Handle {
