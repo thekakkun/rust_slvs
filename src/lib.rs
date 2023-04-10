@@ -26,7 +26,7 @@ pub enum SolveResult {
 impl TryFrom<i32> for SolveResult {
     type Error = &'static str;
 
-    fn try_from(value: i32) -> std::result::Result<Self, &'static str> {
+    fn try_from(value: i32) -> Result<Self, &'static str> {
         match value {
             0 => Ok(Self::None),
             1 => Ok(Self::Inconsistent),
@@ -86,7 +86,6 @@ impl System {
     }
 
     pub fn solve(&mut self, group: Group) {
-        self.failed = Vec::new();
         let mut failed_handles: Vec<binding::Slvs_hConstraint> = vec![0; self.constraints.len()];
 
         let mut slvs_system = binding::Slvs_System {
@@ -114,9 +113,7 @@ impl System {
             )
         };
 
-        failed_handles
-            .into_iter()
-            .for_each(|h| self.failed.push(Constraint(h)));
+        self.failed = failed_handles.into_iter().map(Constraint).collect();
         self.dof = slvs_system.dof;
         self.result = slvs_system.result.try_into().unwrap();
     }
