@@ -2,7 +2,7 @@
 
 // use self::{constraint::Constraint, entity::Entity, param::Param};
 
-pub mod constraint;
+
 
 // #[derive(Clone, Copy, Debug)]
 // pub enum Handle {
