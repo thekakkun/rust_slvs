@@ -1,5 +1,11 @@
 use crate::binding;
 
+pub mod line_segment;
+pub mod point_in_3d;
+
+pub use line_segment::LineSegment;
+pub use point_in_3d::PointIn3d;
+
 #[derive(Clone, Copy)]
 pub struct Entity(pub(super) u32);
 
@@ -29,62 +35,4 @@ pub trait AsEntity {
     fn normal(&self) -> Option<binding::Slvs_hEntity>;
     fn distance(&self) -> Option<binding::Slvs_hEntity>;
     fn param_vals(&self) -> [Option<f64>; 4];
-}
-
-pub struct PointIn3d {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-
-impl AsEntity for PointIn3d {
-    fn type_(&self) -> EntityType {
-        EntityType::PointIn3d
-    }
-
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-
-    fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [None; 4]
-    }
-
-    fn normal(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-
-    fn param_vals(&self) -> [Option<f64>; 4] {
-        [Some(self.x), Some(self.y), Some(self.z), None]
-    }
-}
-
-pub struct LineSegment {
-    pub pt_a: Entity,
-    pub pt_b: Entity,
-}
-
-impl AsEntity for LineSegment {
-    fn type_(&self) -> EntityType {
-        EntityType::LineSegment
-    }
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-    fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [Some(self.pt_a.into()), Some(self.pt_b.into()), None, None]
-    }
-    fn normal(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-    fn distance(&self) -> Option<binding::Slvs_hEntity> {
-        None
-    }
-    fn param_vals(&self) -> [Option<f64>; 4] {
-        [None; 4]
-    }
 }
