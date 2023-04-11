@@ -5,6 +5,7 @@
 use constraint::{AsConstraint, Constraint};
 use entity::{AsEntity, Entity};
 use group::Group;
+use param::Param;
 
 pub mod constraint;
 pub mod entity;
@@ -199,11 +200,15 @@ impl System {
 // Internal methods for Slvs_Handles -> &Slvs_Elements
 impl System {
     fn get_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
-        self.params.iter().find(|&param| param.h == h)
+        self.params
+            .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
+            .map_or(None, |ix| Some(&self.params[ix]))
     }
 
     fn get_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
-        self.entities.iter().find(|&entity| entity.h == h)
+        self.entities
+            .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
+            .map_or(None, |ix| Some(&self.entities[ix]))
     }
 
     fn get_slvs_constraint(
@@ -211,8 +216,8 @@ impl System {
         h: binding::Slvs_hConstraint,
     ) -> Option<&binding::Slvs_Constraint> {
         self.constraints
-            .iter()
-            .find(|&constraint| constraint.h == h)
+            .binary_search_by_key(&h, |&binding::Slvs_Constraint { h, .. }| h)
+            .map_or(None, |ix| Some(&self.constraints[ix]))
     }
 }
 
