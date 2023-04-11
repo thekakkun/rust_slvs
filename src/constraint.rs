@@ -1,4 +1,7 @@
-use crate::{binding, entity::Entity};
+use crate::binding;
+
+pub mod pt_pt_distance;
+pub use pt_pt_distance::PtPtDistance;
 
 #[derive(Clone, Copy)]
 pub struct Constraint(pub(super) u32);
@@ -6,12 +9,6 @@ pub struct Constraint(pub(super) u32);
 impl From<Constraint> for binding::Slvs_hConstraint {
     fn from(value: Constraint) -> Self {
         value.0
-    }
-}
-
-impl From<binding::Slvs_Constraint> for binding::Slvs_hConstraint {
-    fn from(value: binding::Slvs_Constraint) -> Self {
-        value.h
     }
 }
 
@@ -59,36 +56,8 @@ pub enum ConstraintType {
 pub trait AsConstraint {
     fn type_(&self) -> ConstraintType;
     fn wrkpl(&self) -> Option<binding::Slvs_hEntity>;
-    fn valA(&self) -> f64;
+    fn val(&self) -> f64;
     fn pt(&self) -> [Option<binding::Slvs_hEntity>; 2];
     fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4];
     fn other(&self) -> [bool; 2];
-}
-
-pub struct PtPtDistance {
-    pub val: f64,
-    pub wrkpl: Option<Entity>,
-    pub pt_a: Entity,
-    pub pt_b: Entity,
-}
-
-impl AsConstraint for PtPtDistance {
-    fn type_(&self) -> ConstraintType {
-        ConstraintType::PtPtDistance
-    }
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
-        self.wrkpl.map(|e| e.into())
-    }
-    fn valA(&self) -> f64 {
-        self.val
-    }
-    fn pt(&self) -> [Option<binding::Slvs_hEntity>; 2] {
-        [Some(self.pt_a.into()), Some(self.pt_b.into())]
-    }
-    fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [None; 4]
-    }
-    fn other(&self) -> [bool; 2] {
-        [false; 2]
-    }
 }
