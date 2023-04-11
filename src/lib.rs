@@ -17,7 +17,7 @@ mod binding {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SolveResult {
-    None = binding::SLVS_RESULT_OKAY as _,
+    Okay = binding::SLVS_RESULT_OKAY as _,
     Inconsistent = binding::SLVS_RESULT_INCONSISTENT as _,
     DidntConverge = binding::SLVS_RESULT_DIDNT_CONVERGE as _,
     TooManyUnknowns = binding::SLVS_RESULT_TOO_MANY_UNKNOWNS as _,
@@ -28,11 +28,11 @@ impl TryFrom<i32> for SolveResult {
 
     fn try_from(value: i32) -> Result<Self, &'static str> {
         match value {
-            0 => Ok(Self::None),
+            0 => Ok(Self::Okay),
             1 => Ok(Self::Inconsistent),
             2 => Ok(Self::DidntConverge),
             3 => Ok(Self::TooManyUnknowns),
-            _ => Err("Failure can only take values 0, 1, 2, or 3."),
+            _ => Err("Result must be of values 0, 1, 2, or 3."),
         }
     }
 }
@@ -68,12 +68,12 @@ impl System {
             calculateFaileds: true,
             failed: Vec::new(),
             dof: 0,
-            result: SolveResult::None,
+            result: SolveResult::Okay,
         }
     }
 }
 
-// Solving system
+// Solving the system
 impl System {
     pub fn set_dragged(&mut self, entity: Entity) {
         if let Some(slvs_entity) = self.get_slvs_entity(entity.into()) {
@@ -134,20 +134,6 @@ impl System {
         group: Group,
         entity: impl AsEntity,
     ) -> Result<Entity, &'static str> {
-        let params: [u32; 4] = entity
-            .param_vals()
-            .iter()
-            .map(|&param| {
-                if let Some(val) = param {
-                    self.add_param(group, val)
-                } else {
-                    0
-                }
-            })
-            .collect::<Vec<u32>>()
-            .try_into()
-            .unwrap();
-
         let new_entity = binding::Slvs_Entity {
             h: self.next_entity_h,
             group: group.into(),
@@ -156,7 +142,9 @@ impl System {
             point: entity.point().map(|p| p.unwrap_or(0)), // TODO: ditto
             normal: entity.normal().unwrap_or(0), // TODO: ditto
             distance: entity.distance().unwrap_or(0), // TODO: ditto
-            param: params,
+            param: entity
+                .param_vals()
+                .map(|opt_val| opt_val.map_or(0, |v| self.add_param(group, v))),
         };
         self.next_entity_h += 1;
 
@@ -178,7 +166,7 @@ impl System {
             group: group.into(),
             type_: constraint.type_() as _,
             wrkpl: constraint.wrkpl().unwrap_or(0), // TODO: check that entity exists and is the correct type
-            valA: constraint.valA(),
+            valA: constraint.val(),
             ptA: pt_a.unwrap_or(0),         // TODO: ditto
             ptB: pt_b.unwrap_or(0),         // TODO: ditto
             entityA: entity_a.unwrap_or(0), // TODO: ditto
@@ -194,7 +182,7 @@ impl System {
         Ok(Constraint(new_constraint.h))
     }
 
-    // Private as user has no reason to create bare param without also creating entity.
+    // Private as user has no reason to create bare param without linking to an entity.
     fn add_param(&mut self, group: Group, val: f64) -> binding::Slvs_hParam {
         let new_param = binding::Slvs_Param {
             h: self.next_param_h,
@@ -207,15 +195,6 @@ impl System {
         self.params.last().unwrap().h
     }
 }
-
-// Getting elements
-impl System {}
-
-// Modifying elements
-impl System {}
-
-// Deleting elements
-impl System {}
 
 // Internal methods for Slvs_Handles -> &Slvs_Elements
 impl System {
@@ -298,7 +277,7 @@ mod tests {
 
         sys.params
             .iter()
-            .for_each(|param| println!("{}: {:.3}", param.h, param.val));
+            .for_each(|param| println!("Handle {}: {:.3}", param.h, param.val));
 
         let dist = ((sys.params[0].val - sys.params[3].val).powi(2)
             + (sys.params[1].val - sys.params[4].val).powi(2)

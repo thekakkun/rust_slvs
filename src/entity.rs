@@ -1,9 +1,8 @@
 use crate::binding;
 
 pub mod line_segment;
-pub mod point_in_3d;
-
 pub use line_segment::LineSegment;
+pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
 
 #[derive(Clone, Copy)]
