@@ -2,6 +2,7 @@ use crate::binding;
 
 use super::{AsEntity, EntityType};
 
+#[derive(Clone, Copy)]
 pub struct PointIn3d {
     pub x: f64,
     pub y: f64,

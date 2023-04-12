@@ -1,12 +1,22 @@
-use crate::{binding, entity::Entity};
+use crate::{
+    binding,
+    entity::{Entity, PointIn3d},
+};
 
 use super::{AsConstraint, ConstraintType};
 
-pub struct PtPtDistance {
-    pub val: f64,
-    pub wrkpl: Option<Entity>,
-    pub pt_a: Entity,
-    pub pt_b: Entity,
+pub enum PtPtDistance {
+    _2d {
+        val: f64,
+        workplane: Entity<PointIn3d>, // Not really the correct type. fix later.
+        pt_a: Entity<PointIn3d>,
+        pt_b: Entity<PointIn3d>,
+    },
+    _3d {
+        val: f64,
+        pt_a: Entity<PointIn3d>,
+        pt_b: Entity<PointIn3d>,
+    },
 }
 
 impl AsConstraint for PtPtDistance {
@@ -15,15 +25,22 @@ impl AsConstraint for PtPtDistance {
     }
 
     fn workplane(&self) -> Option<binding::Slvs_hEntity> {
-        self.wrkpl.map(|e| e.into())
+        None // TODO: necessary for 2d distances.
+             // self.workplane.map(|e| e.into())
     }
 
     fn val(&self) -> f64 {
-        self.val
+        match self {
+            PtPtDistance::_2d { val, .. } | PtPtDistance::_3d { val, .. } => *val,
+        }
     }
 
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 2] {
-        [Some(self.pt_a.into()), Some(self.pt_b.into())]
+        match self {
+            PtPtDistance::_2d { pt_a, pt_b, .. } | PtPtDistance::_3d { pt_a, pt_b, .. } => {
+                [Some((*pt_a).into()), Some((*pt_b).into())]
+            }
+        }
     }
 
     fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4] {

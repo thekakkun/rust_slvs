@@ -1,15 +1,16 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, EntityType, PointIn3d};
+use super::{AsEntity, EntityType};
 
-pub struct LineSegment {
-    pub pt_a: Entity<PointIn3d>,
-    pub pt_b: Entity<PointIn3d>,
+pub struct PointIn3d {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
-impl AsEntity for LineSegment {
+impl AsEntity for PointIn3d {
     fn type_(&self) -> EntityType {
-        EntityType::LineSegment
+        EntityType::PointIn3d
     }
 
     fn workplane(&self) -> Option<binding::Slvs_hEntity> {
@@ -17,7 +18,7 @@ impl AsEntity for LineSegment {
     }
 
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [Some(self.pt_a.into()), Some(self.pt_b.into()), None, None]
+        [None; 4]
     }
 
     fn normal(&self) -> Option<binding::Slvs_hEntity> {
@@ -29,6 +30,6 @@ impl AsEntity for LineSegment {
     }
 
     fn param_vals(&self) -> [Option<f64>; 4] {
-        [None; 4]
+        [Some(self.x), Some(self.y), Some(self.z), None]
     }
 }

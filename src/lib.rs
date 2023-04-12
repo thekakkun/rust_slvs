@@ -2,6 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::marker::PhantomData;
+
 use constraint::{AsConstraint, Constraint};
 use entity::{AsEntity, Entity};
 use group::Group;
@@ -55,11 +57,11 @@ impl System {
         self.groups.last().cloned().unwrap()
     }
 
-    pub fn add_entity(
+    pub fn add_entity<T: AsEntity>(
         &mut self,
         group: Group,
-        entity: impl AsEntity,
-    ) -> Result<Entity, &'static str> {
+        entity: T,
+    ) -> Result<Entity<T>, &'static str> {
         let new_entity = binding::Slvs_Entity {
             h: self.next_entity_h,
             group: group.into(),
@@ -75,7 +77,10 @@ impl System {
         self.next_entity_h += 1;
 
         self.entities.push(new_entity);
-        Ok(Entity(new_entity.h))
+        Ok(Entity {
+            handle: new_entity.h,
+            phantom: PhantomData,
+        })
     }
 
     pub fn add_constraint(
@@ -124,7 +129,7 @@ impl System {
 
 // Solving the system
 impl System {
-    pub fn set_dragged(&mut self, entity: Entity) {
+    pub fn set_dragged<T: AsEntity>(&mut self, entity: Entity<T>) {
         if let Some(slvs_entity) = self.get_slvs_entity(entity.into()) {
             self.dragged = slvs_entity.param;
         }
@@ -275,9 +280,8 @@ mod tests {
         let target_dist = 30.0;
         sys.add_constraint(
             g,
-            PtPtDistance {
+            PtPtDistance::_3d {
                 val: target_dist,
-                wrkpl: None,
                 pt_a: p1,
                 pt_b: p2,
             },

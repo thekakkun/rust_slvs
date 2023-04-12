@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::binding;
 
 pub mod line_segment;
@@ -6,11 +8,14 @@ pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
 
 #[derive(Clone, Copy)]
-pub struct Entity(pub(super) u32);
+pub struct Entity<T: AsEntity> {
+    pub(super) handle: u32,
+    pub(super) phantom: PhantomData<T>,
+}
 
-impl From<Entity> for binding::Slvs_hEntity {
-    fn from(value: Entity) -> Self {
-        value.0
+impl<T: AsEntity> From<Entity<T>> for binding::Slvs_hEntity {
+    fn from(value: Entity<T>) -> Self {
+        value.handle
     }
 }
 
