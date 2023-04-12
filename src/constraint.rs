@@ -55,9 +55,9 @@ pub enum ConstraintType {
 
 pub trait AsConstraint {
     fn type_(&self) -> ConstraintType;
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity>;
+    fn workplane(&self) -> Option<binding::Slvs_hEntity>;
     fn val(&self) -> f64;
-    fn pt(&self) -> [Option<binding::Slvs_hEntity>; 2];
+    fn point(&self) -> [Option<binding::Slvs_hEntity>; 2];
     fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4];
     fn other(&self) -> [bool; 2];
 }

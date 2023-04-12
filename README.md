@@ -16,7 +16,7 @@
 
    ```toml
    [dependencies]
-   rust_slvs = { git = "https://github.com/thekakkun/rust_slvs.git" }
+   slvs = { git = "https://github.com/thekakkun/rust_slvs.git" }
    ```
 
 2. You may need to create a Cargo configuration file (`.cargo/config.toml`) so that all submodules can be downloaded.

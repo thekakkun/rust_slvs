@@ -14,7 +14,7 @@ impl AsConstraint for PtPtDistance {
         ConstraintType::PtPtDistance
     }
 
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
+    fn workplane(&self) -> Option<binding::Slvs_hEntity> {
         self.wrkpl.map(|e| e.into())
     }
 
@@ -22,7 +22,7 @@ impl AsConstraint for PtPtDistance {
         self.val
     }
 
-    fn pt(&self) -> [Option<binding::Slvs_hEntity>; 2] {
+    fn point(&self) -> [Option<binding::Slvs_hEntity>; 2] {
         [Some(self.pt_a.into()), Some(self.pt_b.into())]
     }
 

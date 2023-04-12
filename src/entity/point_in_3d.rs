@@ -13,7 +13,7 @@ impl AsEntity for PointIn3d {
         EntityType::PointIn3d
     }
 
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
+    fn workplane(&self) -> Option<binding::Slvs_hEntity> {
         None
     }
 

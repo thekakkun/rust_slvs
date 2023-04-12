@@ -12,7 +12,7 @@ impl AsEntity for LineSegment {
         EntityType::LineSegment
     }
 
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity> {
+    fn workplane(&self) -> Option<binding::Slvs_hEntity> {
         None
     }
 

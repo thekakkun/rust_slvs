@@ -29,7 +29,7 @@ pub enum EntityType {
 
 pub trait AsEntity {
     fn type_(&self) -> EntityType;
-    fn wrkpl(&self) -> Option<binding::Slvs_hEntity>;
+    fn workplane(&self) -> Option<binding::Slvs_hEntity>;
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4];
     fn normal(&self) -> Option<binding::Slvs_hEntity>;
     fn distance(&self) -> Option<binding::Slvs_hEntity>;
