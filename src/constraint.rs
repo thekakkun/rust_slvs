@@ -1,14 +1,19 @@
+use std::marker::PhantomData;
+
 use crate::binding;
 
 pub mod pt_pt_distance;
 pub use pt_pt_distance::PtPtDistance;
 
 #[derive(Clone, Copy)]
-pub struct Constraint(pub(super) u32);
+pub struct Constraint<T: AsConstraint + ?Sized> {
+    pub(super) handle: u32,
+    pub(super) phantom: PhantomData<T>,
+}
 
-impl From<Constraint> for binding::Slvs_hConstraint {
-    fn from(value: Constraint) -> Self {
-        value.0
+impl<T: AsConstraint> From<Constraint<T>> for binding::Slvs_hConstraint {
+    fn from(value: Constraint<T>) -> Self {
+        value.handle
     }
 }
 

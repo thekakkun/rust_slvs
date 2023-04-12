@@ -4,8 +4,8 @@
 
 use std::marker::PhantomData;
 
-use constraint::{AsConstraint, Constraint};
-use entity::{AsEntity, Entity};
+use constraint::{AsConstraint, Constraint, PtPtDistance};
+use entity::{AsEntity, Entity, PointIn3d};
 use group::Group;
 
 pub mod constraint;
@@ -57,11 +57,10 @@ impl System {
         self.groups.last().cloned().unwrap()
     }
 
-    pub fn add_entity<T: AsEntity>(
-        &mut self,
-        group: Group,
-        entity: T,
-    ) -> Result<Entity<T>, &'static str> {
+    pub fn add_entity<T>(&mut self, group: Group, entity: T) -> Result<Entity<T>, &'static str>
+    where
+        T: AsEntity,
+    {
         let new_entity = binding::Slvs_Entity {
             h: self.next_entity_h,
             group: group.into(),
@@ -83,11 +82,14 @@ impl System {
         })
     }
 
-    pub fn add_constraint(
+    pub fn add_constraint<T>(
         &mut self,
         group: Group,
-        constraint: impl AsConstraint,
-    ) -> Result<Constraint, &'static str> {
+        constraint: T,
+    ) -> Result<Constraint<T>, &'static str>
+    where
+        T: AsConstraint,
+    {
         let [pt_a, pt_b] = constraint.point();
         let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
         let [other, other_2] = constraint.other();
@@ -110,7 +112,10 @@ impl System {
         self.next_constraint_h += 1;
 
         self.constraints.push(new_constraint);
-        Ok(Constraint(new_constraint.h))
+        Ok(Constraint {
+            handle: new_constraint.h,
+            phantom: PhantomData,
+        })
     }
 
     // Private as user has no reason to create bare param without linking to an entity.
@@ -129,8 +134,8 @@ impl System {
 
 // Solving the system
 impl System {
-    pub fn set_dragged<T: AsEntity>(&mut self, entity: Entity<T>) {
-        if let Some(slvs_entity) = self.get_slvs_entity(entity.into()) {
+    pub fn set_dragged(&mut self, entity: Entity<impl AsEntity>) {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(entity.into()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -139,7 +144,7 @@ impl System {
         self.dragged = [0; 4];
     }
 
-    pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
+    pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail<impl AsConstraint>> {
         let mut failed_handles: Vec<binding::Slvs_hConstraint> = vec![0; self.constraints.len()];
 
         let mut slvs_system = binding::Slvs_System {
@@ -167,11 +172,19 @@ impl System {
             )
         };
 
+        // let foo: Vec<_> = failed_handles
+        //     .into_iter()
+        //     .map(|h| self.h_to_constraint(h).unwrap())
+        //     .collect();
+
         match FailReason::try_from(slvs_system.result) {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
-                failed_constraints: failed_handles.into_iter().map(Constraint).collect(),
+                failed_constraints: failed_handles
+                    .into_iter()
+                    .map(|h| self.h_to_constraint(h).unwrap())
+                    .collect(),
             }),
             Err(_) => Ok(SolveOkay {
                 dof: slvs_system.dof,
@@ -184,10 +197,10 @@ pub struct SolveOkay {
     pub dof: i32,
 }
 
-pub struct SolveFail {
+pub struct SolveFail<T: AsConstraint + ?Sized> {
     pub dof: i32,
     pub reason: FailReason,
-    pub failed_constraints: Vec<Constraint>,
+    pub failed_constraints: Vec<Constraint<T>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -210,27 +223,56 @@ impl TryFrom<i32> for FailReason {
     }
 }
 
-// Internal methods for Slvs_Handles -> &Slvs_Elements
+// Internal methods for Slvs_Handles -> other stuff
 impl System {
-    fn get_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
+    fn h_to_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
         self.params
             .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&self.params[ix]))
     }
 
-    fn get_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
+    fn h_to_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
         self.entities
             .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&self.entities[ix]))
     }
 
-    fn get_slvs_constraint(
+    fn h_to_entity(&self, h: binding::Slvs_hEntity) -> Option<Entity<impl AsEntity>> {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(h) {
+            match slvs_entity.type_ as _ {
+                binding::SLVS_E_POINT_IN_3D => Some(Entity::<PointIn3d> {
+                    handle: slvs_entity.h,
+                    phantom: PhantomData,
+                }),
+            }
+        } else {
+            None
+        }
+    }
+
+    fn h_to_slvs_constraint(
         &self,
         h: binding::Slvs_hConstraint,
     ) -> Option<&binding::Slvs_Constraint> {
         self.constraints
             .binary_search_by_key(&h, |&binding::Slvs_Constraint { h, .. }| h)
             .map_or(None, |ix| Some(&self.constraints[ix]))
+    }
+
+    fn h_to_constraint(
+        &self,
+        h: binding::Slvs_hConstraint,
+    ) -> Option<Constraint<impl AsConstraint>> {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(h) {
+            match slvs_entity.type_ as _ {
+                binding::SLVS_C_PT_PT_DISTANCE => Some(Constraint::<PtPtDistance> {
+                    handle: slvs_entity.h,
+                    phantom: PhantomData,
+                }),
+            }
+        } else {
+            None
+        }
     }
 }
 

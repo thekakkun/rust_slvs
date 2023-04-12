@@ -8,7 +8,7 @@ pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
 
 #[derive(Clone, Copy)]
-pub struct Entity<T: AsEntity> {
+pub struct Entity<T: AsEntity + ?Sized> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
@@ -18,6 +18,14 @@ impl<T: AsEntity> From<Entity<T>> for binding::Slvs_hEntity {
         value.handle
     }
 }
+
+// impl<T: AsEntity> From<binding::Slvs_Entity> for Entity<T> {
+//     fn from(value: binding::Slvs_Entity) -> Self {
+//         match value.type_ {
+
+//         }
+//     }
+// }
 
 pub enum EntityType {
     PointIn3d = binding::SLVS_E_POINT_IN_3D as _,
