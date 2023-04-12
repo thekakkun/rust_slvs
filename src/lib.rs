@@ -4,8 +4,9 @@
 
 use std::marker::PhantomData;
 
+use binding::Slvs_Entity;
 use constraint::{AsConstraint, Constraint, PtPtDistance};
-use entity::{AsEntity, Entity, PointIn3d};
+use entity::{AsEntity, Entity, LineSegment, PointIn3d};
 use group::Group;
 
 pub mod constraint;
@@ -237,17 +238,21 @@ impl System {
             .map_or(None, |ix| Some(&self.entities[ix]))
     }
 
-    fn h_to_entity(&self, h: binding::Slvs_hEntity) -> Option<Entity<impl AsEntity>> {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(h) {
-            match slvs_entity.type_ as _ {
-                binding::SLVS_E_POINT_IN_3D => Some(Entity::<PointIn3d> {
-                    handle: slvs_entity.h,
-                    phantom: PhantomData,
-                }),
-            }
-        } else {
-            None
-        }
+    fn h_to_entity(&self, h: binding::Slvs_hEntity, test: bool) -> Option<Entity<impl AsEntity>> {
+        self.h_to_slvs_entity(h)
+            .map(|Slvs_Entity { h, type_, .. }| match *type_ as _ {
+                binding::SLVS_E_POINT_IN_3D => Entity::<PointIn3d>::from(1),
+                binding::SLVS_E_POINT_IN_2D => todo!(),
+                binding::SLVS_E_NORMAL_IN_3D => todo!(),
+                binding::SLVS_E_NORMAL_IN_2D => todo!(),
+                binding::SLVS_E_DISTANCE => todo!(),
+                binding::SLVS_E_WORKPLANE => todo!(),
+                binding::SLVS_E_LINE_SEGMENT => Entity::<LineSegment>::from(1),
+                binding::SLVS_E_CUBIC => todo!(),
+                binding::SLVS_E_CIRCLE => todo!(),
+                binding::SLVS_E_ARC_OF_CIRCLE => todo!(),
+                _ => panic!("Unknown entity type: {}", type_),
+            })
     }
 
     fn h_to_slvs_constraint(

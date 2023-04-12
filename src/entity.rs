@@ -13,35 +13,23 @@ pub struct Entity<T: AsEntity + ?Sized> {
     pub(super) phantom: PhantomData<T>,
 }
 
+impl<T: AsEntity> Entity<T> {
+    pub fn from(handle: u32) -> Self {
+        Self {
+            handle,
+            phantom: PhantomData,
+        }
+    }
+}
+
 impl<T: AsEntity> From<Entity<T>> for binding::Slvs_hEntity {
     fn from(value: Entity<T>) -> Self {
         value.handle
     }
 }
 
-// impl<T: AsEntity> From<binding::Slvs_Entity> for Entity<T> {
-//     fn from(value: binding::Slvs_Entity) -> Self {
-//         match value.type_ {
-
-//         }
-//     }
-// }
-
-pub enum EntityType {
-    PointIn3d = binding::SLVS_E_POINT_IN_3D as _,
-    PointIn2d = binding::SLVS_E_POINT_IN_2D as _,
-    NormalIn3d = binding::SLVS_E_NORMAL_IN_3D as _,
-    NormalIn2d = binding::SLVS_E_NORMAL_IN_2D as _,
-    Distance = binding::SLVS_E_DISTANCE as _,
-    Workplane = binding::SLVS_E_WORKPLANE as _,
-    LineSegment = binding::SLVS_E_LINE_SEGMENT as _,
-    Cubic = binding::SLVS_E_CUBIC as _,
-    Circle = binding::SLVS_E_CIRCLE as _,
-    ArcOfCircle = binding::SLVS_E_ARC_OF_CIRCLE as _,
-}
-
 pub trait AsEntity {
-    fn type_(&self) -> EntityType;
+    fn type_(&self) -> u32;
     fn workplane(&self) -> Option<binding::Slvs_hEntity>;
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4];
     fn normal(&self) -> Option<binding::Slvs_hEntity>;

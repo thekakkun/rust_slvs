@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, EntityType, PointIn3d};
+use super::{AsEntity, Entity, PointIn3d};
 
 pub struct LineSegment {
     pub pt_a: Entity<PointIn3d>,
@@ -8,8 +8,8 @@ pub struct LineSegment {
 }
 
 impl AsEntity for LineSegment {
-    fn type_(&self) -> EntityType {
-        EntityType::LineSegment
+    fn type_(&self) -> u32 {
+        binding::SLVS_E_LINE_SEGMENT
     }
 
     fn workplane(&self) -> Option<binding::Slvs_hEntity> {
