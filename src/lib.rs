@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 
 use binding::{Slvs_Constraint, Slvs_Entity};
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-use entity::{AsEntity, Entity, SomeEntity};
+use entity::{AsEntity, Entity, LineSegment, PointIn3d, SomeEntity};
 use group::Group;
 
 pub mod constraint;
@@ -67,7 +67,10 @@ impl System {
     }
 }
 
-// Adding elements
+////////////////////////////////////////////////////////////////////////////////
+// Adding Elements
+////////////////////////////////////////////////////////////////////////////////
+
 impl System {
     pub fn add_group(&mut self) -> Group {
         let new_group = Group(self.groups.get_next_h());
@@ -118,8 +121,8 @@ impl System {
             type_: constraint.type_() as _,
             wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
             valA: constraint.val(),
-            ptA: point_a.unwrap_or(0),         // TODO: ditto
-            ptB: point_b.unwrap_or(0),         // TODO: ditto
+            ptA: point_a.unwrap_or(0),      // TODO: ditto
+            ptB: point_b.unwrap_or(0),      // TODO: ditto
             entityA: entity_a.unwrap_or(0), // TODO: ditto
             entityB: entity_b.unwrap_or(0), // TODO: ditto
             entityC: entity_c.unwrap_or(0), // TODO: ditto
@@ -148,7 +151,31 @@ impl System {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Getting Elements
+////////////////////////////////////////////////////////////////////////////////
+
+impl System {
+    pub fn get_entity(&self, entity: SomeEntity) -> Option<Box<dyn AsEntity>> {
+        self.h_to_slvs_entity(entity.into())
+            .map(|slvs_entity| match entity {
+                SomeEntity::PointIn3d(_) => Box::new(PointIn3d {
+                    x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
+                    y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
+                    z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
+                }) as Box<dyn AsEntity>,
+                SomeEntity::LineSegment(_) => Box::new(LineSegment {
+                    point_a: Entity::new(slvs_entity.point[0]),
+                    point_b: Entity::new(slvs_entity.point[1]),
+                }) as Box<dyn AsEntity>,
+            })
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Solving the system
+////////////////////////////////////////////////////////////////////////////////
+
 impl System {
     pub fn set_dragged(&mut self, entity: Entity<impl AsEntity>) {
         if let Some(slvs_entity) = self.h_to_slvs_entity(entity.into()) {
@@ -235,7 +262,10 @@ impl TryFrom<i32> for FailReason {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Internal methods for Slvs_Handles -> other stuff
+////////////////////////////////////////////////////////////////////////////////
+
 impl System {
     fn h_to_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
         self.params
@@ -328,8 +358,14 @@ mod tests {
             )
             .expect("p2 created");
 
-        sys.add_entity(g, LineSegment { point_a: p1, point_b: p2 })
-            .expect("line segment created");
+        sys.add_entity(
+            g,
+            LineSegment {
+                point_a: p1,
+                point_b: p2,
+            },
+        )
+        .expect("line segment created");
 
         let target_dist = 30.0;
         sys.add_constraint(

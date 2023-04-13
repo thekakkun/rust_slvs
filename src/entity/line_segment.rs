@@ -2,6 +2,7 @@ use crate::binding;
 
 use super::{AsEntity, Entity, PointIn3d, SomeEntity};
 
+#[derive(Clone, Copy)]
 pub struct LineSegment {
     pub point_a: Entity<PointIn3d>,
     pub point_b: Entity<PointIn3d>,
