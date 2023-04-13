@@ -9,13 +9,13 @@ pub enum PtPtDistance {
     _2d {
         val: f64,
         workplane: Entity<PointIn3d>, // Not really the correct type. fix later.
-        pt_a: Entity<PointIn3d>,
-        pt_b: Entity<PointIn3d>,
+        point_a: Entity<PointIn3d>,
+        point_b: Entity<PointIn3d>,
     },
     _3d {
         val: f64,
-        pt_a: Entity<PointIn3d>,
-        pt_b: Entity<PointIn3d>,
+        point_a: Entity<PointIn3d>,
+        point_b: Entity<PointIn3d>,
     },
 }
 
@@ -26,7 +26,6 @@ impl AsConstraint for PtPtDistance {
 
     fn workplane(&self) -> Option<binding::Slvs_hEntity> {
         None // TODO: necessary for 2d distances.
-             // self.workplane.map(|e| e.into())
     }
 
     fn val(&self) -> f64 {
@@ -37,9 +36,12 @@ impl AsConstraint for PtPtDistance {
 
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 2] {
         match self {
-            PtPtDistance::_2d { pt_a, pt_b, .. } | PtPtDistance::_3d { pt_a, pt_b, .. } => {
-                [Some((*pt_a).into()), Some((*pt_b).into())]
+            PtPtDistance::_2d {
+                point_a, point_b, ..
             }
+            | PtPtDistance::_3d {
+                point_a, point_b, ..
+            } => [Some((*point_a).into()), Some((*point_b).into())],
         }
     }
 

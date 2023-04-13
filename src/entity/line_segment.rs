@@ -3,8 +3,8 @@ use crate::binding;
 use super::{AsEntity, Entity, PointIn3d, SomeEntity};
 
 pub struct LineSegment {
-    pub pt_a: Entity<PointIn3d>,
-    pub pt_b: Entity<PointIn3d>,
+    pub point_a: Entity<PointIn3d>,
+    pub point_b: Entity<PointIn3d>,
 }
 
 impl AsEntity for LineSegment {
@@ -17,7 +17,12 @@ impl AsEntity for LineSegment {
     }
 
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
-        [Some(self.pt_a.into()), Some(self.pt_b.into()), None, None]
+        [
+            Some(self.point_a.into()),
+            Some(self.point_b.into()),
+            None,
+            None,
+        ]
     }
 
     fn normal(&self) -> Option<binding::Slvs_hEntity> {

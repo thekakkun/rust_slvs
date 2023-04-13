@@ -108,7 +108,7 @@ impl System {
     where
         T: AsConstraint,
     {
-        let [pt_a, pt_b] = constraint.point();
+        let [point_a, point_b] = constraint.point();
         let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
         let [other, other_2] = constraint.other();
 
@@ -118,8 +118,8 @@ impl System {
             type_: constraint.type_() as _,
             wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
             valA: constraint.val(),
-            ptA: pt_a.unwrap_or(0),         // TODO: ditto
-            ptB: pt_b.unwrap_or(0),         // TODO: ditto
+            ptA: point_a.unwrap_or(0),         // TODO: ditto
+            ptB: point_b.unwrap_or(0),         // TODO: ditto
             entityA: entity_a.unwrap_or(0), // TODO: ditto
             entityB: entity_b.unwrap_or(0), // TODO: ditto
             entityC: entity_c.unwrap_or(0), // TODO: ditto
@@ -328,15 +328,16 @@ mod tests {
             )
             .expect("p2 created");
 
-        sys.add_entity(g, LineSegment { pt_a: p1, pt_b: p2 })
+        sys.add_entity(g, LineSegment { point_a: p1, point_b: p2 })
             .expect("line segment created");
+
         let target_dist = 30.0;
         sys.add_constraint(
             g,
             PtPtDistance::_3d {
                 val: target_dist,
-                pt_a: p1,
-                pt_b: p2,
+                point_a: p1,
+                point_b: p2,
             },
         )
         .expect("distance constraint added");
