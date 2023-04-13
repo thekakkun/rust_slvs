@@ -1,6 +1,6 @@
 use crate::{
     binding,
-    entity::{Entity, PointIn3d},
+    entity::{Entity, PointIn3d, SomeEntity},
 };
 
 use super::{AsConstraint, Constraint, SomeConstraint};
@@ -61,5 +61,11 @@ impl TryFrom<SomeConstraint> for Constraint<PtPtDistance> {
         } else {
             Err("Expected SomeConstraint::PtPtDistance")
         }
+    }
+}
+
+impl From<Constraint<PtPtDistance>> for SomeConstraint {
+    fn from(value: Constraint<PtPtDistance>) -> Self {
+        SomeConstraint::PtPtDistance(value)
     }
 }
