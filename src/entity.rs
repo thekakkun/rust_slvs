@@ -8,7 +8,7 @@ pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
 
 pub trait AsEntity {
-    fn type_(&self) -> u32;
+    fn type_(&self) -> binding::Slvs_hEntity;
     fn workplane(&self) -> Option<binding::Slvs_hEntity>;
     fn point(&self) -> [Option<binding::Slvs_hEntity>; 4];
     fn normal(&self) -> Option<binding::Slvs_hEntity>;

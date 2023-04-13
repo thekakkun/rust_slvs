@@ -8,7 +8,7 @@ pub struct LineSegment {
 }
 
 impl AsEntity for LineSegment {
-    fn type_(&self) -> u32 {
+    fn type_(&self) -> binding::Slvs_hEntity {
         binding::SLVS_E_LINE_SEGMENT
     }
 

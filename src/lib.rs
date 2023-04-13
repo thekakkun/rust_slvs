@@ -4,9 +4,9 @@
 
 use std::marker::PhantomData;
 
-use binding::Slvs_Entity;
-use constraint::{AsConstraint, Constraint, PtPtDistance};
-use entity::{AsEntity, Entity, LineSegment, PointIn3d};
+use binding::{Slvs_Constraint, Slvs_Entity};
+use constraint::{AsConstraint, Constraint, SomeConstraint};
+use entity::{AsEntity, Entity, SomeEntity};
 use group::Group;
 
 pub mod constraint;
@@ -145,7 +145,7 @@ impl System {
         self.dragged = [0; 4];
     }
 
-    pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail<impl AsConstraint>> {
+    pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
         let mut failed_handles: Vec<binding::Slvs_hConstraint> = vec![0; self.constraints.len()];
 
         let mut slvs_system = binding::Slvs_System {
@@ -173,18 +173,13 @@ impl System {
             )
         };
 
-        // let foo: Vec<_> = failed_handles
-        //     .into_iter()
-        //     .map(|h| self.h_to_constraint(h).unwrap())
-        //     .collect();
-
         match FailReason::try_from(slvs_system.result) {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
                 failed_constraints: failed_handles
                     .into_iter()
-                    .map(|h| self.h_to_constraint(h).unwrap())
+                    .map(|h| self.h_to_some_constraint(h).unwrap())
                     .collect(),
             }),
             Err(_) => Ok(SolveOkay {
@@ -198,10 +193,10 @@ pub struct SolveOkay {
     pub dof: i32,
 }
 
-pub struct SolveFail<T: AsConstraint + ?Sized> {
+pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
-    pub failed_constraints: Vec<Constraint<T>>,
+    pub failed_constraints: Vec<SomeConstraint>, // I can't do this. T is of various different types.
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -238,7 +233,7 @@ impl System {
             .map_or(None, |ix| Some(&self.entities[ix]))
     }
 
-    pub fn h_to_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
+    fn h_to_some_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
         self.h_to_slvs_entity(h)
             .map(|Slvs_Entity { h, type_, .. }| match *type_ as _ {
                 binding::SLVS_E_POINT_IN_3D => SomeEntity::PointIn3d(Entity::new(*h)),
@@ -264,20 +259,12 @@ impl System {
             .map_or(None, |ix| Some(&self.constraints[ix]))
     }
 
-    fn h_to_constraint(
-        &self,
-        h: binding::Slvs_hConstraint,
-    ) -> Option<Constraint<impl AsConstraint>> {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(h) {
-            match slvs_entity.type_ as _ {
-                binding::SLVS_C_PT_PT_DISTANCE => Some(Constraint::<PtPtDistance> {
-                    handle: slvs_entity.h,
-                    phantom: PhantomData,
-                }),
-            }
-        } else {
-            None
-        }
+    fn h_to_some_constraint(&self, h: binding::Slvs_hConstraint) -> Option<SomeConstraint> {
+        self.h_to_slvs_constraint(h)
+            .map(|Slvs_Constraint { h, type_, .. }| match *type_ as _ {
+                binding::SLVS_C_PT_PT_DISTANCE => SomeConstraint::PtPtDistance(Constraint::new(*h)),
+                _ => panic!("Unknown constraint type: {}", type_),
+            })
     }
 }
 

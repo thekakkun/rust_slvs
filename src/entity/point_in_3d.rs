@@ -10,7 +10,7 @@ pub struct PointIn3d {
 }
 
 impl AsEntity for PointIn3d {
-    fn type_(&self) -> u32 {
+    fn type_(&self) -> binding::Slvs_hEntity {
         binding::SLVS_E_POINT_IN_3D
     }
 

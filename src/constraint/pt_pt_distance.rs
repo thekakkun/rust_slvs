@@ -3,7 +3,7 @@ use crate::{
     entity::{Entity, PointIn3d},
 };
 
-use super::{AsConstraint, ConstraintType};
+use super::{AsConstraint, Constraint, SomeConstraint};
 
 pub enum PtPtDistance {
     _2d {
@@ -20,8 +20,8 @@ pub enum PtPtDistance {
 }
 
 impl AsConstraint for PtPtDistance {
-    fn type_(&self) -> ConstraintType {
-        ConstraintType::PtPtDistance
+    fn type_(&self) -> binding::Slvs_hConstraint {
+        binding::SLVS_C_PT_PT_DISTANCE
     }
 
     fn workplane(&self) -> Option<binding::Slvs_hEntity> {
@@ -49,5 +49,17 @@ impl AsConstraint for PtPtDistance {
 
     fn other(&self) -> [bool; 2] {
         [false; 2]
+    }
+}
+
+impl TryFrom<SomeConstraint> for Constraint<PtPtDistance> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeConstraint) -> Result<Self, Self::Error> {
+        if let SomeConstraint::PtPtDistance(constraint) = value {
+            Ok(constraint)
+        } else {
+            Err("Expected SomeConstraint::PtPtDistance")
+        }
     }
 }
