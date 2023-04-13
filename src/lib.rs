@@ -18,15 +18,38 @@ mod binding {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
+struct Elements<T> {
+    list: Vec<T>,
+    next_h: u32,
+}
+
+impl<T> Elements<T> {
+    fn new() -> Self {
+        Self {
+            list: Vec::new(),
+            next_h: 1,
+        }
+    }
+
+    fn get_next_h(&mut self) -> u32 {
+        let current_h = self.next_h;
+        self.next_h += 1;
+
+        current_h
+    }
+}
+
+impl<T> Default for Elements<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct System {
-    groups: Vec<Group>,
-    next_group_h: u32,
-    pub params: Vec<binding::Slvs_Param>, // public for testing purposes. implement a getter.
-    next_param_h: u32,
-    entities: Vec<binding::Slvs_Entity>,
-    next_entity_h: u32,
-    constraints: Vec<binding::Slvs_Constraint>,
-    next_constraint_h: u32,
+    groups: Elements<Group>,
+    params: Elements<binding::Slvs_Param>,
+    entities: Elements<binding::Slvs_Entity>,
+    constraints: Elements<binding::Slvs_Constraint>,
     dragged: [binding::Slvs_hParam; 4],
     calculate_faileds: bool,
 }
@@ -34,14 +57,10 @@ pub struct System {
 impl System {
     pub fn new() -> Self {
         Self {
-            groups: Vec::new(),
-            next_group_h: 1,
-            params: Vec::new(),
-            next_param_h: 1,
-            entities: Vec::new(),
-            next_entity_h: 1,
-            constraints: Vec::new(),
-            next_constraint_h: 1,
+            groups: Elements::default(),
+            params: Elements::default(),
+            entities: Elements::default(),
+            constraints: Elements::default(),
             dragged: [0; 4],
             calculate_faileds: true,
         }
@@ -51,11 +70,10 @@ impl System {
 // Adding elements
 impl System {
     pub fn add_group(&mut self) -> Group {
-        let new_group = Group(self.next_group_h);
-        self.next_group_h += 1;
+        let new_group = Group(self.groups.get_next_h());
 
-        self.groups.push(new_group);
-        self.groups.last().cloned().unwrap()
+        self.groups.list.push(new_group);
+        self.groups.list.last().cloned().unwrap()
     }
 
     pub fn add_entity<T>(&mut self, group: Group, entity: T) -> Result<Entity<T>, &'static str>
@@ -63,7 +81,7 @@ impl System {
         T: AsEntity,
     {
         let new_entity = binding::Slvs_Entity {
-            h: self.next_entity_h,
+            h: self.entities.get_next_h(),
             group: group.into(),
             type_: entity.type_() as _,
             wrkpl: entity.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
@@ -74,9 +92,8 @@ impl System {
                 .param_vals()
                 .map(|opt_val| opt_val.map_or(0, |v| self.add_param(group, v))),
         };
-        self.next_entity_h += 1;
 
-        self.entities.push(new_entity);
+        self.entities.list.push(new_entity);
         Ok(Entity {
             handle: new_entity.h,
             phantom: PhantomData,
@@ -96,7 +113,7 @@ impl System {
         let [other, other_2] = constraint.other();
 
         let new_constraint = binding::Slvs_Constraint {
-            h: self.next_constraint_h,
+            h: self.constraints.get_next_h(),
             group: group.into(),
             type_: constraint.type_() as _,
             wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
@@ -110,9 +127,8 @@ impl System {
             other: other as _,
             other2: other_2 as _,
         };
-        self.next_constraint_h += 1;
 
-        self.constraints.push(new_constraint);
+        self.constraints.list.push(new_constraint);
         Ok(Constraint {
             handle: new_constraint.h,
             phantom: PhantomData,
@@ -122,14 +138,13 @@ impl System {
     // Private as user has no reason to create bare param without linking to an entity.
     fn add_param(&mut self, group: Group, val: f64) -> binding::Slvs_hParam {
         let new_param = binding::Slvs_Param {
-            h: self.next_param_h,
+            h: self.params.get_next_h(),
             group: group.into(),
             val,
         };
-        self.next_param_h += 1;
 
-        self.params.push(new_param);
-        self.params.last().unwrap().h
+        self.params.list.push(new_param);
+        self.params.list.last().unwrap().h
     }
 }
 
@@ -146,15 +161,16 @@ impl System {
     }
 
     pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
-        let mut failed_handles: Vec<binding::Slvs_hConstraint> = vec![0; self.constraints.len()];
+        let mut failed_handles: Vec<binding::Slvs_hConstraint> =
+            vec![0; self.constraints.list.len()];
 
         let mut slvs_system = binding::Slvs_System {
-            param: self.params.as_mut_ptr(),
-            params: self.params.len() as _,
-            entity: self.entities.as_mut_ptr(),
-            entities: self.entities.len() as _,
-            constraint: self.constraints.as_mut_ptr(),
-            constraints: self.constraints.len() as _,
+            param: self.params.list.as_mut_ptr(),
+            params: self.params.list.len() as _,
+            entity: self.entities.list.as_mut_ptr(),
+            entities: self.entities.list.len() as _,
+            constraint: self.constraints.list.as_mut_ptr(),
+            constraints: self.constraints.list.len() as _,
             dragged: self.dragged,
             calculateFaileds: self.calculate_faileds as _,
             failed: failed_handles.as_mut_ptr(),
@@ -223,14 +239,16 @@ impl TryFrom<i32> for FailReason {
 impl System {
     fn h_to_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
         self.params
+            .list
             .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
-            .map_or(None, |ix| Some(&self.params[ix]))
+            .map_or(None, |ix| Some(&self.params.list[ix]))
     }
 
     fn h_to_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
         self.entities
+            .list
             .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
-            .map_or(None, |ix| Some(&self.entities[ix]))
+            .map_or(None, |ix| Some(&self.entities.list[ix]))
     }
 
     fn h_to_some_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
@@ -255,8 +273,9 @@ impl System {
         h: binding::Slvs_hConstraint,
     ) -> Option<&binding::Slvs_Constraint> {
         self.constraints
+            .list
             .binary_search_by_key(&h, |&binding::Slvs_Constraint { h, .. }| h)
-            .map_or(None, |ix| Some(&self.constraints[ix]))
+            .map_or(None, |ix| Some(&self.constraints.list[ix]))
     }
 
     fn h_to_some_constraint(&self, h: binding::Slvs_hConstraint) -> Option<SomeConstraint> {
@@ -328,12 +347,13 @@ mod tests {
 
         if solve_result.is_ok() {
             sys.params
+                .list
                 .iter()
                 .for_each(|param| println!("Handle {}: {:.3}", param.h, param.val));
 
-            let dist = ((sys.params[0].val - sys.params[3].val).powi(2)
-                + (sys.params[1].val - sys.params[4].val).powi(2)
-                + (sys.params[2].val - sys.params[5].val).powi(2))
+            let dist = ((sys.params.list[0].val - sys.params.list[3].val).powi(2)
+                + (sys.params.list[1].val - sys.params.list[4].val).powi(2)
+                + (sys.params.list[2].val - sys.params.list[5].val).powi(2))
             .sqrt();
 
             assert!((target_dist - dist).abs() < SOLVE_TOLERANCE);

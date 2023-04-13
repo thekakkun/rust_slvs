@@ -1,6 +1,6 @@
 use crate::{
     binding,
-    entity::{Entity, PointIn3d, SomeEntity},
+    entity::{Entity, PointIn3d},
 };
 
 use super::{AsConstraint, Constraint, SomeConstraint};
