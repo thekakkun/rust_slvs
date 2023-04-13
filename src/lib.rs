@@ -239,7 +239,7 @@ pub struct SolveOkay {
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
-    pub failed_constraints: Vec<SomeConstraint>, // I can't do this. T is of various different types.
+    pub failed_constraints: Vec<SomeConstraint>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
