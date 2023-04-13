@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::AsEntity;
+use super::{AsEntity, Entity, SomeEntity};
 
 #[derive(Clone, Copy)]
 pub struct PointIn3d {
@@ -32,5 +32,23 @@ impl AsEntity for PointIn3d {
 
     fn param_vals(&self) -> [Option<f64>; 4] {
         [Some(self.x), Some(self.y), Some(self.z), None]
+    }
+}
+
+impl TryFrom<SomeEntity> for Entity<PointIn3d> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntity) -> Result<Self, Self::Error> {
+        if let SomeEntity::PointIn3d(entity) = value {
+            Ok(entity)
+        } else {
+            Err("Expected SomeEntity::PointIn3d")
+        }
+    }
+}
+
+impl From<Entity<PointIn3d>> for SomeEntity {
+    fn from(value: Entity<PointIn3d>) -> Self {
+        SomeEntity::PointIn3d(value)
     }
 }

@@ -238,16 +238,16 @@ impl System {
             .map_or(None, |ix| Some(&self.entities[ix]))
     }
 
-    fn h_to_entity(&self, h: binding::Slvs_hEntity, test: bool) -> Option<Entity<impl AsEntity>> {
+    pub fn h_to_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
         self.h_to_slvs_entity(h)
             .map(|Slvs_Entity { h, type_, .. }| match *type_ as _ {
-                binding::SLVS_E_POINT_IN_3D => Entity::<PointIn3d>::from(1),
+                binding::SLVS_E_POINT_IN_3D => SomeEntity::PointIn3d(Entity::new(*h)),
                 binding::SLVS_E_POINT_IN_2D => todo!(),
                 binding::SLVS_E_NORMAL_IN_3D => todo!(),
                 binding::SLVS_E_NORMAL_IN_2D => todo!(),
                 binding::SLVS_E_DISTANCE => todo!(),
                 binding::SLVS_E_WORKPLANE => todo!(),
-                binding::SLVS_E_LINE_SEGMENT => Entity::<LineSegment>::from(1),
+                binding::SLVS_E_LINE_SEGMENT => SomeEntity::LineSegment(Entity::new(*h)),
                 binding::SLVS_E_CUBIC => todo!(),
                 binding::SLVS_E_CIRCLE => todo!(),
                 binding::SLVS_E_ARC_OF_CIRCLE => todo!(),

@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, PointIn3d};
+use super::{AsEntity, Entity, PointIn3d, SomeEntity};
 
 pub struct LineSegment {
     pub pt_a: Entity<PointIn3d>,
@@ -30,5 +30,23 @@ impl AsEntity for LineSegment {
 
     fn param_vals(&self) -> [Option<f64>; 4] {
         [None; 4]
+    }
+}
+
+impl TryFrom<SomeEntity> for Entity<LineSegment> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntity) -> Result<Self, Self::Error> {
+        if let SomeEntity::LineSegment(entity) = value {
+            Ok(entity)
+        } else {
+            Err("Expected SomeEntity::LineSegment")
+        }
+    }
+}
+
+impl From<Entity<LineSegment>> for SomeEntity {
+    fn from(value: Entity<LineSegment>) -> Self {
+        SomeEntity::LineSegment(value)
     }
 }
