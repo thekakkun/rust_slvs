@@ -1,6 +1,6 @@
 use slvs::{
     constraint::PtPtDistance,
-    entity::{LineSegment, PointIn3d},
+    entity::{EntityData, LineSegment, PointIn3d},
     System,
 };
 
@@ -57,22 +57,16 @@ fn solve_3d_demo() {
     sys.clear_dragged();
 
     if solve_result.is_ok() {
-        let new_p1: PointIn3d = sys
-            .get_entity_data(p1)
-            .expect("p1 should exist")
-            .try_into()
-            .expect("p1 is PointIn3d");
-        let new_p2: PointIn3d = sys
-            .get_entity_data(p2)
-            .expect("p2 should exist")
-            .try_into()
-            .expect("p2 is PointIn3d");
+        if let (EntityData::PointIn3d(new_p1), EntityData::PointIn3d(new_p2)) = (
+            sys.get_entity_data(p1).expect("p1 should exist"),
+            sys.get_entity_data(p2).expect("p2 should exist"),
+        ) {
+            let dist = ((new_p1.x - new_p2.x).powi(2)
+                + (new_p1.y - new_p2.y).powi(2)
+                + (new_p1.z - new_p2.z).powi(2))
+            .sqrt();
 
-        let dist = ((new_p1.x - new_p2.x).powi(2)
-            + (new_p1.y - new_p2.y).powi(2)
-            + (new_p1.z - new_p2.z).powi(2))
-        .sqrt();
-
-        assert!((target_dist - dist).abs() < SOLVE_TOLERANCE);
+            assert!((target_dist - dist).abs() < SOLVE_TOLERANCE);
+        }
     }
 }
