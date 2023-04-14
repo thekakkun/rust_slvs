@@ -7,6 +7,10 @@ pub use line_segment::LineSegment;
 pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
 
+////////////////////////////////////////////////////////////////////////////////
+// Entity of a specific type
+////////////////////////////////////////////////////////////////////////////////
+
 pub trait AsEntity {
     fn type_(&self) -> binding::Slvs_hEntity;
     fn workplane(&self) -> Option<binding::Slvs_hEntity>;
@@ -23,7 +27,7 @@ pub struct Entity<T: AsEntity> {
 }
 
 impl<T: AsEntity> Entity<T> {
-    pub fn new(handle: u32) -> Self {
+    pub(super) fn new(handle: u32) -> Self {
         Self {
             handle,
             phantom: PhantomData,
@@ -36,6 +40,10 @@ impl<T: AsEntity> From<Entity<T>> for binding::Slvs_hEntity {
         value.handle
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Some sort of entity of type
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy)]
 pub enum SomeEntity {
@@ -50,4 +58,13 @@ impl From<SomeEntity> for binding::Slvs_hEntity {
             SomeEntity::LineSegment(e) => e.handle,
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Some sort of entity data
+////////////////////////////////////////////////////////////////////////////////
+
+pub enum EntityData {
+    PointIn3d(PointIn3d),
+    LineSegment(LineSegment),
 }

@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, PointIn3d, SomeEntity};
+use super::{AsEntity, Entity, EntityData, PointIn3d, SomeEntity};
 
 #[derive(Clone, Copy)]
 pub struct LineSegment {
@@ -39,6 +39,10 @@ impl AsEntity for LineSegment {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Conversions between SomeEntity
+////////////////////////////////////////////////////////////////////////////////
+
 impl TryFrom<SomeEntity> for Entity<LineSegment> {
     type Error = &'static str;
 
@@ -54,5 +58,27 @@ impl TryFrom<SomeEntity> for Entity<LineSegment> {
 impl From<Entity<LineSegment>> for SomeEntity {
     fn from(value: Entity<LineSegment>) -> Self {
         SomeEntity::LineSegment(value)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Conversions between EntityData
+////////////////////////////////////////////////////////////////////////////////\
+
+impl From<LineSegment> for EntityData {
+    fn from(value: LineSegment) -> Self {
+        EntityData::LineSegment(value)
+    }
+}
+
+impl TryFrom<EntityData> for LineSegment {
+    type Error = &'static str;
+
+    fn try_from(value: EntityData) -> Result<Self, Self::Error> {
+        if let EntityData::LineSegment(data) = value {
+            Ok(data)
+        } else {
+            Err("Expected EntityData::LineSegment")
+        }
     }
 }

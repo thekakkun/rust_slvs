@@ -2,11 +2,11 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::marker::PhantomData;
+use std::{iter::zip, marker::PhantomData};
 
 use binding::{Slvs_Constraint, Slvs_Entity};
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-use entity::{AsEntity, Entity, LineSegment, PointIn3d, SomeEntity};
+use entity::{AsEntity, Entity, EntityData, LineSegment, PointIn3d, SomeEntity};
 use group::Group;
 
 pub mod constraint;
@@ -79,19 +79,20 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn add_entity<T>(&mut self, group: Group, entity: T) -> Result<Entity<T>, &'static str>
-    where
-        T: AsEntity,
-    {
+    pub fn add_entity<T: AsEntity>(
+        &mut self,
+        group: Group,
+        entity_data: T,
+    ) -> Result<Entity<T>, &'static str> {
         let new_entity = binding::Slvs_Entity {
             h: self.entities.get_next_h(),
             group: group.into(),
-            type_: entity.type_() as _,
-            wrkpl: entity.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
-            point: entity.point().map(|p| p.unwrap_or(0)), // TODO: ditto
-            normal: entity.normal().unwrap_or(0),   // TODO: ditto
-            distance: entity.distance().unwrap_or(0), // TODO: ditto
-            param: entity
+            type_: entity_data.type_() as _,
+            wrkpl: entity_data.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
+            point: entity_data.point().map(|p| p.unwrap_or(0)), // TODO: ditto
+            normal: entity_data.normal().unwrap_or(0),   // TODO: ditto
+            distance: entity_data.distance().unwrap_or(0), // TODO: ditto
+            param: entity_data
                 .param_vals()
                 .map(|opt_val| opt_val.map_or(0, |v| self.add_param(group, v))),
         };
@@ -103,14 +104,11 @@ impl System {
         })
     }
 
-    pub fn add_constraint<T>(
+    pub fn add_constraint<T: AsConstraint>(
         &mut self,
         group: Group,
         constraint: T,
-    ) -> Result<Constraint<T>, &'static str>
-    where
-        T: AsConstraint,
-    {
+    ) -> Result<Constraint<T>, &'static str> {
         let [point_a, point_b] = constraint.point();
         let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
         let [other, other_2] = constraint.other();
@@ -156,18 +154,24 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn get_entity(&self, entity: SomeEntity) -> Option<Box<dyn AsEntity>> {
+    pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<EntityData>
+    where
+        T: AsEntity,
+        Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
+    {
         self.h_to_slvs_entity(entity.into())
-            .map(|slvs_entity| match entity {
-                SomeEntity::PointIn3d(_) => Box::new(PointIn3d {
+            .map(|slvs_entity| match entity.into() {
+                SomeEntity::PointIn3d(_) => PointIn3d {
                     x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
                     y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
                     z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
-                }) as Box<dyn AsEntity>,
-                SomeEntity::LineSegment(_) => Box::new(LineSegment {
+                }
+                .into(),
+                SomeEntity::LineSegment(_) => LineSegment {
                     point_a: Entity::new(slvs_entity.point[0]),
                     point_b: Entity::new(slvs_entity.point[1]),
-                }) as Box<dyn AsEntity>,
+                }
+                .into(),
             })
     }
 }
@@ -177,16 +181,45 @@ impl System {
 ///////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn update_entity<T, F>(
-        &mut self,
-        entity: Entity<T>,
-        f: F,
-    ) -> Result<Box<dyn AsEntity>, &'static str>
+    pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
+        T: AsEntity + std::convert::From<entity::EntityData>,
+        Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
         F: FnOnce(T) -> T,
-        T: AsEntity,
     {
-        unimplemented!()
+        if let Some(e) = self.get_entity_data(entity) {
+            let updated_e = f(e.into());
+
+            let param_h = {
+                // safe to unwrap() we've already confirmed `entity` exists in the `if let` above
+                let mut slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
+
+                slvs_entity.wrkpl = updated_e.workplane().unwrap_or(0);
+                slvs_entity.point = updated_e.point().map(|p| p.unwrap_or(0));
+                slvs_entity.normal = updated_e.normal().unwrap_or(0);
+                slvs_entity.distance = updated_e.distance().unwrap_or(0);
+
+                slvs_entity.param
+            };
+
+            while let Some((h, Some(val))) = zip(param_h, updated_e.param_vals()).next() {
+                self.update_param(h, val)?;
+            }
+
+            Ok(updated_e)
+        } else {
+            Err("Entity not found")
+        }
+    }
+
+    fn update_param(&mut self, h: binding::Slvs_hParam, val: f64) -> Result<(), &'static str> {
+        if let Some(param) = self.h_to_mut_slvs_param(h) {
+            param.val = val;
+
+            Ok(())
+        } else {
+            Err("Param not found")
+        }
     }
 }
 
@@ -292,11 +325,28 @@ impl System {
             .map_or(None, |ix| Some(&self.params.list[ix]))
     }
 
+    fn h_to_mut_slvs_param(&mut self, h: binding::Slvs_hParam) -> Option<&mut binding::Slvs_Param> {
+        self.params
+            .list
+            .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
+            .map_or(None, |ix| Some(&mut self.params.list[ix]))
+    }
+
     fn h_to_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
         self.entities
             .list
             .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&self.entities.list[ix]))
+    }
+
+    fn h_to_mut_slvs_entity(
+        &mut self,
+        h: binding::Slvs_hEntity,
+    ) -> Option<&mut binding::Slvs_Entity> {
+        self.entities
+            .list
+            .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
+            .map_or(None, |ix| Some(&mut self.entities.list[ix]))
     }
 
     fn h_to_some_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
@@ -365,6 +415,7 @@ mod tests {
                 },
             )
             .expect("p1 created");
+
         let p2 = sys
             .add_entity(
                 g,
