@@ -35,14 +35,32 @@ impl<T: AsEntity> Entity<T> {
     }
 }
 
-impl<T: AsEntity> From<Entity<T>> for binding::Slvs_hEntity {
-    fn from(value: Entity<T>) -> Self {
-        value.handle
+impl TryFrom<SomeEntity> for Entity<LineSegment> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntity) -> Result<Self, Self::Error> {
+        if let SomeEntity::LineSegment(entity) = value {
+            Ok(entity)
+        } else {
+            Err("Expected SomeEntity::LineSegment")
+        }
+    }
+}
+
+impl TryFrom<SomeEntity> for Entity<PointIn3d> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntity) -> Result<Self, Self::Error> {
+        if let SomeEntity::PointIn3d(entity) = value {
+            Ok(entity)
+        } else {
+            Err("Expected SomeEntity::PointIn3d")
+        }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Some sort of entity of type
+// Entity of some sort
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy)]
@@ -51,20 +69,35 @@ pub enum SomeEntity {
     LineSegment(Entity<LineSegment>),
 }
 
-impl From<SomeEntity> for binding::Slvs_hEntity {
-    fn from(value: SomeEntity) -> Self {
-        match value {
-            SomeEntity::PointIn3d(e) => e.handle,
-            SomeEntity::LineSegment(e) => e.handle,
-        }
+impl From<Entity<LineSegment>> for SomeEntity {
+    fn from(value: Entity<LineSegment>) -> Self {
+        SomeEntity::LineSegment(value)
+    }
+}
+
+impl From<Entity<PointIn3d>> for SomeEntity {
+    fn from(value: Entity<PointIn3d>) -> Self {
+        SomeEntity::PointIn3d(value)
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Some sort of entity data
+// Entity data of some sort
 ////////////////////////////////////////////////////////////////////////////////
 
 pub enum EntityData {
     PointIn3d(PointIn3d),
     LineSegment(LineSegment),
+}
+
+impl From<LineSegment> for EntityData {
+    fn from(value: LineSegment) -> Self {
+        EntityData::LineSegment(value)
+    }
+}
+
+impl From<PointIn3d> for EntityData {
+    fn from(value: PointIn3d) -> Self {
+        EntityData::PointIn3d(value)
+    }
 }

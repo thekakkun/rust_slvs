@@ -1,22 +1,22 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
 use std::{iter::zip, marker::PhantomData};
 
-use binding::{Slvs_Constraint, Slvs_Entity};
+use binding::{Slvs_Constraint, Slvs_hConstraint, SLVS_C_PT_PT_DISTANCE};
+use binding::{
+    Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
+    SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
+    SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
+};
+use binding::{Slvs_Param, Slvs_hParam};
+use binding::{
+    Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
+    SLVS_RESULT_TOO_MANY_UNKNOWNS,
+};
 use constraint::{AsConstraint, Constraint, SomeConstraint};
 use entity::{AsEntity, Entity, EntityData, LineSegment, PointIn3d, SomeEntity};
-use group::Group;
 
+mod binding;
 pub mod constraint;
 pub mod entity;
-pub mod group;
-pub mod param;
-
-mod binding {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
 
 struct Elements<T> {
     list: Vec<T>,
@@ -45,12 +45,15 @@ impl<T> Default for Elements<T> {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct Group(u32);
+
 pub struct System {
     groups: Elements<Group>,
-    params: Elements<binding::Slvs_Param>,
-    entities: Elements<binding::Slvs_Entity>,
-    constraints: Elements<binding::Slvs_Constraint>,
-    dragged: [binding::Slvs_hParam; 4],
+    params: Elements<Slvs_Param>,
+    entities: Elements<Slvs_Entity>,
+    constraints: Elements<Slvs_Constraint>,
+    dragged: [Slvs_hParam; 4],
     calculate_faileds: bool,
 }
 
@@ -84,7 +87,7 @@ impl System {
         group: Group,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
-        let new_entity = binding::Slvs_Entity {
+        let new_entity = Slvs_Entity {
             h: self.entities.get_next_h(),
             group: group.into(),
             type_: entity_data.type_() as _,
@@ -113,7 +116,7 @@ impl System {
         let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
         let [other, other_2] = constraint.other();
 
-        let new_constraint = binding::Slvs_Constraint {
+        let new_constraint = Slvs_Constraint {
             h: self.constraints.get_next_h(),
             group: group.into(),
             type_: constraint.type_() as _,
@@ -137,8 +140,8 @@ impl System {
     }
 
     // Private as user has no reason to create bare param without linking to an entity.
-    fn add_param(&mut self, group: Group, val: f64) -> binding::Slvs_hParam {
-        let new_param = binding::Slvs_Param {
+    fn add_param(&mut self, group: Group, val: f64) -> Slvs_hParam {
+        let new_param = Slvs_Param {
             h: self.params.get_next_h(),
             group: group.into(),
             val,
@@ -157,7 +160,7 @@ impl System {
     pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<EntityData>
     where
         T: AsEntity,
-        Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
+        Entity<T>: Copy + Into<SomeEntity> + Into<Slvs_hEntity>,
     {
         self.h_to_slvs_entity(entity.into())
             .map(|slvs_entity| match entity.into() {
@@ -183,8 +186,8 @@ impl System {
 impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + std::convert::TryFrom<entity::EntityData, Error = &'static str>,
-        Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
+        T: AsEntity + TryFrom<EntityData, Error = &'static str>,
+        Entity<T>: Copy + Into<SomeEntity> + Into<Slvs_hEntity>,
         F: FnOnce(&mut T),
     {
         if let Some(entity_data) = self.get_entity_data(entity) {
@@ -215,7 +218,7 @@ impl System {
         }
     }
 
-    fn update_param(&mut self, h: binding::Slvs_hParam, val: f64) -> Result<(), &'static str> {
+    fn update_param(&mut self, h: Slvs_hParam, val: f64) -> Result<(), &'static str> {
         if let Some(param) = self.h_to_mut_slvs_param(h) {
             param.val = val;
 
@@ -242,10 +245,9 @@ impl System {
     }
 
     pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
-        let mut failed_handles: Vec<binding::Slvs_hConstraint> =
-            vec![0; self.constraints.list.len()];
+        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
 
-        let mut slvs_system = binding::Slvs_System {
+        let mut slvs_system = Slvs_System {
             param: self.params.list.as_mut_ptr(),
             params: self.params.list.len() as _,
             entity: self.entities.list.as_mut_ptr(),
@@ -261,7 +263,7 @@ impl System {
         };
 
         unsafe {
-            binding::Slvs_Solve(&mut slvs_system, group.into());
+            Slvs_Solve(&mut slvs_system, group.into());
 
             failed_handles = Vec::from_raw_parts(
                 slvs_system.failed,
@@ -298,9 +300,9 @@ pub struct SolveFail {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FailReason {
-    Inconsistent = binding::SLVS_RESULT_INCONSISTENT as _,
-    DidntConverge = binding::SLVS_RESULT_DIDNT_CONVERGE as _,
-    TooManyUnknowns = binding::SLVS_RESULT_TOO_MANY_UNKNOWNS as _,
+    Inconsistent = SLVS_RESULT_INCONSISTENT as _,
+    DidntConverge = SLVS_RESULT_DIDNT_CONVERGE as _,
+    TooManyUnknowns = SLVS_RESULT_TOO_MANY_UNKNOWNS as _,
 }
 
 impl TryFrom<i32> for FailReason {
@@ -321,68 +323,62 @@ impl TryFrom<i32> for FailReason {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    fn h_to_slvs_param(&self, h: binding::Slvs_hParam) -> Option<&binding::Slvs_Param> {
+    fn h_to_slvs_param(&self, h: Slvs_hParam) -> Option<&Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&self.params.list[ix]))
     }
 
-    fn h_to_mut_slvs_param(&mut self, h: binding::Slvs_hParam) -> Option<&mut binding::Slvs_Param> {
+    fn h_to_mut_slvs_param(&mut self, h: Slvs_hParam) -> Option<&mut Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(&h, |&binding::Slvs_Param { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
     }
 
-    fn h_to_slvs_entity(&self, h: binding::Slvs_hEntity) -> Option<&binding::Slvs_Entity> {
+    fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Option<&Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&self.entities.list[ix]))
     }
 
-    fn h_to_mut_slvs_entity(
-        &mut self,
-        h: binding::Slvs_hEntity,
-    ) -> Option<&mut binding::Slvs_Entity> {
+    fn h_to_mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Option<&mut Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(&h, |&binding::Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.entities.list[ix]))
     }
 
-    fn h_to_some_entity(&self, h: binding::Slvs_hEntity) -> Option<SomeEntity> {
+    fn h_to_some_entity(&self, h: Slvs_hEntity) -> Option<SomeEntity> {
         self.h_to_slvs_entity(h)
             .map(|Slvs_Entity { h, type_, .. }| match *type_ as _ {
-                binding::SLVS_E_POINT_IN_3D => SomeEntity::PointIn3d(Entity::new(*h)),
-                binding::SLVS_E_POINT_IN_2D => todo!(),
-                binding::SLVS_E_NORMAL_IN_3D => todo!(),
-                binding::SLVS_E_NORMAL_IN_2D => todo!(),
-                binding::SLVS_E_DISTANCE => todo!(),
-                binding::SLVS_E_WORKPLANE => todo!(),
-                binding::SLVS_E_LINE_SEGMENT => SomeEntity::LineSegment(Entity::new(*h)),
-                binding::SLVS_E_CUBIC => todo!(),
-                binding::SLVS_E_CIRCLE => todo!(),
-                binding::SLVS_E_ARC_OF_CIRCLE => todo!(),
+                SLVS_E_POINT_IN_3D => SomeEntity::PointIn3d(Entity::new(*h)),
+                SLVS_E_POINT_IN_2D => todo!(),
+                SLVS_E_NORMAL_IN_3D => todo!(),
+                SLVS_E_NORMAL_IN_2D => todo!(),
+                SLVS_E_DISTANCE => todo!(),
+                SLVS_E_WORKPLANE => todo!(),
+                SLVS_E_LINE_SEGMENT => SomeEntity::LineSegment(Entity::new(*h)),
+                SLVS_E_CUBIC => todo!(),
+                SLVS_E_CIRCLE => todo!(),
+                SLVS_E_ARC_OF_CIRCLE => todo!(),
                 _ => panic!("Unknown entity type: {}", type_),
             })
     }
 
-    fn h_to_slvs_constraint(
-        &self,
-        h: binding::Slvs_hConstraint,
-    ) -> Option<&binding::Slvs_Constraint> {
+    fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Option<&Slvs_Constraint> {
         self.constraints
             .list
-            .binary_search_by_key(&h, |&binding::Slvs_Constraint { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Constraint { h, .. }| h)
             .map_or(None, |ix| Some(&self.constraints.list[ix]))
     }
 
-    fn h_to_some_constraint(&self, h: binding::Slvs_hConstraint) -> Option<SomeConstraint> {
+    fn h_to_some_constraint(&self, h: Slvs_hConstraint) -> Option<SomeConstraint> {
         self.h_to_slvs_constraint(h)
             .map(|Slvs_Constraint { h, type_, .. }| match *type_ as _ {
-                binding::SLVS_C_PT_PT_DISTANCE => SomeConstraint::PtPtDistance(Constraint::new(*h)),
+                SLVS_C_PT_PT_DISTANCE => SomeConstraint::PtPtDistance(Constraint::new(*h)),
                 _ => panic!("Unknown constraint type: {}", type_),
             })
     }

@@ -29,12 +29,6 @@ impl<T: AsConstraint + ?Sized> Constraint<T> {
     }
 }
 
-impl<T: AsConstraint> From<Constraint<T>> for binding::Slvs_hConstraint {
-    fn from(value: Constraint<T>) -> Self {
-        value.handle
-    }
-}
-
 pub enum SomeConstraint {
     PtPtDistance(Constraint<PtPtDistance>),
     // PointsCoincident(),
