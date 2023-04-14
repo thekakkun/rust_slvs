@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, SomeEntity, EntityData};
+use super::{AsEntity, Entity, EntityData, SomeEntity};
 
 #[derive(Clone, Copy)]
 pub struct PointIn3d {
