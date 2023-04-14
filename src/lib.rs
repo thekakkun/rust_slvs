@@ -183,12 +183,12 @@ impl System {
 impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + std::convert::From<entity::EntityData>,
+        T: AsEntity + std::convert::TryFrom<entity::EntityData, Error = &'static str>,
         Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
         F: FnOnce(T) -> T,
     {
-        if let Some(e) = self.get_entity_data(entity) {
-            let updated_e = f(e.into());
+        if let Some(entity_data) = self.get_entity_data(entity) {
+            let updated_e = f(entity_data.try_into()?);
 
             let param_h = {
                 // safe to unwrap() we've already confirmed `entity` exists in the `if let` above
@@ -202,7 +202,9 @@ impl System {
                 slvs_entity.param
             };
 
-            while let Some((h, Some(val))) = zip(param_h, updated_e.param_vals()).next() {
+            let mut h_val_iter = zip(param_h, updated_e.param_vals());
+            while let Some((h, Some(val))) = h_val_iter.next() {
+                println!("{h} {val}");
                 self.update_param(h, val)?;
             }
 
