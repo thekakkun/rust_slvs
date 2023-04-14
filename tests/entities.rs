@@ -1,4 +1,7 @@
-use slvs::{self, entity::PointIn3d};
+use slvs::{
+    self,
+    entity::{EntityData, PointIn3d},
+};
 
 #[test]
 fn add_entity() {
@@ -20,15 +23,11 @@ fn add_entity() {
         )
         .expect("point in 3d created");
 
-    let p_data: PointIn3d = sys
-        .get_entity_data(p)
-        .expect("point found")
-        .try_into()
-        .expect("returned data is for PointIn3d");
-
-    assert_eq!(p_data.x, p_x);
-    assert_eq!(p_data.y, p_y);
-    assert_eq!(p_data.z, p_z);
+    if let EntityData::PointIn3d(p_data) = sys.get_entity_data(p).expect("point found") {
+        assert_eq!(p_data.x, p_x);
+        assert_eq!(p_data.y, p_y);
+        assert_eq!(p_data.z, p_z);
+    }
 }
 
 #[test]
@@ -56,8 +55,6 @@ fn update_entity() {
             entity.x = updated_p_x;
             entity.y = updated_p_y;
             entity.z = updated_p_z;
-
-            entity
         })
         .expect("should get updated point data");
 

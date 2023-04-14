@@ -185,30 +185,31 @@ impl System {
     where
         T: AsEntity + std::convert::TryFrom<entity::EntityData, Error = &'static str>,
         Entity<T>: Copy + Into<SomeEntity> + Into<binding::Slvs_hEntity>,
-        F: FnOnce(T) -> T,
+        F: FnOnce(&mut T),
     {
         if let Some(entity_data) = self.get_entity_data(entity) {
-            let updated_e = f(entity_data.try_into()?);
+            let mut entity_data = entity_data.try_into()?;
+            f(&mut entity_data);
 
+            // scoped to allow another mut self for the params.
             let param_h = {
                 // safe to unwrap() we've already confirmed `entity` exists in the `if let` above
                 let mut slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
 
-                slvs_entity.wrkpl = updated_e.workplane().unwrap_or(0);
-                slvs_entity.point = updated_e.point().map(|p| p.unwrap_or(0));
-                slvs_entity.normal = updated_e.normal().unwrap_or(0);
-                slvs_entity.distance = updated_e.distance().unwrap_or(0);
+                slvs_entity.wrkpl = entity_data.workplane().unwrap_or(0);
+                slvs_entity.point = entity_data.point().map(|p| p.unwrap_or(0));
+                slvs_entity.normal = entity_data.normal().unwrap_or(0);
+                slvs_entity.distance = entity_data.distance().unwrap_or(0);
 
                 slvs_entity.param
             };
 
-            let mut h_val_iter = zip(param_h, updated_e.param_vals());
+            let mut h_val_iter = zip(param_h, entity_data.param_vals());
             while let Some((h, Some(val))) = h_val_iter.next() {
-                println!("{h} {val}");
                 self.update_param(h, val)?;
             }
 
-            Ok(updated_e)
+            Ok(entity_data)
         } else {
             Err("Entity not found")
         }
