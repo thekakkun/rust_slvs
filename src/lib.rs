@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::{iter::zip, marker::PhantomData};
 
 use binding::{Slvs_Constraint, Slvs_hConstraint};
@@ -153,25 +154,26 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<EntityData>
+    pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<T>
     where
-        T: AsEntity,
-        Entity<T>: Copy + Into<SomeEntity> + Into<Slvs_hEntity>,
+        T: AsEntity + Copy + 'static,
+        Entity<T>: Into<SomeEntity> + Into<Slvs_hEntity>,
     {
-        self.h_to_slvs_entity(entity.into())
-            .map(|slvs_entity| match entity.into() {
-                SomeEntity::PointIn3d(_) => PointIn3d {
+        self.h_to_slvs_entity(entity.into()).map(|slvs_entity| {
+            let some_entity: Box<dyn Any> = match entity.into() {
+                SomeEntity::PointIn3d(_) => Box::new(PointIn3d {
                     x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
                     y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
                     z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
-                }
-                .into(),
-                SomeEntity::LineSegment(_) => LineSegment {
+                }),
+                SomeEntity::LineSegment(_) => Box::new(LineSegment {
                     point_a: Entity::new(slvs_entity.point[0]),
                     point_b: Entity::new(slvs_entity.point[1]),
-                }
-                .into(),
-            })
+                }),
+            };
+
+            *some_entity.downcast_ref::<T>().unwrap()
+        })
     }
 }
 
@@ -182,12 +184,11 @@ impl System {
 impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + TryFrom<EntityData, Error = &'static str>,
-        Entity<T>: Copy + Into<SomeEntity> + Into<Slvs_hEntity>,
+        T: AsEntity + TryFrom<EntityData, Error = &'static str> + Copy + 'static,
+        Entity<T>: Into<SomeEntity> + Into<Slvs_hEntity>,
         F: FnOnce(&mut T),
     {
-        if let Some(entity_data) = self.get_entity_data(entity) {
-            let mut entity_data = entity_data.try_into()?;
+        if let Some(mut entity_data) = self.get_entity_data(entity) {
             f(&mut entity_data);
 
             // scoped to allow another mut self for the params.
