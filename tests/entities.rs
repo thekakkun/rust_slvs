@@ -1,4 +1,7 @@
-use slvs::{self, entity::PointIn3d};
+use slvs::{
+    self,
+    entity::{Entity, PointIn3d, SomeEntity},
+};
 
 #[test]
 fn add_entity() {

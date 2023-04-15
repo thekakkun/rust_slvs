@@ -1,6 +1,6 @@
 use crate::binding;
 
-use super::{AsEntity, Entity, EntityData, PointIn3d};
+use super::{AsEntity, Entity, PointIn3d};
 
 #[derive(Clone, Copy)]
 pub struct LineSegment {
@@ -36,17 +36,5 @@ impl AsEntity for LineSegment {
 
     fn param_vals(&self) -> [Option<f64>; 4] {
         [None; 4]
-    }
-}
-
-impl TryFrom<EntityData> for LineSegment {
-    type Error = &'static str;
-
-    fn try_from(value: EntityData) -> Result<Self, Self::Error> {
-        if let EntityData::LineSegment(data) = value {
-            Ok(data)
-        } else {
-            Err("Expected EntityData::LineSegment")
-        }
     }
 }

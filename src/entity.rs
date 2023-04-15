@@ -102,24 +102,3 @@ impl From<Entity<PointIn3d>> for SomeEntity {
         SomeEntity::PointIn3d(value)
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity data of some sort
-////////////////////////////////////////////////////////////////////////////////
-
-pub enum EntityData {
-    PointIn3d(PointIn3d),
-    LineSegment(LineSegment),
-}
-
-impl From<LineSegment> for EntityData {
-    fn from(value: LineSegment) -> Self {
-        EntityData::LineSegment(value)
-    }
-}
-
-impl From<PointIn3d> for EntityData {
-    fn from(value: PointIn3d) -> Self {
-        EntityData::PointIn3d(value)
-    }
-}

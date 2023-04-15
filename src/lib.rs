@@ -9,7 +9,7 @@ use binding::{
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-use entity::{AsEntity, Entity, EntityData, LineSegment, PointIn3d, SomeEntity};
+use entity::{AsEntity, Entity, LineSegment, PointIn3d, SomeEntity};
 
 mod binding;
 pub mod constraint;
@@ -184,7 +184,7 @@ impl System {
 impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + TryFrom<EntityData, Error = &'static str> + Copy + 'static,
+        T: AsEntity + Copy + 'static,
         Entity<T>: Into<SomeEntity> + Into<Slvs_hEntity>,
         F: FnOnce(&mut T),
     {
