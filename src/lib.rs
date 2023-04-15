@@ -1,11 +1,7 @@
 use std::{iter::zip, marker::PhantomData};
 
-use binding::{Slvs_Constraint, Slvs_hConstraint, SLVS_C_PT_PT_DISTANCE};
-use binding::{
-    Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
-    SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
-    SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
-};
+use binding::{Slvs_Constraint, Slvs_hConstraint};
+use binding::{Slvs_Entity, Slvs_hEntity};
 use binding::{Slvs_Param, Slvs_hParam};
 use binding::{
     Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
@@ -300,19 +296,19 @@ pub struct SolveFail {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FailReason {
-    Inconsistent = SLVS_RESULT_INCONSISTENT as _,
-    DidntConverge = SLVS_RESULT_DIDNT_CONVERGE as _,
-    TooManyUnknowns = SLVS_RESULT_TOO_MANY_UNKNOWNS as _,
+    Inconsistent,
+    DidntConverge,
+    TooManyUnknowns,
 }
 
 impl TryFrom<i32> for FailReason {
     type Error = &'static str;
 
     fn try_from(value: i32) -> Result<Self, &'static str> {
-        match value {
-            1 => Ok(Self::Inconsistent),
-            2 => Ok(Self::DidntConverge),
-            3 => Ok(Self::TooManyUnknowns),
+        match value as _ {
+            SLVS_RESULT_INCONSISTENT => Ok(Self::Inconsistent),
+            SLVS_RESULT_DIDNT_CONVERGE => Ok(Self::DidntConverge),
+            SLVS_RESULT_TOO_MANY_UNKNOWNS => Ok(Self::TooManyUnknowns),
             _ => Err("Result must be of values 1, 2, or 3."),
         }
     }
@@ -353,19 +349,7 @@ impl System {
 
     fn h_to_some_entity(&self, h: Slvs_hEntity) -> Option<SomeEntity> {
         self.h_to_slvs_entity(h)
-            .map(|Slvs_Entity { h, type_, .. }| match *type_ as _ {
-                SLVS_E_POINT_IN_3D => SomeEntity::PointIn3d(Entity::new(*h)),
-                SLVS_E_POINT_IN_2D => todo!(),
-                SLVS_E_NORMAL_IN_3D => todo!(),
-                SLVS_E_NORMAL_IN_2D => todo!(),
-                SLVS_E_DISTANCE => todo!(),
-                SLVS_E_WORKPLANE => todo!(),
-                SLVS_E_LINE_SEGMENT => SomeEntity::LineSegment(Entity::new(*h)),
-                SLVS_E_CUBIC => todo!(),
-                SLVS_E_CIRCLE => todo!(),
-                SLVS_E_ARC_OF_CIRCLE => todo!(),
-                _ => panic!("Unknown entity type: {}", type_),
-            })
+            .map(|Slvs_Entity { h, type_, .. }| SomeEntity::new(*type_ as _, *h))
     }
 
     fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Option<&Slvs_Constraint> {
@@ -377,10 +361,7 @@ impl System {
 
     fn h_to_some_constraint(&self, h: Slvs_hConstraint) -> Option<SomeConstraint> {
         self.h_to_slvs_constraint(h)
-            .map(|Slvs_Constraint { h, type_, .. }| match *type_ as _ {
-                SLVS_C_PT_PT_DISTANCE => SomeConstraint::PtPtDistance(Constraint::new(*h)),
-                _ => panic!("Unknown constraint type: {}", type_),
-            })
+            .map(|Slvs_Constraint { h, type_, .. }| SomeConstraint::new(*type_ as _, *h))
     }
 }
 
