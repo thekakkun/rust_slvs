@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::binding::{
+use crate::bindings::{
     Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
     SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
     SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,

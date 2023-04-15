@@ -1,5 +1,5 @@
 use crate::{
-    binding,
+    bindings,
     entity::{Entity, PointIn3d},
 };
 
@@ -20,11 +20,11 @@ pub enum PtPtDistance {
 }
 
 impl AsConstraint for PtPtDistance {
-    fn type_(&self) -> binding::Slvs_hConstraint {
-        binding::SLVS_C_PT_PT_DISTANCE
+    fn type_(&self) -> bindings::Slvs_hConstraint {
+        bindings::SLVS_C_PT_PT_DISTANCE
     }
 
-    fn workplane(&self) -> Option<binding::Slvs_hEntity> {
+    fn workplane(&self) -> Option<bindings::Slvs_hEntity> {
         None // TODO: necessary for 2d distances.
     }
 
@@ -34,7 +34,7 @@ impl AsConstraint for PtPtDistance {
         }
     }
 
-    fn point(&self) -> [Option<binding::Slvs_hEntity>; 2] {
+    fn point(&self) -> [Option<bindings::Slvs_hEntity>; 2] {
         match self {
             PtPtDistance::_2d {
                 point_a, point_b, ..
@@ -45,7 +45,7 @@ impl AsConstraint for PtPtDistance {
         }
     }
 
-    fn entity(&self) -> [Option<binding::Slvs_hEntity>; 4] {
+    fn entity(&self) -> [Option<bindings::Slvs_hEntity>; 4] {
         [None; 4]
     }
 

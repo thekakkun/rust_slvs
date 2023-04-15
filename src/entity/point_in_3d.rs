@@ -1,4 +1,4 @@
-use crate::binding;
+use crate::bindings;
 
 use super::AsEntity;
 
@@ -10,23 +10,23 @@ pub struct PointIn3d {
 }
 
 impl AsEntity for PointIn3d {
-    fn type_(&self) -> binding::Slvs_hEntity {
-        binding::SLVS_E_POINT_IN_3D
+    fn type_(&self) -> bindings::Slvs_hEntity {
+        bindings::SLVS_E_POINT_IN_3D
     }
 
-    fn workplane(&self) -> Option<binding::Slvs_hEntity> {
+    fn workplane(&self) -> Option<bindings::Slvs_hEntity> {
         None
     }
 
-    fn point(&self) -> [Option<binding::Slvs_hEntity>; 4] {
+    fn point(&self) -> [Option<bindings::Slvs_hEntity>; 4] {
         [None; 4]
     }
 
-    fn normal(&self) -> Option<binding::Slvs_hEntity> {
+    fn normal(&self) -> Option<bindings::Slvs_hEntity> {
         None
     }
 
-    fn distance(&self) -> Option<binding::Slvs_hEntity> {
+    fn distance(&self) -> Option<bindings::Slvs_hEntity> {
         None
     }
 

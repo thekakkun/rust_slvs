@@ -1,17 +1,17 @@
 use std::any::Any;
 use std::{iter::zip, marker::PhantomData};
 
-use binding::{Slvs_Constraint, Slvs_hConstraint};
-use binding::{Slvs_Entity, Slvs_hEntity};
-use binding::{Slvs_Param, Slvs_hParam};
-use binding::{
+use bindings::{Slvs_Constraint, Slvs_hConstraint};
+use bindings::{Slvs_Entity, Slvs_hEntity};
+use bindings::{Slvs_Param, Slvs_hParam};
+use bindings::{
     Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
 use entity::{AsEntity, Entity, LineSegment, PointIn3d, SomeEntity};
 
-mod binding;
+mod bindings;
 pub mod constraint;
 pub mod entity;
 
