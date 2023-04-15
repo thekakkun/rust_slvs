@@ -2,14 +2,18 @@ use std::any::Any;
 use std::{iter::zip, marker::PhantomData};
 
 use bindings::{Slvs_Constraint, Slvs_hConstraint};
-use bindings::{Slvs_Entity, Slvs_hEntity};
+use bindings::{
+    Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
+    SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
+    SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
+};
 use bindings::{Slvs_Param, Slvs_hParam};
 use bindings::{
     Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-use entity::{AsEntity, Entity, LineSegment, PointIn3d, SomeEntity};
+use entity::{AsEntity, Entity, LineSegment, PointIn3d};
 
 mod bindings;
 pub mod constraint;
@@ -157,19 +161,28 @@ impl System {
     pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<T>
     where
         T: AsEntity + Copy + 'static,
-        Entity<T>: Into<SomeEntity> + Into<Slvs_hEntity>,
+        Entity<T>: Into<Slvs_hEntity>,
     {
         self.h_to_slvs_entity(entity.into()).map(|slvs_entity| {
-            let some_entity: Box<dyn Any> = match entity.into() {
-                SomeEntity::PointIn3d(_) => Box::new(PointIn3d {
+            let some_entity: Box<dyn Any> = match slvs_entity.type_ as _ {
+                SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
                     x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
                     y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
                     z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
                 }),
-                SomeEntity::LineSegment(_) => Box::new(LineSegment {
+                SLVS_E_POINT_IN_2D => todo!(),
+                SLVS_E_NORMAL_IN_3D => todo!(),
+                SLVS_E_NORMAL_IN_2D => todo!(),
+                SLVS_E_DISTANCE => todo!(),
+                SLVS_E_WORKPLANE => todo!(),
+                SLVS_E_LINE_SEGMENT => Box::new(LineSegment {
                     point_a: Entity::new(slvs_entity.point[0]),
                     point_b: Entity::new(slvs_entity.point[1]),
                 }),
+                SLVS_E_CUBIC => todo!(),
+                SLVS_E_CIRCLE => todo!(),
+                SLVS_E_ARC_OF_CIRCLE => todo!(),
+                _ => panic!("Unknown entity type: {}", slvs_entity.type_),
             };
 
             *some_entity.downcast_ref::<T>().unwrap()
@@ -185,7 +198,7 @@ impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
     where
         T: AsEntity + Copy + 'static,
-        Entity<T>: Into<SomeEntity> + Into<Slvs_hEntity>,
+        Entity<T>: Into<Slvs_hEntity>,
         F: FnOnce(&mut T),
     {
         if let Some(mut entity_data) = self.get_entity_data(entity) {
@@ -346,11 +359,6 @@ impl System {
             .list
             .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.entities.list[ix]))
-    }
-
-    fn h_to_some_entity(&self, h: Slvs_hEntity) -> Option<SomeEntity> {
-        self.h_to_slvs_entity(h)
-            .map(|Slvs_Entity { h, type_, .. }| SomeEntity::new(*type_ as _, *h))
     }
 
     fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Option<&Slvs_Constraint> {

@@ -4,7 +4,7 @@
 
 use crate::{
     constraint::{AsConstraint, Constraint},
-    entity::{AsEntity, Entity, SomeEntity},
+    entity::{AsEntity, Entity},
     Group,
 };
 
@@ -27,15 +27,6 @@ impl From<Group> for Slvs_hGroup {
 impl<T: AsEntity> From<Entity<T>> for Slvs_hEntity {
     fn from(value: Entity<T>) -> Self {
         value.handle
-    }
-}
-
-impl From<SomeEntity> for Slvs_hEntity {
-    fn from(value: SomeEntity) -> Self {
-        match value {
-            SomeEntity::PointIn3d(e) => e.handle,
-            SomeEntity::LineSegment(e) => e.handle,
-        }
     }
 }
 
