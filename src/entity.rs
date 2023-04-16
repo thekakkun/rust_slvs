@@ -14,7 +14,7 @@ pub use point_in_3d::PointIn3d;
 pub trait AsEntity {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn point(&self) -> [Option<Slvs_hEntity>; 4];
+    fn points(&self) -> Option<Vec<Slvs_hEntity>>;
     fn normal(&self) -> Option<Slvs_hEntity>;
     fn distance(&self) -> Option<Slvs_hEntity>;
     fn param_vals(&self) -> Option<Vec<f64>>;

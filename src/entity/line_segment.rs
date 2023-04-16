@@ -1,6 +1,5 @@
-use crate::bindings;
-
 use super::{AsEntity, Entity, PointIn3d};
+use crate::{Slvs_hEntity, SLVS_E_LINE_SEGMENT};
 
 #[derive(Clone, Copy)]
 pub struct LineSegment {
@@ -10,27 +9,22 @@ pub struct LineSegment {
 
 impl AsEntity for LineSegment {
     fn type_(&self) -> i32 {
-        bindings::SLVS_E_LINE_SEGMENT as _
+        SLVS_E_LINE_SEGMENT as _
     }
 
-    fn workplane(&self) -> Option<bindings::Slvs_hEntity> {
+    fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
-    fn point(&self) -> [Option<bindings::Slvs_hEntity>; 4] {
-        [
-            Some(self.point_a.into()),
-            Some(self.point_b.into()),
-            None,
-            None,
-        ]
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        Some(vec![self.point_a.into(), self.point_b.into()])
     }
 
-    fn normal(&self) -> Option<bindings::Slvs_hEntity> {
+    fn normal(&self) -> Option<Slvs_hEntity> {
         None
     }
 
-    fn distance(&self) -> Option<bindings::Slvs_hEntity> {
+    fn distance(&self) -> Option<Slvs_hEntity> {
         None
     }
 
