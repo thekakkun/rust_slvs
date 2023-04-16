@@ -12,7 +12,7 @@ pub use point_in_3d::PointIn3d;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait AsEntity {
-    fn type_(&self) -> Slvs_hEntity;
+    fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn point(&self) -> [Option<Slvs_hEntity>; 4];
     fn normal(&self) -> Option<Slvs_hEntity>;

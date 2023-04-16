@@ -10,8 +10,8 @@ pub struct PointIn3d {
 }
 
 impl AsEntity for PointIn3d {
-    fn type_(&self) -> bindings::Slvs_hEntity {
-        bindings::SLVS_E_POINT_IN_3D
+    fn type_(&self) -> i32 {
+        bindings::SLVS_E_POINT_IN_3D as _
     }
 
     fn workplane(&self) -> Option<bindings::Slvs_hEntity> {

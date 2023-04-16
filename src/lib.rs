@@ -61,10 +61,10 @@ pub struct System {
 impl System {
     pub fn new() -> Self {
         Self {
-            groups: Elements::default(),
-            params: Elements::default(),
-            entities: Elements::default(),
-            constraints: Elements::default(),
+            groups: Elements::new(),
+            params: Elements::new(),
+            entities: Elements::new(),
+            constraints: Elements::new(),
             dragged: [0; 4],
             calculate_faileds: true,
         }
@@ -88,18 +88,55 @@ impl System {
         group: Group,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
-        let new_entity = Slvs_Entity {
-            h: self.entities.get_next_h(),
-            group: group.into(),
-            type_: entity_data.type_() as _,
-            wrkpl: entity_data.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
-            point: entity_data.point().map(|p| p.unwrap_or(0)), // TODO: ditto
-            normal: entity_data.normal().unwrap_or(0),   // TODO: ditto
-            distance: entity_data.distance().unwrap_or(0), // TODO: ditto
-            param: entity_data
-                .param_vals()
-                .map(|opt_val| opt_val.map_or(0, |v| self.add_param(group, v))),
-        };
+        let mut new_entity = Slvs_Entity::new(
+            self.entities.get_next_h(),
+            group.into(),
+            entity_data.type_(),
+        );
+
+        if let Some(workplane) = entity_data.workplane() {
+            if self.entity_exists(workplane) {
+                new_entity.workplane(workplane);
+            } else {
+                return Err("Specified workplane does not exist.");
+            }
+        }
+
+        let points_valid: Result<Vec<_>, _> = entity_data
+            .point()
+            .iter()
+            .map(|point| {
+                point.map_or(Ok(0), |h| {
+                    if self.entity_exists(h) {
+                        Ok(h)
+                    } else {
+                        Err("Specified point does not exist")
+                    }
+                })
+            })
+            .collect();
+        new_entity.point(points_valid?.try_into().unwrap());
+
+        if let Some(normal) = entity_data.workplane() {
+            if self.entity_exists(normal) {
+                new_entity.normal(normal);
+            } else {
+                return Err("Specified normal does not exist.");
+            }
+        }
+
+        if let Some(distance) = entity_data.workplane() {
+            if self.entity_exists(distance) {
+                new_entity.distance(distance);
+            } else {
+                return Err("Specified distance does not exist.");
+            }
+        }
+
+        let param_handles = entity_data
+            .param_vals()
+            .map(|some_val| some_val.map_or(0, |val| self.add_param(group, val)));
+        new_entity.param(param_handles);
 
         self.entities.list.push(new_entity);
         Ok(Entity {
@@ -185,7 +222,7 @@ impl System {
                 _ => panic!("Unknown entity type: {}", slvs_entity.type_),
             };
 
-            *some_entity.downcast_ref::<T>().unwrap()
+            *some_entity.downcast::<T>().unwrap()
         })
     }
 }
@@ -345,6 +382,13 @@ impl System {
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
+    }
+
+    fn entity_exists(&self, h: Slvs_hEntity) -> bool {
+        self.entities
+            .list
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .is_ok()
     }
 
     fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Option<&Slvs_Entity> {

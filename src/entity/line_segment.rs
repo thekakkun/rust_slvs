@@ -9,8 +9,8 @@ pub struct LineSegment {
 }
 
 impl AsEntity for LineSegment {
-    fn type_(&self) -> bindings::Slvs_hEntity {
-        bindings::SLVS_E_LINE_SEGMENT
+    fn type_(&self) -> i32 {
+        bindings::SLVS_E_LINE_SEGMENT as _
     }
 
     fn workplane(&self) -> Option<bindings::Slvs_hEntity> {
