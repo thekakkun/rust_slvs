@@ -17,7 +17,7 @@ pub trait AsEntity {
     fn point(&self) -> [Option<Slvs_hEntity>; 4];
     fn normal(&self) -> Option<Slvs_hEntity>;
     fn distance(&self) -> Option<Slvs_hEntity>;
-    fn param_vals(&self) -> [Option<f64>; 4];
+    fn param_vals(&self) -> Option<Vec<f64>>;
 }
 
 #[derive(Clone, Copy)]

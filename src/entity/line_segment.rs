@@ -34,7 +34,7 @@ impl AsEntity for LineSegment {
         None
     }
 
-    fn param_vals(&self) -> [Option<f64>; 4] {
-        [None; 4]
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        None
     }
 }

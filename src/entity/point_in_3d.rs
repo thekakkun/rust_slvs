@@ -30,7 +30,7 @@ impl AsEntity for PointIn3d {
         None
     }
 
-    fn param_vals(&self) -> [Option<f64>; 4] {
-        [Some(self.x), Some(self.y), Some(self.z), None]
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        Some(vec![self.x, self.y, self.z])
     }
 }
