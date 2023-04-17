@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::bindings::{
+use crate::{bindings::{
     Slvs_hConstraint, Slvs_hEntity, SLVS_C_ANGLE, SLVS_C_ARC_ARC_DIFFERENCE,
     SLVS_C_ARC_ARC_LEN_RATIO, SLVS_C_ARC_LINE_DIFFERENCE, SLVS_C_ARC_LINE_LEN_RATIO,
     SLVS_C_ARC_LINE_TANGENT, SLVS_C_AT_MIDPOINT, SLVS_C_CUBIC_LINE_TANGENT,
@@ -12,7 +12,7 @@ use crate::bindings::{
     SLVS_C_PT_ON_FACE, SLVS_C_PT_ON_LINE, SLVS_C_PT_PLANE_DISTANCE, SLVS_C_PT_PT_DISTANCE,
     SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
     SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
-};
+}, AsHandle};
 
 pub mod pt_pt_distance;
 pub use pt_pt_distance::PtPtDistance;
@@ -41,7 +41,14 @@ impl<T: AsConstraint> Constraint<T> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+impl<T: AsConstraint> AsHandle for Constraint<T> {
+    fn handle(&self) -> u32 {
+        self.handle
+    }
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SomeConstraint {
     // PointsCoincident(Constraint<PointsCoincident>),
     PtPtDistance(Constraint<PtPtDistance>),

@@ -1,11 +1,12 @@
 use crate::{
     bindings,
     entity::{Entity, PointIn3d},
+    AsHandle,
 };
 
 use super::{AsConstraint, Constraint, SomeConstraint};
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PtPtDistance {
     _2d {
         val: f64,
@@ -42,7 +43,7 @@ impl AsConstraint for PtPtDistance {
             }
             | PtPtDistance::_3d {
                 point_a, point_b, ..
-            } => [Some((*point_a).into()), Some((*point_b).into())],
+            } => [Some((*point_a).handle()), Some((*point_b).handle())],
         }
     }
 

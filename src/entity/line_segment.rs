@@ -1,5 +1,5 @@
 use super::{AsEntity, Entity, PointIn3d};
-use crate::{Slvs_hEntity, SLVS_E_LINE_SEGMENT};
+use crate::{Slvs_hEntity, SLVS_E_LINE_SEGMENT, AsHandle};
 
 #[derive(Clone, Copy)]
 pub struct LineSegment {
@@ -23,7 +23,7 @@ impl AsEntity for LineSegment {
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.into(), self.point_b.into()])
+        Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::bindings::Slvs_hEntity;
+use crate::{bindings::Slvs_hEntity, AsHandle};
 
 pub mod line_segment;
 pub use line_segment::LineSegment;
@@ -32,5 +32,11 @@ impl<T: AsEntity> Entity<T> {
             handle,
             phantom: PhantomData,
         }
+    }
+}
+
+impl<T: AsEntity> AsHandle for Entity<T> {
+    fn handle(&self) -> u32 {
+        self.handle
     }
 }

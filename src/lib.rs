@@ -46,8 +46,18 @@ impl<T> Default for Elements<T> {
     }
 }
 
+trait AsHandle {
+    fn handle(&self) -> u32;
+}
+
 #[derive(Clone, Copy)]
 pub struct Group(u32);
+
+impl AsHandle for Group {
+    fn handle(&self) -> u32 {
+        self.0
+    }
+}
 
 pub struct System {
     groups: Elements<Group>,
@@ -85,14 +95,14 @@ impl System {
 
     pub fn add_entity<T: AsEntity>(
         &mut self,
-        group: Group,
+        group: &Group,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
         self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
-            group.into(),
+            group.handle(),
             entity_data.type_(),
         );
 
@@ -126,7 +136,7 @@ impl System {
 
     pub fn add_constraint<T: AsConstraint>(
         &mut self,
-        group: Group,
+        group: &Group,
         constraint: T,
     ) -> Result<Constraint<T>, &'static str> {
         let [point_a, point_b] = constraint.point();
@@ -135,7 +145,7 @@ impl System {
 
         let new_constraint = Slvs_Constraint {
             h: self.constraints.get_next_h(),
-            group: group.into(),
+            group: group.handle(),
             type_: constraint.type_() as _,
             wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
             valA: constraint.val(),
@@ -157,10 +167,10 @@ impl System {
     }
 
     // Private as user has no reason to create bare param without linking to an entity.
-    fn add_param(&mut self, group: Group, val: f64) -> Slvs_hParam {
+    fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
         let new_param = Slvs_Param {
             h: self.params.get_next_h(),
-            group: group.into(),
+            group: group.handle(),
             val,
         };
 
@@ -174,17 +184,16 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn get_entity_data<T>(&self, entity: Entity<T>) -> Option<T>
+    pub fn get_entity_data<T>(&self, entity: &Entity<T>) -> Option<T>
     where
-        T: AsEntity + Copy + 'static,
-        Entity<T>: Into<Slvs_hEntity>,
+        T: AsEntity + 'static,
     {
-        self.h_to_slvs_entity(entity.into()).map(|slvs_entity| {
+        self.h_to_slvs_entity(&entity.handle()).map(|slvs_entity| {
             let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
                 SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
-                    x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
-                    y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
-                    z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
+                    x: self.h_to_slvs_param(&slvs_entity.param[0]).unwrap().val,
+                    y: self.h_to_slvs_param(&slvs_entity.param[1]).unwrap().val,
+                    z: self.h_to_slvs_param(&slvs_entity.param[2]).unwrap().val,
                 }),
                 SLVS_E_POINT_IN_2D => todo!(),
                 SLVS_E_NORMAL_IN_3D => todo!(),
@@ -211,10 +220,9 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
+    pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + Copy + 'static,
-        Entity<T>: Into<Slvs_hEntity>,
+        T: AsEntity + 'static,
         F: FnOnce(&mut T),
     {
         if let Some(mut entity_data) = self.get_entity_data(entity) {
@@ -222,7 +230,7 @@ impl System {
             self.validate_entity_data(&entity_data)?;
 
             let param_h = {
-                let slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
+                let slvs_entity = self.h_to_mut_slvs_entity(&entity.handle()).unwrap();
 
                 if let Some(workplane) = entity_data.workplane() {
                     slvs_entity.workplane(workplane)
@@ -242,7 +250,7 @@ impl System {
 
             if let Some(param_vals) = entity_data.param_vals() {
                 for (h, val) in zip(param_h, param_vals) {
-                    self.update_param(h, val)?;
+                    self.update_param(&h, val)?;
                 }
             }
 
@@ -252,7 +260,7 @@ impl System {
         }
     }
 
-    fn update_param(&mut self, h: Slvs_hParam, val: f64) -> Result<(), &'static str> {
+    fn update_param(&mut self, h: &Slvs_hParam, val: f64) -> Result<(), &'static str> {
         if let Some(param) = self.h_to_mut_slvs_param(h) {
             param.val = val;
 
@@ -284,8 +292,8 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn set_dragged(&mut self, entity: Entity<impl AsEntity>) {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(entity.into()) {
+    pub fn set_dragged(&mut self, entity: &Entity<impl AsEntity>) {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(&entity.handle()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -294,11 +302,11 @@ impl System {
         self.dragged = [0; 4];
     }
 
-    pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
+    pub fn solve(&mut self, group: &Group) -> Result<SolveOkay, SolveFail> {
         let mut slvs_system = Slvs_System::from(self);
 
         let failed_handles = unsafe {
-            Slvs_Solve(&mut slvs_system, group.into());
+            Slvs_Solve(&mut slvs_system, group.handle());
 
             Vec::from_raw_parts(
                 slvs_system.failed,
@@ -313,7 +321,7 @@ impl System {
                 reason: fail_reason,
                 failed_constraints: failed_handles
                     .into_iter()
-                    .map(|h| self.h_to_some_constraint(h).unwrap())
+                    .map(|h| self.h_to_some_constraint(&h).unwrap())
                     .collect(),
             }),
             Err(_) => Ok(SolveOkay {
@@ -358,61 +366,61 @@ impl TryFrom<i32> for FailReason {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    fn h_to_slvs_param(&self, h: Slvs_hParam) -> Option<&Slvs_Param> {
+    fn h_to_slvs_param(&self, h: &Slvs_hParam) -> Option<&Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&self.params.list[ix]))
     }
 
-    fn h_to_mut_slvs_param(&mut self, h: Slvs_hParam) -> Option<&mut Slvs_Param> {
+    fn h_to_mut_slvs_param(&mut self, h: &Slvs_hParam) -> Option<&mut Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
     }
 
-    fn entity_exists(&self, h: Slvs_hEntity) -> bool {
+    fn entity_exists(&self, h: &Slvs_hEntity) -> bool {
         self.entities
             .list
-            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
             .is_ok()
     }
 
-    fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Option<&Slvs_Entity> {
+    fn h_to_slvs_entity(&self, h: &Slvs_hEntity) -> Option<&Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&self.entities.list[ix]))
     }
 
-    fn h_to_mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Option<&mut Slvs_Entity> {
+    fn h_to_mut_slvs_entity(&mut self, h: &Slvs_hEntity) -> Option<&mut Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.entities.list[ix]))
     }
 
     // Checks that all elements referenced within entity_data exist
     fn validate_entity_data<T: AsEntity>(&self, entity_data: &T) -> Result<(), &'static str> {
         if let Some(workplane) = entity_data.workplane() {
-            if !self.entity_exists(workplane) {
+            if !self.entity_exists(&workplane) {
                 return Err("Specified workplane not found.");
             }
         } else if let Some(points) = entity_data.points() {
             if !points
                 .iter()
-                .map(|&point| self.entity_exists(point))
+                .map(|&point| self.entity_exists(&point))
                 .all(|x| x)
             {
                 return Err("Specified point not found");
             }
         } else if let Some(normal) = entity_data.normal() {
-            if !self.entity_exists(normal) {
+            if !self.entity_exists(&normal) {
                 return Err("Specified normal not found.");
             }
         } else if let Some(distance) = entity_data.distance() {
-            if !self.entity_exists(distance) {
+            if !self.entity_exists(&distance) {
                 return Err("Specified distance not found.");
             }
         }
@@ -420,14 +428,14 @@ impl System {
         Ok(())
     }
 
-    fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Option<&Slvs_Constraint> {
+    fn h_to_slvs_constraint(&self, h: &Slvs_hConstraint) -> Option<&Slvs_Constraint> {
         self.constraints
             .list
-            .binary_search_by_key(&h, |&Slvs_Constraint { h, .. }| h)
+            .binary_search_by_key(h, |&Slvs_Constraint { h, .. }| h)
             .map_or(None, |ix| Some(&self.constraints.list[ix]))
     }
 
-    fn h_to_some_constraint(&self, h: Slvs_hConstraint) -> Option<SomeConstraint> {
+    fn h_to_some_constraint(&self, h: &Slvs_hConstraint) -> Option<SomeConstraint> {
         self.h_to_slvs_constraint(h)
             .map(|Slvs_Constraint { h, type_, .. }| SomeConstraint::new(*type_ as _, *h))
     }
