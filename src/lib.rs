@@ -47,14 +47,14 @@ impl<T> Default for Elements<T> {
 }
 
 trait AsHandle {
-    fn handle(&self) -> u32;
+    fn as_handle(&self) -> u32;
 }
 
 #[derive(Clone, Copy)]
 pub struct Group(u32);
 
 impl AsHandle for Group {
-    fn handle(&self) -> u32 {
+    fn as_handle(&self) -> u32 {
         self.0
     }
 }
@@ -102,7 +102,7 @@ impl System {
 
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
-            group.handle(),
+            group.as_handle(),
             entity_data.type_(),
         );
 
@@ -121,8 +121,8 @@ impl System {
         if let Some(param_vals) = entity_data.param_vals() {
             new_slvs_entity.param(
                 param_vals
-                    .iter()
-                    .map(|val| self.add_param(group, *val))
+                    .into_iter()
+                    .map(|val| self.add_param(group, val))
                     .collect(),
             );
         }
@@ -145,7 +145,7 @@ impl System {
 
         let new_constraint = Slvs_Constraint {
             h: self.constraints.get_next_h(),
-            group: group.handle(),
+            group: group.as_handle(),
             type_: constraint.type_() as _,
             wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
             valA: constraint.val(),
@@ -170,7 +170,7 @@ impl System {
     fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
         let new_param = Slvs_Param {
             h: self.params.get_next_h(),
-            group: group.handle(),
+            group: group.as_handle(),
             val,
         };
 
@@ -188,30 +188,31 @@ impl System {
     where
         T: AsEntity + 'static,
     {
-        self.h_to_slvs_entity(&entity.handle()).map(|slvs_entity| {
-            let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
-                SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
-                    x: self.h_to_slvs_param(&slvs_entity.param[0]).unwrap().val,
-                    y: self.h_to_slvs_param(&slvs_entity.param[1]).unwrap().val,
-                    z: self.h_to_slvs_param(&slvs_entity.param[2]).unwrap().val,
-                }),
-                SLVS_E_POINT_IN_2D => todo!(),
-                SLVS_E_NORMAL_IN_3D => todo!(),
-                SLVS_E_NORMAL_IN_2D => todo!(),
-                SLVS_E_DISTANCE => todo!(),
-                SLVS_E_WORKPLANE => todo!(),
-                SLVS_E_LINE_SEGMENT => Box::new(LineSegment {
-                    point_a: Entity::new(slvs_entity.point[0]),
-                    point_b: Entity::new(slvs_entity.point[1]),
-                }),
-                SLVS_E_CUBIC => todo!(),
-                SLVS_E_CIRCLE => todo!(),
-                SLVS_E_ARC_OF_CIRCLE => todo!(),
-                _ => panic!("Unknown entity type: {}", slvs_entity.type_),
-            };
+        self.h_to_slvs_entity(&entity.as_handle())
+            .map(|slvs_entity| {
+                let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
+                    SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
+                        x: self.h_to_slvs_param(&slvs_entity.param[0]).unwrap().val,
+                        y: self.h_to_slvs_param(&slvs_entity.param[1]).unwrap().val,
+                        z: self.h_to_slvs_param(&slvs_entity.param[2]).unwrap().val,
+                    }),
+                    SLVS_E_POINT_IN_2D => todo!(),
+                    SLVS_E_NORMAL_IN_3D => todo!(),
+                    SLVS_E_NORMAL_IN_2D => todo!(),
+                    SLVS_E_DISTANCE => todo!(),
+                    SLVS_E_WORKPLANE => todo!(),
+                    SLVS_E_LINE_SEGMENT => Box::new(LineSegment {
+                        point_a: Entity::new(slvs_entity.point[0]),
+                        point_b: Entity::new(slvs_entity.point[1]),
+                    }),
+                    SLVS_E_CUBIC => todo!(),
+                    SLVS_E_CIRCLE => todo!(),
+                    SLVS_E_ARC_OF_CIRCLE => todo!(),
+                    _ => panic!("Unknown entity type: {}", slvs_entity.type_),
+                };
 
-            *some_entity_data.downcast::<T>().unwrap()
-        })
+                *some_entity_data.downcast::<T>().unwrap()
+            })
     }
 }
 
@@ -230,7 +231,7 @@ impl System {
             self.validate_entity_data(&entity_data)?;
 
             let param_h = {
-                let slvs_entity = self.h_to_mut_slvs_entity(&entity.handle()).unwrap();
+                let slvs_entity = self.h_to_mut_slvs_entity(&entity.as_handle()).unwrap();
 
                 if let Some(workplane) = entity_data.workplane() {
                     slvs_entity.workplane(workplane)
@@ -293,7 +294,7 @@ impl System {
 
 impl System {
     pub fn set_dragged(&mut self, entity: &Entity<impl AsEntity>) {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(&entity.handle()) {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(&entity.as_handle()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -303,16 +304,11 @@ impl System {
     }
 
     pub fn solve(&mut self, group: &Group) -> Result<SolveOkay, SolveFail> {
-        let mut slvs_system = Slvs_System::from(self);
+        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
+        let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
 
-        let failed_handles = unsafe {
-            Slvs_Solve(&mut slvs_system, group.handle());
-
-            Vec::from_raw_parts(
-                slvs_system.failed,
-                slvs_system.faileds.try_into().unwrap(),
-                slvs_system.faileds.try_into().unwrap(),
-            )
+        unsafe {
+            Slvs_Solve(&mut slvs_system, group.as_handle());
         };
 
         match FailReason::try_from(slvs_system.result) {
@@ -409,8 +405,8 @@ impl System {
             }
         } else if let Some(points) = entity_data.points() {
             if !points
-                .iter()
-                .map(|&point| self.entity_exists(&point))
+                .into_iter()
+                .map(|point| self.entity_exists(&point))
                 .all(|x| x)
             {
                 return Err("Specified point not found");

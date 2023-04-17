@@ -42,7 +42,7 @@ impl<T: AsConstraint> Constraint<T> {
 }
 
 impl<T: AsConstraint> AsHandle for Constraint<T> {
-    fn handle(&self) -> u32 {
+    fn as_handle(&self) -> u32 {
         self.handle
     }
 }

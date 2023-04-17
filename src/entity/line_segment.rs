@@ -23,7 +23,7 @@ impl AsEntity for LineSegment {
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
+        Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {

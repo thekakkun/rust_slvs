@@ -36,7 +36,7 @@ impl<T: AsEntity> Entity<T> {
 }
 
 impl<T: AsEntity> AsHandle for Entity<T> {
-    fn handle(&self) -> u32 {
+    fn as_handle(&self) -> u32 {
         self.handle
     }
 }

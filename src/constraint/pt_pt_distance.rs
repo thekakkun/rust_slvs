@@ -43,7 +43,7 @@ impl AsConstraint for PtPtDistance {
             }
             | PtPtDistance::_3d {
                 point_a, point_b, ..
-            } => [Some((*point_a).handle()), Some((*point_b).handle())],
+            } => [Some((*point_a).as_handle()), Some((*point_b).as_handle())],
         }
     }
 
