@@ -58,9 +58,7 @@ impl Slvs_Entity {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Slvs_System {
-    pub(super) fn from(system: &mut System) -> Self {
-        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; system.constraints.list.len()];
-
+    pub(super) fn from(system: &mut System, failed_handles: &mut Vec<Slvs_hConstraint>) -> Self {
         Slvs_System {
             param: system.params.list.as_mut_ptr(),
             params: system.params.list.len() as _,
