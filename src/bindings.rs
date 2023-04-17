@@ -42,8 +42,10 @@ impl Slvs_Entity {
         self.wrkpl = workplane;
     }
 
-    pub(crate) fn point(&mut self, point: [Slvs_hEntity; 4]) {
-        self.point = point;
+    pub(crate) fn point(&mut self, points: Vec<Slvs_hEntity>) {
+        for (i, point) in points.iter().enumerate() {
+            self.point[i] = *point;
+        }
     }
 
     pub(crate) fn normal(&mut self, normal: Slvs_hEntity) {
@@ -54,8 +56,10 @@ impl Slvs_Entity {
         self.distance = distance;
     }
 
-    pub(crate) fn param(&mut self, param: [Slvs_hEntity; 4]) {
-        self.param = param;
+    pub(crate) fn param(&mut self, param: Vec<Slvs_hParam>) {
+        for (i, param_h) in param.iter().enumerate() {
+            self.param[i] = *param_h;
+        }
     }
 }
 

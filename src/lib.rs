@@ -88,44 +88,38 @@ impl System {
         group: Group,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
-        let validated_entity = self.validate_entity(entity_data)?;
+        self.validate_entity(&entity_data)?;
 
-        let mut new_entity = Slvs_Entity::new(
+        let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
             group.into(),
-            validated_entity.type_(),
+            entity_data.type_(),
         );
 
-        if let Some(workplane) = validated_entity.workplane() {
-            new_entity.workplane(workplane);
+        if let Some(workplane) = entity_data.workplane() {
+            new_slvs_entity.workplane(workplane);
+        }
+        if let Some(points) = entity_data.points() {
+            new_slvs_entity.point(points);
+        }
+        if let Some(normal) = entity_data.normal() {
+            new_slvs_entity.normal(normal);
+        }
+        if let Some(distance) = entity_data.distance() {
+            new_slvs_entity.distance(distance);
+        }
+        if let Some(param_vals) = entity_data.param_vals() {
+            new_slvs_entity.param(
+                param_vals
+                    .iter()
+                    .map(|val| self.add_param(group, *val))
+                    .collect(),
+            );
         }
 
-        if let Some(mut points) = validated_entity.points() {
-            points.resize(4, 0);
-            new_entity.point(points.try_into().unwrap());
-        }
-
-        if let Some(normal) = validated_entity.normal() {
-            new_entity.normal(normal);
-        }
-
-        if let Some(distance) = validated_entity.distance() {
-            new_entity.distance(distance);
-        }
-
-        if let Some(param_vals) = validated_entity.param_vals() {
-            let mut param_h: Vec<_> = param_vals
-                .iter()
-                .map(|val| self.add_param(group, *val))
-                .collect();
-            param_h.resize(4, 0);
-
-            new_entity.param(param_h.try_into().unwrap())
-        }
-
-        self.entities.list.push(new_entity);
+        self.entities.list.push(new_slvs_entity);
         Ok(Entity {
-            handle: new_entity.h,
+            handle: new_slvs_entity.h,
             phantom: PhantomData,
         })
     }
@@ -186,7 +180,7 @@ impl System {
         Entity<T>: Into<Slvs_hEntity>,
     {
         self.h_to_slvs_entity(entity.into()).map(|slvs_entity| {
-            let some_entity: Box<dyn Any> = match slvs_entity.type_ as _ {
+            let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
                 SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
                     x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
                     y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
@@ -207,7 +201,7 @@ impl System {
                 _ => panic!("Unknown entity type: {}", slvs_entity.type_),
             };
 
-            *some_entity.downcast::<T>().unwrap()
+            *some_entity_data.downcast::<T>().unwrap()
         })
     }
 }
@@ -225,38 +219,36 @@ impl System {
     {
         if let Some(mut entity_data) = self.get_entity_data(entity) {
             f(&mut entity_data);
+            self.validate_entity(&entity_data)?;
 
-            let validated_entity_data = self.validate_entity(entity_data)?;
-
-            // scoped to allow another mut self for the params.
             let param_h = {
-                // safe to unwrap() we've already confirmed `entity` exists in the `if let` above
-                let mut slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
+                let slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
 
-                slvs_entity.wrkpl = validated_entity_data.workplane().unwrap_or(0);
-                slvs_entity.point =
-                    validated_entity_data
-                        .points()
-                        .map_or([0, 0, 0, 0], |mut points| {
-                            points.resize(4, 0);
-                            points.try_into().unwrap()
-                        });
-                slvs_entity.normal = validated_entity_data.normal().unwrap_or(0);
-                slvs_entity.distance = validated_entity_data.distance().unwrap_or(0);
+                if let Some(workplane) = entity_data.workplane() {
+                    slvs_entity.workplane(workplane)
+                }
+                if let Some(points) = entity_data.points() {
+                    slvs_entity.point(points);
+                }
+                if let Some(normal) = entity_data.normal() {
+                    slvs_entity.normal(normal);
+                }
+                if let Some(distance) = entity_data.distance() {
+                    slvs_entity.distance(distance);
+                }
 
                 slvs_entity.param
             };
 
-            if let Some(param_vals) = validated_entity_data.param_vals() {
-                let h_val_iter = zip(param_h, param_vals);
-                for (h, val) in h_val_iter {
+            if let Some(param_vals) = entity_data.param_vals() {
+                for (h, val) in zip(param_h, param_vals) {
                     self.update_param(h, val)?;
                 }
             }
 
-            Ok(validated_entity_data)
+            Ok(entity_data)
         } else {
-            Err("Entity not found")
+            Err("Specified entity not found.")
         }
     }
 
@@ -266,7 +258,7 @@ impl System {
 
             Ok(())
         } else {
-            Err("Param not found")
+            Err("Specified parameter not found.")
         }
     }
 }
@@ -379,10 +371,10 @@ impl System {
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
     }
 
-    fn validate_entity<T: AsEntity>(&self, entity: T) -> Result<T, &'static str> {
+    fn validate_entity<T: AsEntity>(&self, entity: &T) -> Result<(), &'static str> {
         if let Some(workplane) = entity.workplane() {
             if !self.entity_exists(workplane) {
-                return Err("Specified workplane does not exist.");
+                return Err("Specified workplane not found.");
             }
         } else if let Some(points) = entity.points() {
             if !points
@@ -390,19 +382,19 @@ impl System {
                 .map(|&point| self.entity_exists(point))
                 .all(|x| x)
             {
-                return Err("Specified point does not exist");
+                return Err("Specified point not found");
             }
         } else if let Some(normal) = entity.normal() {
             if !self.entity_exists(normal) {
-                return Err("Specified normal does not exist.");
+                return Err("Specified normal not found.");
             }
         } else if let Some(distance) = entity.distance() {
             if !self.entity_exists(distance) {
-                return Err("Specified distance does not exist.");
+                return Err("Specified distance not found.");
             }
         }
 
-        Ok(entity)
+        Ok(())
     }
 
     fn entity_exists(&self, h: Slvs_hEntity) -> bool {
