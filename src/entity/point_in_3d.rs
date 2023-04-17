@@ -9,6 +9,12 @@ pub struct PointIn3d {
     pub z: f64,
 }
 
+impl PointIn3d {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z }
+    }
+}
+
 impl AsEntity for PointIn3d {
     fn type_(&self) -> i32 {
         SLVS_E_POINT_IN_3D as _

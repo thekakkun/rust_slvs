@@ -7,6 +7,12 @@ pub struct LineSegment {
     pub point_b: Entity<PointIn3d>,
 }
 
+impl LineSegment {
+    pub fn new(point_a: Entity<PointIn3d>, point_b: Entity<PointIn3d>) -> Self {
+        Self { point_a, point_b }
+    }
+}
+
 impl AsEntity for LineSegment {
     fn type_(&self) -> i32 {
         SLVS_E_LINE_SEGMENT as _
