@@ -5,6 +5,7 @@ use crate::{
 
 use super::{AsConstraint, Constraint, SomeConstraint};
 
+#[derive(Debug, PartialEq)]
 pub enum PtPtDistance {
     _2d {
         val: f64,

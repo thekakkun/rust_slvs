@@ -1,7 +1,7 @@
 use slvs::{
     constraint::PtPtDistance,
     entity::{LineSegment, PointIn3d},
-    System,
+    FailReason, System,
 };
 
 const SOLVE_TOLERANCE: f64 = 1e-8;
@@ -46,5 +46,49 @@ fn solve_3d_demo() {
         .sqrt();
 
         assert!((target_dist - dist).abs() < SOLVE_TOLERANCE);
+    }
+}
+
+#[test]
+fn inconsistent_constraints() {
+    let mut sys = System::new();
+    let g = sys.add_group();
+    let p1 = sys
+        .add_entity(g, PointIn3d::new(10.0, 10.0, 10.0))
+        .expect("p1 created");
+
+    let p2 = sys
+        .add_entity(g, PointIn3d::new(20.0, 20.0, 20.0))
+        .expect("p2 created");
+
+    // distance between p1 and p2 is 10
+    let c1 = sys
+        .add_constraint(
+            g,
+            PtPtDistance::_3d {
+                val: 10.0,
+                point_a: p1,
+                point_b: p2,
+            },
+        )
+        .expect("distance constraint added");
+    // distance between p1 and p2 is 20
+    let c2 = sys
+        .add_constraint(
+            g,
+            PtPtDistance::_3d {
+                val: 20.0,
+                point_a: p1,
+                point_b: p2,
+            },
+        )
+        .expect("distance constraint added");
+
+    let solve_result = sys.solve(g);
+
+    if let Err(fail_result) = solve_result {
+        assert_eq!(fail_result.reason, FailReason::Inconsistent);
+        assert!(fail_result.failed_constraints.contains(&c1.into()));
+        assert!(fail_result.failed_constraints.contains(&c2.into()));
     }
 }

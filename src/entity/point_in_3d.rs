@@ -2,7 +2,7 @@ use crate::bindings::{Slvs_hEntity, SLVS_E_POINT_IN_3D};
 
 use super::AsEntity;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PointIn3d {
     pub x: f64,
     pub y: f64,

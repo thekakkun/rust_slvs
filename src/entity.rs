@@ -20,7 +20,7 @@ pub trait AsEntity {
     fn param_vals(&self) -> Option<Vec<f64>>;
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntity> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,

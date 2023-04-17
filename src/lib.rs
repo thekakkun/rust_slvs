@@ -72,7 +72,7 @@ impl System {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Adding Elements
+// Creating Elements
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
@@ -88,7 +88,7 @@ impl System {
         group: Group,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
-        self.validate_entity(&entity_data)?;
+        self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
@@ -170,7 +170,7 @@ impl System {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Getting Elements
+// Reading Elements
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
@@ -208,7 +208,7 @@ impl System {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Updating Elements
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 impl System {
     pub fn update_entity<T, F>(&mut self, entity: Entity<T>, f: F) -> Result<T, &'static str>
@@ -219,7 +219,7 @@ impl System {
     {
         if let Some(mut entity_data) = self.get_entity_data(entity) {
             f(&mut entity_data);
-            self.validate_entity(&entity_data)?;
+            self.validate_entity_data(&entity_data)?;
 
             let param_h = {
                 let slvs_entity = self.h_to_mut_slvs_entity(entity.into()).unwrap();
@@ -260,6 +260,22 @@ impl System {
         } else {
             Err("Specified parameter not found.")
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Deleting Elements
+////////////////////////////////////////////////////////////////////////////////
+
+impl System {
+    pub fn delete_group(&mut self) {
+        unimplemented!()
+    }
+    pub fn delete_entity(&mut self) {
+        unimplemented!()
+    }
+    pub fn delete_constraint(&mut self) {
+        unimplemented!()
     }
 }
 
@@ -356,32 +372,6 @@ impl System {
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
     }
 
-    fn validate_entity<T: AsEntity>(&self, entity: &T) -> Result<(), &'static str> {
-        if let Some(workplane) = entity.workplane() {
-            if !self.entity_exists(workplane) {
-                return Err("Specified workplane not found.");
-            }
-        } else if let Some(points) = entity.points() {
-            if !points
-                .iter()
-                .map(|&point| self.entity_exists(point))
-                .all(|x| x)
-            {
-                return Err("Specified point not found");
-            }
-        } else if let Some(normal) = entity.normal() {
-            if !self.entity_exists(normal) {
-                return Err("Specified normal not found.");
-            }
-        } else if let Some(distance) = entity.distance() {
-            if !self.entity_exists(distance) {
-                return Err("Specified distance not found.");
-            }
-        }
-
-        Ok(())
-    }
-
     fn entity_exists(&self, h: Slvs_hEntity) -> bool {
         self.entities
             .list
@@ -401,6 +391,33 @@ impl System {
             .list
             .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.entities.list[ix]))
+    }
+
+    // Checks that all elements referenced within entity_data exist
+    fn validate_entity_data<T: AsEntity>(&self, entity_data: &T) -> Result<(), &'static str> {
+        if let Some(workplane) = entity_data.workplane() {
+            if !self.entity_exists(workplane) {
+                return Err("Specified workplane not found.");
+            }
+        } else if let Some(points) = entity_data.points() {
+            if !points
+                .iter()
+                .map(|&point| self.entity_exists(point))
+                .all(|x| x)
+            {
+                return Err("Specified point not found");
+            }
+        } else if let Some(normal) = entity_data.normal() {
+            if !self.entity_exists(normal) {
+                return Err("Specified normal not found.");
+            }
+        } else if let Some(distance) = entity_data.distance() {
+            if !self.entity_exists(distance) {
+                return Err("Specified distance not found.");
+            }
+        }
+
+        Ok(())
     }
 
     fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Option<&Slvs_Constraint> {

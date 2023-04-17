@@ -26,13 +26,13 @@ pub trait AsConstraint {
     fn other(&self) -> [bool; 2];
 }
 
-#[derive(Clone, Copy)]
-pub struct Constraint<T: AsConstraint + ?Sized> {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Constraint<T: AsConstraint> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
 
-impl<T: AsConstraint + ?Sized> Constraint<T> {
+impl<T: AsConstraint> Constraint<T> {
     pub fn new(handle: u32) -> Self {
         Self {
             handle,
@@ -41,6 +41,7 @@ impl<T: AsConstraint + ?Sized> Constraint<T> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum SomeConstraint {
     // PointsCoincident(Constraint<PointsCoincident>),
     PtPtDistance(Constraint<PtPtDistance>),
