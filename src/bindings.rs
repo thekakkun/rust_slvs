@@ -5,7 +5,7 @@
 use crate::{
     constraint::{AsConstraint, Constraint},
     entity::{AsEntity, Entity},
-    Group,
+    Group, System,
 };
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -76,5 +76,30 @@ impl<T: AsEntity> From<Entity<T>> for Slvs_hEntity {
 impl<T: AsConstraint> From<Constraint<T>> for Slvs_hConstraint {
     fn from(value: Constraint<T>) -> Self {
         value.handle
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// System
+////////////////////////////////////////////////////////////////////////////////
+
+impl Slvs_System {
+    pub(super) fn from(system: &mut System) -> Self {
+        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; system.constraints.list.len()];
+
+        Slvs_System {
+            param: system.params.list.as_mut_ptr(),
+            params: system.params.list.len() as _,
+            entity: system.entities.list.as_mut_ptr(),
+            entities: system.entities.list.len() as _,
+            constraint: system.constraints.list.as_mut_ptr(),
+            constraints: system.constraints.list.len() as _,
+            dragged: system.dragged,
+            calculateFaileds: system.calculate_faileds as _,
+            failed: failed_handles.as_mut_ptr(),
+            faileds: failed_handles.len() as _,
+            dof: 0,
+            result: 0,
+        }
     }
 }

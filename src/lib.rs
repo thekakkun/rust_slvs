@@ -279,27 +279,12 @@ impl System {
     }
 
     pub fn solve(&mut self, group: Group) -> Result<SolveOkay, SolveFail> {
-        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
+        let mut slvs_system = Slvs_System::from(self);
 
-        let mut slvs_system = Slvs_System {
-            param: self.params.list.as_mut_ptr(),
-            params: self.params.list.len() as _,
-            entity: self.entities.list.as_mut_ptr(),
-            entities: self.entities.list.len() as _,
-            constraint: self.constraints.list.as_mut_ptr(),
-            constraints: self.constraints.list.len() as _,
-            dragged: self.dragged,
-            calculateFaileds: self.calculate_faileds as _,
-            failed: failed_handles.as_mut_ptr(),
-            faileds: failed_handles.len() as _,
-            dof: 0,
-            result: 0,
-        };
-
-        unsafe {
+        let failed_handles = unsafe {
             Slvs_Solve(&mut slvs_system, group.into());
 
-            failed_handles = Vec::from_raw_parts(
+            Vec::from_raw_parts(
                 slvs_system.failed,
                 slvs_system.faileds.try_into().unwrap(),
                 slvs_system.faileds.try_into().unwrap(),
