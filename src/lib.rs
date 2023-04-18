@@ -290,16 +290,31 @@ impl System {
 
 impl System {
     pub fn delete_group(&mut self, group: Group) -> Result<Group, &'static str> {
-        if let Ok(ix) = self.groups.list.binary_search_by_key(&group, |&g| g) {
-            self.groups.list.remove(ix);
-            Ok(group)
-        } else {
-            Err("Specified group not found.")
-        }
+        let ix = self.group_ix(group.as_handle())?;
+        self.groups.list.remove(ix);
+        Ok(group)
     }
 
-    pub fn delete_entity<T: AsEntity>(&mut self, entity: Entity<T>) -> Result<T, &'static str> {
-        unimplemented!()
+    fn delete_param(&mut self, h: Slvs_hParam) -> Result<(), &'static str> {
+        let ix = self.param_ix(h)?;
+        self.params.list.remove(ix);
+
+        Ok(())
+    }
+
+    pub fn delete_entity<T>(&mut self, entity: Entity<T>) -> Result<T, &'static str>
+    where
+        T: AsEntity + 'static,
+    {
+        let entity_data = self.get_entity_data(&entity)?;
+        let ix = self.entity_ix(entity.as_handle())?;
+        let deleted_entity = self.entities.list.remove(ix);
+
+        for param_h in deleted_entity.param {
+            self.delete_param(param_h)?
+        }
+
+        Ok(entity_data)
     }
 
     pub fn delete_constraint(&mut self) {
