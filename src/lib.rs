@@ -51,7 +51,7 @@ trait AsHandle {
     fn as_handle(&self) -> u32;
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Group(u32);
 
 impl AsHandle for Group {
@@ -266,7 +266,7 @@ impl System {
 
             Ok(entity_data)
         } else {
-            Err("Specified entity not found.")
+            Err("Specified entity not found")
         }
     }
 
@@ -295,12 +295,19 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn delete_group(&mut self) {
+    pub fn delete_group(&mut self, group: Group) -> Result<Group, &'static str> {
+        if let Ok(ix) = self.groups.list.binary_search_by_key(&group, |&g| g) {
+            self.groups.list.remove(ix);
+            Ok(group)
+        } else {
+            Err("Specified group not found.")
+        }
+    }
+
+    pub fn delete_entity<T: AsEntity>(&mut self, entity: Entity<T>) -> Result<T, &'static str> {
         unimplemented!()
     }
-    pub fn delete_entity(&mut self) {
-        unimplemented!()
-    }
+
     pub fn delete_constraint(&mut self) {
         unimplemented!()
     }
