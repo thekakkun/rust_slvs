@@ -2,6 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::mem::MaybeUninit;
+
 use crate::System;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -77,5 +79,106 @@ impl Slvs_System {
             dof: 0,
             result: 0,
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// System
+////////////////////////////////////////////////////////////////////////////////
+
+pub(crate) fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
+    let [qw, qx, qy, qz] = quaternion;
+
+    let mut x = MaybeUninit::<f64>::uninit();
+    let mut y = MaybeUninit::<f64>::uninit();
+    let mut z = MaybeUninit::<f64>::uninit();
+
+    unsafe {
+        Slvs_QuaternionU(
+            qw,
+            qx,
+            qy,
+            qz,
+            x.as_mut_ptr(),
+            y.as_mut_ptr(),
+            z.as_mut_ptr(),
+        );
+
+        [x.assume_init(), y.assume_init(), z.assume_init()]
+    }
+}
+
+pub(crate) fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
+    let [qw, qx, qy, qz] = quaternion;
+
+    let mut x = MaybeUninit::<f64>::uninit();
+    let mut y = MaybeUninit::<f64>::uninit();
+    let mut z = MaybeUninit::<f64>::uninit();
+
+    unsafe {
+        Slvs_QuaternionV(
+            qw,
+            qx,
+            qy,
+            qz,
+            x.as_mut_ptr(),
+            y.as_mut_ptr(),
+            z.as_mut_ptr(),
+        );
+
+        [x.assume_init(), y.assume_init(), z.assume_init()]
+    }
+}
+
+pub(crate) fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
+    let [qw, qx, qy, qz] = quaternion;
+
+    let mut x = MaybeUninit::<f64>::uninit();
+    let mut y = MaybeUninit::<f64>::uninit();
+    let mut z = MaybeUninit::<f64>::uninit();
+
+    unsafe {
+        Slvs_QuaternionN(
+            qw,
+            qx,
+            qy,
+            qz,
+            x.as_mut_ptr(),
+            y.as_mut_ptr(),
+            z.as_mut_ptr(),
+        );
+
+        [x.assume_init(), y.assume_init(), z.assume_init()]
+    }
+}
+
+pub(crate) fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4] {
+    let [ux, uy, uz] = basis_vec_1;
+    let [vx, vy, vz] = basic_vec_2;
+
+    let mut qw = MaybeUninit::<f64>::uninit();
+    let mut qx = MaybeUninit::<f64>::uninit();
+    let mut qy = MaybeUninit::<f64>::uninit();
+    let mut qz = MaybeUninit::<f64>::uninit();
+
+    unsafe {
+        Slvs_MakeQuaternion(
+            ux,
+            uy,
+            uz,
+            vx,
+            vy,
+            vz,
+            qw.as_mut_ptr(),
+            qx.as_mut_ptr(),
+            qy.as_mut_ptr(),
+            qz.as_mut_ptr(),
+        );
+        [
+            qw.assume_init(),
+            qx.assume_init(),
+            qy.assume_init(),
+            qz.assume_init(),
+        ]
     }
 }
