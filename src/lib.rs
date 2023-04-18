@@ -185,7 +185,7 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn get_entity_data<T>(&self, entity: &Entity<T>) -> Option<T>
+    pub fn get_entity_data<T>(&self, entity: &Entity<T>) -> Result<T, &'static str>
     where
         T: AsEntity + 'static,
     {
@@ -232,42 +232,39 @@ impl System {
         T: AsEntity + 'static,
         F: FnOnce(&mut T),
     {
-        if let Some(mut entity_data) = self.get_entity_data(entity) {
-            f(&mut entity_data);
-            self.validate_entity_data(&entity_data)?;
+        let mut entity_data = self.get_entity_data(entity)?;
 
-            let param_h = {
-                let slvs_entity = self.h_to_mut_slvs_entity(entity.as_handle()).unwrap();
+        f(&mut entity_data);
+        self.validate_entity_data(&entity_data)?;
 
-                if let Some(group) = group {
-                    slvs_entity.group(group.as_handle())
-                }
-                if let Some(workplane) = entity_data.workplane() {
-                    slvs_entity.workplane(workplane)
-                }
-                if let Some(points) = entity_data.points() {
-                    slvs_entity.point(points);
-                }
-                if let Some(normal) = entity_data.normal() {
-                    slvs_entity.normal(normal);
-                }
-                if let Some(distance) = entity_data.distance() {
-                    slvs_entity.distance(distance);
-                }
+        let param_h = {
+            let slvs_entity = self.h_to_mut_slvs_entity(entity.as_handle()).unwrap();
 
-                slvs_entity.param
-            };
-
-            if let Some(param_vals) = entity_data.param_vals() {
-                for (h, val) in zip(param_h, param_vals) {
-                    self.update_param(h, group.map(|g| (g.as_handle())), val)?;
-                }
+            if let Some(group) = group {
+                slvs_entity.group(group.as_handle())
+            }
+            if let Some(workplane) = entity_data.workplane() {
+                slvs_entity.workplane(workplane)
+            }
+            if let Some(points) = entity_data.points() {
+                slvs_entity.point(points);
+            }
+            if let Some(normal) = entity_data.normal() {
+                slvs_entity.normal(normal);
+            }
+            if let Some(distance) = entity_data.distance() {
+                slvs_entity.distance(distance);
             }
 
-            Ok(entity_data)
-        } else {
-            Err("Specified entity not found")
+            slvs_entity.param
+        };
+
+        if let Some(param_vals) = entity_data.param_vals() {
+            for (h, val) in zip(param_h, param_vals) {
+                self.update_param(h, group.map(|g| (g.as_handle())), val)?;
+            }
         }
+        Ok(entity_data)
     }
 
     fn update_param(
@@ -276,17 +273,14 @@ impl System {
         group_h: Option<Slvs_hGroup>,
         val: f64,
     ) -> Result<(), &'static str> {
-        if let Some(param) = self.h_to_mut_slvs_param(h) {
-            param.val = val;
+        let mut param = self.h_to_mut_slvs_param(h)?;
+        param.val = val;
 
-            if let Some(group_h) = group_h {
-                param.group = group_h;
-            }
-
-            Ok(())
-        } else {
-            Err("Specified parameter not found.")
+        if let Some(group_h) = group_h {
+            param.group = group_h;
         }
+
+        Ok(())
     }
 }
 
@@ -319,7 +313,7 @@ impl System {
 
 impl System {
     pub fn set_dragged(&mut self, entity: &Entity<impl AsEntity>) {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(entity.as_handle()) {
+        if let Ok(slvs_entity) = self.h_to_slvs_entity(entity.as_handle()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -342,7 +336,7 @@ impl System {
                 reason: fail_reason,
                 failed_constraints: failed_handles
                     .into_iter()
-                    .map(|h| self.h_to_some_constraint(&h).unwrap())
+                    .map(|h| self.h_to_some_constraint(h).unwrap())
                     .collect(),
             }),
             Err(_) => Ok(SolveOkay {
@@ -387,18 +381,40 @@ impl TryFrom<i32> for FailReason {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    fn h_to_slvs_param(&self, h: Slvs_hParam) -> Option<&Slvs_Param> {
+    fn h_to_slvs_param(&self, h: Slvs_hParam) -> Result<&Slvs_Param, &'static str> {
         self.params
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
-            .map_or(None, |ix| Some(&self.params.list[ix]))
+            .map_or(Err("Specified param not found."), |ix| {
+                Ok(&self.params.list[ix])
+            })
     }
 
-    fn h_to_mut_slvs_param(&mut self, h: Slvs_hParam) -> Option<&mut Slvs_Param> {
+    fn h_to_mut_slvs_param(&mut self, h: Slvs_hParam) -> Result<&mut Slvs_Param, &'static str> {
         self.params
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
-            .map_or(None, |ix| Some(&mut self.params.list[ix]))
+            .map_or(Err("Specified param not found."), |ix| {
+                Ok(&mut self.params.list[ix])
+            })
+    }
+
+    fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Result<&Slvs_Entity, &'static str> {
+        self.entities
+            .list
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .map_or(Err("Specified entity not found."), |ix| {
+                Ok(&self.entities.list[ix])
+            })
+    }
+
+    fn h_to_mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Result<&mut Slvs_Entity, &'static str> {
+        self.entities
+            .list
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
+            .map_or(Err("Specified entity not found."), |ix| {
+                Ok(&mut self.entities.list[ix])
+            })
     }
 
     fn entity_exists(&self, h: Slvs_hEntity) -> bool {
@@ -406,20 +422,6 @@ impl System {
             .list
             .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .is_ok()
-    }
-
-    fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Option<&Slvs_Entity> {
-        self.entities
-            .list
-            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
-            .map_or(None, |ix| Some(&self.entities.list[ix]))
-    }
-
-    fn h_to_mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Option<&mut Slvs_Entity> {
-        self.entities
-            .list
-            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
-            .map_or(None, |ix| Some(&mut self.entities.list[ix]))
     }
 
     // Checks that all elements referenced within entity_data exist
@@ -449,14 +451,16 @@ impl System {
         Ok(())
     }
 
-    fn h_to_slvs_constraint(&self, h: &Slvs_hConstraint) -> Option<&Slvs_Constraint> {
+    fn h_to_slvs_constraint(&self, h: Slvs_hConstraint) -> Result<&Slvs_Constraint, &'static str> {
         self.constraints
             .list
-            .binary_search_by_key(h, |&Slvs_Constraint { h, .. }| h)
-            .map_or(None, |ix| Some(&self.constraints.list[ix]))
+            .binary_search_by_key(&h, |&Slvs_Constraint { h, .. }| h)
+            .map_or(Err("Specified constraint not found."), |ix| {
+                Ok(&self.constraints.list[ix])
+            })
     }
 
-    fn h_to_some_constraint(&self, h: &Slvs_hConstraint) -> Option<SomeConstraint> {
+    fn h_to_some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
         self.h_to_slvs_constraint(h)
             .map(|Slvs_Constraint { h, type_, .. }| SomeConstraint::new(*type_ as _, *h))
     }
