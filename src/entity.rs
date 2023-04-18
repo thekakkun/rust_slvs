@@ -2,10 +2,27 @@ use std::marker::PhantomData;
 
 use crate::{bindings::Slvs_hEntity, AsHandle};
 
-pub mod line_segment;
-pub use line_segment::LineSegment;
 pub mod point_in_3d;
 pub use point_in_3d::PointIn3d;
+pub mod point_in_2d;
+pub use point_in_2d::PointIn2d;
+pub mod normal_in_3d;
+pub use normal_in_3d::NormalIn3d;
+pub mod normal_in_2d;
+pub use normal_in_2d::NormalIn2d;
+pub mod distance;
+pub use distance::Distance;
+pub mod workplane;
+pub use workplane::Workplane;
+pub mod line_segment;
+pub use line_segment::LineSegment;
+pub mod cubic;
+pub use cubic::Cubic;
+pub mod circle;
+pub use circle::Circle;
+pub mod arc_of_circle;
+pub use arc_of_circle::ArcOfCircle;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity of a specific type

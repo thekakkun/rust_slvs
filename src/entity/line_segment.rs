@@ -1,7 +1,7 @@
 use super::{AsEntity, Entity, PointIn3d};
 use crate::{AsHandle, Slvs_hEntity, SLVS_E_LINE_SEGMENT};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LineSegment {
     pub point_a: Entity<PointIn3d>,
     pub point_b: Entity<PointIn3d>,

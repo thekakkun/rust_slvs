@@ -192,20 +192,20 @@ impl System {
     {
         self.slvs_entity(entity.as_handle()).map(|slvs_entity| {
             let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
-                SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
-                    x: self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    y: self.slvs_param(slvs_entity.param[1]).unwrap().val,
-                    z: self.slvs_param(slvs_entity.param[2]).unwrap().val,
-                }),
+                SLVS_E_POINT_IN_3D => Box::new(PointIn3d::new(
+                    self.slvs_param(slvs_entity.param[0]).unwrap().val,
+                    self.slvs_param(slvs_entity.param[1]).unwrap().val,
+                    self.slvs_param(slvs_entity.param[2]).unwrap().val,
+                )),
                 SLVS_E_POINT_IN_2D => todo!(),
                 SLVS_E_NORMAL_IN_3D => todo!(),
                 SLVS_E_NORMAL_IN_2D => todo!(),
                 SLVS_E_DISTANCE => todo!(),
                 SLVS_E_WORKPLANE => todo!(),
-                SLVS_E_LINE_SEGMENT => Box::new(LineSegment {
-                    point_a: Entity::new(slvs_entity.point[0]),
-                    point_b: Entity::new(slvs_entity.point[1]),
-                }),
+                SLVS_E_LINE_SEGMENT => Box::new(LineSegment::new(
+                    Entity::new(slvs_entity.point[0]),
+                    Entity::new(slvs_entity.point[1]),
+                )),
                 SLVS_E_CUBIC => todo!(),
                 SLVS_E_CIRCLE => todo!(),
                 SLVS_E_ARC_OF_CIRCLE => todo!(),
@@ -222,6 +222,22 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
+    fn update_param(
+        &mut self,
+        h: Slvs_hParam,
+        group_h: Option<Slvs_hGroup>,
+        val: f64,
+    ) -> Result<(), &'static str> {
+        let mut param = self.mut_slvs_param(h)?;
+        param.val = val;
+
+        if let Some(group_h) = group_h {
+            param.group = group_h;
+        }
+
+        Ok(())
+    }
+
     pub fn update_entity<T, F>(
         &mut self,
         entity: &Entity<T>,
@@ -265,22 +281,6 @@ impl System {
             }
         }
         Ok(entity_data)
-    }
-
-    fn update_param(
-        &mut self,
-        h: Slvs_hParam,
-        group_h: Option<Slvs_hGroup>,
-        val: f64,
-    ) -> Result<(), &'static str> {
-        let mut param = self.mut_slvs_param(h)?;
-        param.val = val;
-
-        if let Some(group_h) = group_h {
-            param.group = group_h;
-        }
-
-        Ok(())
     }
 }
 
