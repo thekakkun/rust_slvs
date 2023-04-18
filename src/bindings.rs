@@ -24,6 +24,10 @@ impl Slvs_Entity {
         }
     }
 
+    pub(crate) fn group(&mut self, group: Slvs_hGroup) {
+        self.group = group;
+    }
+
     pub(crate) fn workplane(&mut self, workplane: Slvs_hEntity) {
         self.wrkpl = workplane;
     }

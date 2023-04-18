@@ -1,5 +1,5 @@
 use super::{AsEntity, Entity, PointIn3d};
-use crate::{Slvs_hEntity, SLVS_E_LINE_SEGMENT, AsHandle};
+use crate::{AsHandle, Slvs_hEntity, SLVS_E_LINE_SEGMENT};
 
 #[derive(Clone, Copy)]
 pub struct LineSegment {

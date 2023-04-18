@@ -34,11 +34,15 @@ fn update_entity() {
     let updated_p_z = 30.0;
 
     let updated_p_data = sys
-        .update_entity(&p, |mut entity| {
-            entity.x = updated_p_x;
-            entity.y = updated_p_y;
-            entity.z = updated_p_z;
-        })
+        .update_entity(
+            &p,
+            |mut entity| {
+                entity.x = updated_p_x;
+                entity.y = updated_p_y;
+                entity.z = updated_p_z;
+            },
+            None,
+        )
         .expect("should get updated point data");
 
     assert_eq!(updated_p_data.x, updated_p_x);

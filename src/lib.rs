@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::{iter::zip, marker::PhantomData};
 
+use bindings::Slvs_hGroup;
 use bindings::{Slvs_Constraint, Slvs_hConstraint};
 use bindings::{
     Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
@@ -188,13 +189,13 @@ impl System {
     where
         T: AsEntity + 'static,
     {
-        self.h_to_slvs_entity(&entity.as_handle())
+        self.h_to_slvs_entity(entity.as_handle())
             .map(|slvs_entity| {
                 let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
                     SLVS_E_POINT_IN_3D => Box::new(PointIn3d {
-                        x: self.h_to_slvs_param(&slvs_entity.param[0]).unwrap().val,
-                        y: self.h_to_slvs_param(&slvs_entity.param[1]).unwrap().val,
-                        z: self.h_to_slvs_param(&slvs_entity.param[2]).unwrap().val,
+                        x: self.h_to_slvs_param(slvs_entity.param[0]).unwrap().val,
+                        y: self.h_to_slvs_param(slvs_entity.param[1]).unwrap().val,
+                        z: self.h_to_slvs_param(slvs_entity.param[2]).unwrap().val,
                     }),
                     SLVS_E_POINT_IN_2D => todo!(),
                     SLVS_E_NORMAL_IN_3D => todo!(),
@@ -221,7 +222,12 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
+    pub fn update_entity<T, F>(
+        &mut self,
+        entity: &Entity<T>,
+        f: F,
+        group: Option<&Group>,
+    ) -> Result<T, &'static str>
     where
         T: AsEntity + 'static,
         F: FnOnce(&mut T),
@@ -231,8 +237,11 @@ impl System {
             self.validate_entity_data(&entity_data)?;
 
             let param_h = {
-                let slvs_entity = self.h_to_mut_slvs_entity(&entity.as_handle()).unwrap();
+                let slvs_entity = self.h_to_mut_slvs_entity(entity.as_handle()).unwrap();
 
+                if let Some(group) = group {
+                    slvs_entity.group(group.as_handle())
+                }
                 if let Some(workplane) = entity_data.workplane() {
                     slvs_entity.workplane(workplane)
                 }
@@ -251,7 +260,7 @@ impl System {
 
             if let Some(param_vals) = entity_data.param_vals() {
                 for (h, val) in zip(param_h, param_vals) {
-                    self.update_param(&h, val)?;
+                    self.update_param(h, group.map(|g| (g.as_handle())), val)?;
                 }
             }
 
@@ -261,9 +270,18 @@ impl System {
         }
     }
 
-    fn update_param(&mut self, h: &Slvs_hParam, val: f64) -> Result<(), &'static str> {
+    fn update_param(
+        &mut self,
+        h: Slvs_hParam,
+        group_h: Option<Slvs_hGroup>,
+        val: f64,
+    ) -> Result<(), &'static str> {
         if let Some(param) = self.h_to_mut_slvs_param(h) {
             param.val = val;
+
+            if let Some(group_h) = group_h {
+                param.group = group_h;
+            }
 
             Ok(())
         } else {
@@ -294,7 +312,7 @@ impl System {
 
 impl System {
     pub fn set_dragged(&mut self, entity: &Entity<impl AsEntity>) {
-        if let Some(slvs_entity) = self.h_to_slvs_entity(&entity.as_handle()) {
+        if let Some(slvs_entity) = self.h_to_slvs_entity(entity.as_handle()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -362,61 +380,61 @@ impl TryFrom<i32> for FailReason {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    fn h_to_slvs_param(&self, h: &Slvs_hParam) -> Option<&Slvs_Param> {
+    fn h_to_slvs_param(&self, h: Slvs_hParam) -> Option<&Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(h, |&Slvs_Param { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&self.params.list[ix]))
     }
 
-    fn h_to_mut_slvs_param(&mut self, h: &Slvs_hParam) -> Option<&mut Slvs_Param> {
+    fn h_to_mut_slvs_param(&mut self, h: Slvs_hParam) -> Option<&mut Slvs_Param> {
         self.params
             .list
-            .binary_search_by_key(h, |&Slvs_Param { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.params.list[ix]))
     }
 
-    fn entity_exists(&self, h: &Slvs_hEntity) -> bool {
+    fn entity_exists(&self, h: Slvs_hEntity) -> bool {
         self.entities
             .list
-            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .is_ok()
     }
 
-    fn h_to_slvs_entity(&self, h: &Slvs_hEntity) -> Option<&Slvs_Entity> {
+    fn h_to_slvs_entity(&self, h: Slvs_hEntity) -> Option<&Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&self.entities.list[ix]))
     }
 
-    fn h_to_mut_slvs_entity(&mut self, h: &Slvs_hEntity) -> Option<&mut Slvs_Entity> {
+    fn h_to_mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Option<&mut Slvs_Entity> {
         self.entities
             .list
-            .binary_search_by_key(h, |&Slvs_Entity { h, .. }| h)
+            .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_or(None, |ix| Some(&mut self.entities.list[ix]))
     }
 
     // Checks that all elements referenced within entity_data exist
     fn validate_entity_data<T: AsEntity>(&self, entity_data: &T) -> Result<(), &'static str> {
         if let Some(workplane) = entity_data.workplane() {
-            if !self.entity_exists(&workplane) {
+            if !self.entity_exists(workplane) {
                 return Err("Specified workplane not found.");
             }
         } else if let Some(points) = entity_data.points() {
             if !points
                 .into_iter()
-                .map(|point| self.entity_exists(&point))
+                .map(|point| self.entity_exists(point))
                 .all(|x| x)
             {
                 return Err("Specified point not found");
             }
         } else if let Some(normal) = entity_data.normal() {
-            if !self.entity_exists(&normal) {
+            if !self.entity_exists(normal) {
                 return Err("Specified normal not found.");
             }
         } else if let Some(distance) = entity_data.distance() {
-            if !self.entity_exists(&distance) {
+            if !self.entity_exists(distance) {
                 return Err("Specified distance not found.");
             }
         }
