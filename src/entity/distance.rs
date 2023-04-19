@@ -1,14 +1,18 @@
-use super::AsEntity;
-use crate::bindings::{Slvs_hEntity, SLVS_E_DISTANCE};
+use super::{AsEntity, Entity, Workplane};
+use crate::{
+    bindings::{Slvs_hEntity, SLVS_E_DISTANCE},
+    AsHandle,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Distance {
-    pub r: f64,
+    pub workplane: Entity<Workplane>,
+    pub d: f64,
 }
 
 impl Distance {
-    pub fn new(r: f64) -> Self {
-        Self { r }
+    pub fn new(workplane: Entity<Workplane>, d: f64) -> Self {
+        Self { workplane, d }
     }
 }
 
@@ -18,7 +22,7 @@ impl AsEntity for Distance {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        None
+        Some(self.workplane.as_handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -34,6 +38,6 @@ impl AsEntity for Distance {
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(vec![self.r])
+        Some(vec![self.d])
     }
 }

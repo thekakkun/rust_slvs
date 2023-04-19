@@ -202,7 +202,7 @@ impl System {
                 SLVS_E_NORMAL_IN_2D => todo!(),
                 SLVS_E_DISTANCE => todo!(),
                 SLVS_E_WORKPLANE => todo!(),
-                SLVS_E_LINE_SEGMENT => Box::new(LineSegment::new(
+                SLVS_E_LINE_SEGMENT => Box::new(LineSegment::new_in_3d(
                     Entity::new(slvs_entity.point[0]),
                     Entity::new(slvs_entity.point[1]),
                 )),
@@ -438,6 +438,7 @@ impl System {
     }
 
     // Checks that all elements referenced within entity_data exist
+    // TODO: If there is a workplane, check that all entities references lie on the same workplane
     fn validate_entity_data<T: AsEntity>(&self, entity_data: &T) -> Result<(), &'static str> {
         if let Some(workplane) = entity_data.workplane() {
             if self.entity_ix(workplane).is_err() {

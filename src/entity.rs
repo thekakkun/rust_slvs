@@ -56,3 +56,6 @@ impl<T: AsEntity> AsHandle for Entity<T> {
         self.handle
     }
 }
+
+pub trait In3d {}
+pub trait OnWorkplane {}

@@ -17,7 +17,7 @@ fn solve_3d_demo() {
         .add_entity(&g, PointIn3d::new(20.0, 20.0, 20.0))
         .expect("p2 created");
 
-    sys.add_entity(&g, LineSegment::new(p1, p2))
+    sys.add_entity(&g, LineSegment::new_in_3d(p1, p2))
         .expect("line segment created");
 
     let target_dist = 30.0;

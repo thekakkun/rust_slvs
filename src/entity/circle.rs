@@ -1,28 +1,22 @@
-use super::{AsEntity, Distance, Entity, NormalIn2d, PointIn2d};
+use super::{AsEntity, Distance, Entity, NormalIn2d, NormalIn3d, PointIn2d, PointIn3d, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CIRCLE},
     AsHandle,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Circle {
-    pub normal: Entity<NormalIn2d>,
-    pub center: Entity<PointIn2d>,
-    pub radius: Entity<Distance>,
-}
-
-impl Circle {
-    pub fn new(
-        normal: Entity<NormalIn2d>,
+pub enum Circle {
+    OnWorkplane {
+        workplane: Entity<Workplane>,
         center: Entity<PointIn2d>,
         radius: Entity<Distance>,
-    ) -> Self {
-        Self {
-            normal,
-            center,
-            radius,
-        }
-    }
+        normal: Entity<NormalIn2d>,
+    },
+    In3d {
+        center: Entity<PointIn3d>,
+        radius: Entity<Distance>,
+        normal: Entity<NormalIn3d>,
+    },
 }
 
 impl AsEntity for Circle {
