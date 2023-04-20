@@ -19,7 +19,7 @@ fn add_entity() {
         .add_entity(&g, PointIn3d::new(p_x, p_y, p_z))
         .expect("point in 3d created");
 
-    let p_data = sys.get_entity_data(&p).expect("point found");
+    let p_data = sys.entity_data(&p).expect("point found");
 
     assert_eq!(p_data.x, p_x);
     assert_eq!(p_data.y, p_y);

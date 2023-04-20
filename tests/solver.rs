@@ -36,8 +36,8 @@ fn solve_3d_demo() {
     sys.clear_dragged();
 
     if solve_result.is_ok() {
-        let new_p1 = sys.get_entity_data(&p1).expect("p1 should exist");
-        let new_p2 = sys.get_entity_data(&p2).expect("p2 should exist");
+        let new_p1 = sys.entity_data(&p1).expect("p1 should exist");
+        let new_p2 = sys.entity_data(&p2).expect("p2 should exist");
 
         let dist = ((new_p1.x - new_p2.x).powi(2)
             + (new_p1.y - new_p2.y).powi(2)

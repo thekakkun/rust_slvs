@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::convert::identity;
 use std::{iter::zip, marker::PhantomData};
 
 use bindings::Slvs_hGroup;
@@ -69,6 +68,8 @@ impl System {
     where
         T: AsEntity<SketchedOn = FreeIn3d>,
     {
+        self.validate_entity_data(&entity_data, None)?;
+
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
             group.as_handle(),
@@ -109,6 +110,8 @@ impl System {
     where
         T: AsEntity<SketchedOn = OnWorkplane>,
     {
+        self.validate_entity_data(&entity_data, Some(&workplane))?;
+
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
             group.as_handle(),
@@ -283,46 +286,26 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    fn update_param(
-        &mut self,
-        h: Slvs_hParam,
-        group_h: Option<Slvs_hGroup>,
-        val: f64,
-    ) -> Result<(), &'static str> {
+    fn update_param(&mut self, h: Slvs_hParam, val: f64) -> Result<(), &'static str> {
         let mut param = self.mut_slvs_param(h)?;
         param.val = val;
-
-        if let Some(group_h) = group_h {
-            param.group = group_h;
-        }
 
         Ok(())
     }
 
-    pub fn update_entity<T, F>(
-        &mut self,
-        entity: &Entity<T>,
-        f: F,
-        group: Option<&Group>,
-    ) -> Result<T, &'static str>
+    pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
     where
         T: AsEntity + 'static,
         F: FnOnce(&mut T),
     {
-        let mut entity_data = self.get_entity_data(entity)?;
+        let mut entity_data = self.entity_data(entity)?;
 
         f(&mut entity_data);
-        self.validate_entity_data(&entity_data)?;
+        self.validate_entity_data(&entity_data, None)?;
 
         let param_h = {
             let slvs_entity = self.mut_slvs_entity(entity.as_handle()).unwrap();
 
-            if let Some(group) = group {
-                slvs_entity.set_group(group.as_handle())
-            }
-            if let Some(workplane) = entity_data.workplane() {
-                slvs_entity.set_workplane(workplane)
-            }
             if let Some(points) = entity_data.points() {
                 slvs_entity.set_point(points);
             }
@@ -338,7 +321,7 @@ impl System {
 
         if let Some(param_vals) = entity_data.param_vals() {
             for (h, val) in zip(param_h, param_vals) {
-                self.update_param(h, group.map(|g| (g.as_handle())), val)?;
+                self.update_param(h, val)?;
             }
         }
         Ok(entity_data)
@@ -367,7 +350,7 @@ impl System {
     where
         T: AsEntity + 'static,
     {
-        let entity_data = self.get_entity_data(&entity)?;
+        let entity_data = self.entity_data(&entity)?;
         let ix = self.entity_ix(entity.as_handle())?;
         let deleted_entity = self.entities.list.remove(ix);
 
@@ -493,34 +476,63 @@ impl System {
         Ok(&self.entities.list[ix])
     }
 
+    fn entity_on_workplane(
+        &self,
+        h: Slvs_hEntity,
+        workplane: Slvs_hEntity,
+    ) -> Result<(), &'static str> {
+        let entity_workplane = self.slvs_entity(h)?.wrkpl;
+
+        match entity_workplane == workplane {
+            true => Ok(()),
+            false => Err("Entity not on expected workplane."),
+        }
+    }
+
     fn mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Result<&mut Slvs_Entity, &'static str> {
         let ix = self.entity_ix(h)?;
         Ok(&mut self.entities.list[ix])
     }
 
-    // Checks that all elements referenced within entity_data exist
-    // TODO: If there is a workplane, check that all entities references lie on the same workplane
-    fn validate_entity_data<T: AsEntity>(&self, entity_data: &T) -> Result<(), &'static str> {
-        if let Some(workplane) = entity_data.workplane() {
-            if self.entity_ix(workplane).is_err() {
-                return Err("Specified workplane not found.");
-            }
-        } else if let Some(points) = entity_data.points() {
-            if points
+    // Checks that all elements referenced within entity_data exist and are on the expected workplane
+    fn validate_entity_data(
+        &self,
+        entity_data: &impl AsEntity,
+        workplane: Option<&Entity<Workplane>>,
+    ) -> Result<(), &'static str> {
+        if let Some(points) = entity_data.points() {
+            let all_points_valid: Result<Vec<_>, _> = points
                 .into_iter()
-                .map(|point| self.entity_ix(point).is_err())
-                .any(identity)
-            {
-                return Err("Specified point not found");
-            }
-        } else if let Some(normal) = entity_data.normal() {
-            if self.entity_ix(normal).is_err() {
-                return Err("Specified normal not found.");
-            }
-        } else if let Some(distance) = entity_data.distance() {
-            if self.entity_ix(distance).is_err() {
-                return Err("Specified distance not found.");
-            }
+                .map(|point| {
+                    if let Some(workplane) = workplane {
+                        self.entity_on_workplane(point, workplane.as_handle())
+                            .map_err(|_| "Point not on expected workplane.")
+                    } else {
+                        self.slvs_entity(point).map(|_| ())
+                    }
+                })
+                .collect();
+            all_points_valid?;
+        }
+
+        if let Some(normal) = entity_data.normal() {
+            let normal_valid = if let Some(workplane) = workplane {
+                self.entity_on_workplane(normal, workplane.as_handle())
+                    .map_err(|_| "Normal not on expected workplane.")
+            } else {
+                self.slvs_entity(normal).map(|_| ())
+            };
+            normal_valid?;
+        }
+
+        if let Some(distance) = entity_data.distance() {
+            let distance_valid = if let Some(workplane) = workplane {
+                self.entity_on_workplane(distance, workplane.as_handle())
+                    .map_err(|_| "Distance not on expected workplane.")
+            } else {
+                self.slvs_entity(distance).map(|_| ())
+            };
+            distance_valid?;
         }
 
         Ok(())

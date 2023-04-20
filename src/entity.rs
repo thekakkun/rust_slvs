@@ -2,21 +2,21 @@ use std::marker::PhantomData;
 
 use crate::{bindings::Slvs_hEntity, element::AsHandle};
 
-pub mod point;
+mod point;
 pub use point::Point;
-pub mod normal;
+mod normal;
 pub use normal::Normal;
-pub mod distance;
+mod distance;
 pub use distance::Distance;
-pub mod workplane;
+mod workplane;
 pub use workplane::Workplane;
-pub mod line_segment;
+mod line_segment;
 pub use line_segment::LineSegment;
-pub mod cubic;
+mod cubic;
 pub use cubic::Cubic;
-pub mod circle;
+mod circle;
 pub use circle::Circle;
-pub mod arc_of_circle;
+mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
 ////////////////////////////////////////////////////////////////////////////////
