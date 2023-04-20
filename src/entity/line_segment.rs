@@ -6,8 +6,8 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LineSegment<T: SketchTarget> {
-    point_a: Entity<Point<T>>,
-    point_b: Entity<Point<T>>,
+    pub point_a: Entity<Point<T>>,
+    pub point_b: Entity<Point<T>>,
 }
 
 impl<T: SketchTarget> LineSegment<T> {

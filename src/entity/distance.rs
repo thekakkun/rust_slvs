@@ -9,6 +9,15 @@ pub struct Distance<T: SketchTarget> {
     phantom: PhantomData<T>,
 }
 
+impl<T: SketchTarget> Distance<T> {
+    pub fn new(d: f64) -> Self {
+        Self {
+            d,
+            phantom: PhantomData,
+        }
+    }
+}
+
 impl<T: SketchTarget> AsEntity for Distance<T> {
     type SketchedOn = T;
 

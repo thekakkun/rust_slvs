@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::{AsEntity, FreeIn3d, OnWorkplane, SketchTarget};
+use super::{AsEntity, Entity, FreeIn3d, OnWorkplane, SketchTarget, Workplane};
 use crate::bindings::{Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -10,16 +10,16 @@ pub struct Normal<T: SketchTarget> {
 }
 
 impl Normal<OnWorkplane> {
-    fn new() -> Self {
+    pub fn new(workplane: Entity<Workplane>) -> Self {
         Self {
-            data: NormalDef::In2d {},
+            data: NormalDef::In2d { workplane },
             phantom: PhantomData::<OnWorkplane>,
         }
     }
 }
 
 impl Normal<FreeIn3d> {
-    fn new(quaternion: [f64; 4]) -> Self {
+    pub fn new(quaternion: [f64; 4]) -> Self {
         let [w, x, y, z] = quaternion;
         Self {
             data: NormalDef::In3d { w, x, y, z },
@@ -52,7 +52,7 @@ impl<T: SketchTarget> AsEntity for Normal<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         match self.data {
-            NormalDef::In2d {} => None,
+            NormalDef::In2d { .. } => None,
             NormalDef::In3d { w, x, y, z } => Some(vec![w, x, y, z]),
         }
     }
@@ -60,6 +60,6 @@ impl<T: SketchTarget> AsEntity for Normal<T> {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum NormalDef {
-    In2d {},
+    In2d { workplane: Entity<Workplane> },
     In3d { w: f64, x: f64, y: f64, z: f64 },
 }

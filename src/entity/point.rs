@@ -10,7 +10,7 @@ pub struct Point<T: SketchTarget> {
 }
 
 impl Point<OnWorkplane> {
-    fn new(u: f64, v: f64) -> Self {
+    pub fn new(u: f64, v: f64) -> Self {
         Self {
             coords: PointCoords::In2d { u, v },
             phantom: PhantomData::<OnWorkplane>,
@@ -19,7 +19,7 @@ impl Point<OnWorkplane> {
 }
 
 impl Point<FreeIn3d> {
-    fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self {
             coords: PointCoords::In3d { x, y, z },
             phantom: PhantomData::<FreeIn3d>,
