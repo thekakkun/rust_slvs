@@ -1,12 +1,11 @@
 use super::{AsEntity, Entity, Normal, OnWorkplane, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
-    AsHandle,
+    element::AsHandle,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ArcOfCircle {
-    // How to show that this can only exist in 2d?
     pub center: Entity<Point<OnWorkplane>>,
     pub arc_begin: Entity<Point<OnWorkplane>>,
     pub arc_end: Entity<Point<OnWorkplane>>,
@@ -30,6 +29,8 @@ impl ArcOfCircle {
 }
 
 impl AsEntity for ArcOfCircle {
+    type SketchedOn = OnWorkplane;
+
     fn type_(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
     }

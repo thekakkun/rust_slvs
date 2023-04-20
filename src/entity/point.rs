@@ -28,6 +28,8 @@ impl Point<FreeIn3d> {
 }
 
 impl<T: SketchTarget> AsEntity for Point<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         match self.coords {
             PointCoords::In2d { .. } => SLVS_E_POINT_IN_2D as _,

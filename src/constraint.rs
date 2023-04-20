@@ -15,7 +15,7 @@ use crate::{
         SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE, SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL,
         SLVS_C_WHERE_DRAGGED,
     },
-    AsHandle,
+    element::AsHandle,
 };
 
 pub mod pt_pt_distance;

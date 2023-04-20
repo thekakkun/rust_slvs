@@ -1,7 +1,7 @@
 use super::{AsEntity, Distance, Entity, Normal, Point, SketchTarget};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CIRCLE},
-    AsHandle,
+    element::AsHandle,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -26,6 +26,8 @@ impl<T: SketchTarget> Circle<T> {
 }
 
 impl<T: SketchTarget> AsEntity for Circle<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         SLVS_E_CIRCLE as _
     }

@@ -29,6 +29,8 @@ impl Normal<FreeIn3d> {
 }
 
 impl<T: SketchTarget> AsEntity for Normal<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         match self.data {
             NormalDef::In2d { .. } => SLVS_E_NORMAL_IN_2D as _,

@@ -15,51 +15,14 @@ use bindings::{
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
+pub use element::Group;
+use element::{AsHandle, Elements};
 use entity::{AsEntity, Entity, LineSegment};
 
 mod bindings;
 pub mod constraint;
+mod element;
 pub mod entity;
-
-struct Elements<T> {
-    list: Vec<T>,
-    next_h: u32,
-}
-
-impl<T> Elements<T> {
-    fn new() -> Self {
-        Self {
-            list: Vec::new(),
-            next_h: 1,
-        }
-    }
-
-    fn get_next_h(&mut self) -> u32 {
-        let current_h = self.next_h;
-        self.next_h += 1;
-
-        current_h
-    }
-}
-
-impl<T> Default for Elements<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-trait AsHandle {
-    fn as_handle(&self) -> u32;
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Group(u32);
-
-impl AsHandle for Group {
-    fn as_handle(&self) -> u32 {
-        self.0
-    }
-}
 
 pub struct System {
     groups: Elements<Group>,
@@ -94,6 +57,8 @@ impl System {
         self.groups.list.push(new_group);
         self.groups.list.last().cloned().unwrap()
     }
+
+    pub fn sketch_in_3d<T>(&mut self, group: &Group, entity_data: T) {}
 
     pub fn add_entity<T: AsEntity>(
         &mut self,

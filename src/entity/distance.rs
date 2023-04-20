@@ -10,6 +10,8 @@ pub struct Distance<T: SketchTarget> {
 }
 
 impl<T: SketchTarget> AsEntity for Distance<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         SLVS_E_DISTANCE as _
     }

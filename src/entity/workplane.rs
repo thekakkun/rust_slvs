@@ -1,7 +1,7 @@
 use super::{AsEntity, Entity, FreeIn3d, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_WORKPLANE},
-    AsHandle,
+    element::AsHandle,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -17,6 +17,8 @@ impl Workplane {
 }
 
 impl AsEntity for Workplane {
+    type SketchedOn = FreeIn3d;
+
     fn type_(&self) -> i32 {
         SLVS_E_WORKPLANE as _
     }

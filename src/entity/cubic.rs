@@ -1,7 +1,7 @@
 use super::{AsEntity, Entity, Point, SketchTarget};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CUBIC},
-    AsHandle,
+    element::AsHandle,
 };
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Cubic<T: SketchTarget> {
@@ -28,6 +28,8 @@ impl<T: SketchTarget> Cubic<T> {
 }
 
 impl<T: SketchTarget> AsEntity for Cubic<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         SLVS_E_CUBIC as _
     }

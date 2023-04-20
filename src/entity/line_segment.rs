@@ -1,5 +1,8 @@
 use super::{AsEntity, Entity, Point, SketchTarget};
-use crate::{bindings::SLVS_E_LINE_SEGMENT, AsHandle};
+use crate::{
+    bindings::{Slvs_hEntity, SLVS_E_LINE_SEGMENT},
+    element::AsHandle,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LineSegment<T: SketchTarget> {
@@ -14,19 +17,21 @@ impl<T: SketchTarget> LineSegment<T> {
 }
 
 impl<T: SketchTarget> AsEntity for LineSegment<T> {
+    type SketchedOn = T;
+
     fn type_(&self) -> i32 {
         SLVS_E_LINE_SEGMENT as _
     }
 
-    fn points(&self) -> Option<Vec<crate::bindings::Slvs_hEntity>> {
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
     }
 
-    fn normal(&self) -> Option<crate::bindings::Slvs_hEntity> {
+    fn normal(&self) -> Option<Slvs_hEntity> {
         None
     }
 
-    fn distance(&self) -> Option<crate::bindings::Slvs_hEntity> {
+    fn distance(&self) -> Option<Slvs_hEntity> {
         None
     }
 
