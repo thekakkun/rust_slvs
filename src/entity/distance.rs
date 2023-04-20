@@ -1,28 +1,17 @@
-use super::{AsEntity, Entity, Workplane};
-use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_DISTANCE},
-    AsHandle,
-};
+use std::marker::PhantomData;
+
+use super::{AsEntity, SketchTarget};
+use crate::bindings::{Slvs_hEntity, SLVS_E_DISTANCE};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Distance {
-    pub workplane: Entity<Workplane>,
+pub struct Distance<T: SketchTarget> {
     pub d: f64,
+    phantom: PhantomData<T>,
 }
 
-impl Distance {
-    pub fn new(workplane: Entity<Workplane>, d: f64) -> Self {
-        Self { workplane, d }
-    }
-}
-
-impl AsEntity for Distance {
+impl<T: SketchTarget> AsEntity for Distance<T> {
     fn type_(&self) -> i32 {
         SLVS_E_DISTANCE as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.as_handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {

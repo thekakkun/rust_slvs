@@ -15,7 +15,7 @@ use bindings::{
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-use entity::{AsEntity, Entity, LineSegment, PointIn3d};
+use entity::{AsEntity, Entity, LineSegment};
 
 mod bindings;
 pub mod constraint;

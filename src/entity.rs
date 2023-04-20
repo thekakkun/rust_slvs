@@ -2,14 +2,10 @@ use std::marker::PhantomData;
 
 use crate::{bindings::Slvs_hEntity, AsHandle};
 
-pub mod point_in_3d;
-pub use point_in_3d::PointIn3d;
-pub mod point_in_2d;
-pub use point_in_2d::PointIn2d;
-pub mod normal_in_3d;
-pub use normal_in_3d::NormalIn3d;
-pub mod normal_in_2d;
-pub use normal_in_2d::NormalIn2d;
+pub mod point;
+pub use point::Point;
+pub mod normal;
+pub use normal::Normal;
 pub mod distance;
 pub use distance::Distance;
 pub mod workplane;
@@ -29,7 +25,6 @@ pub use arc_of_circle::ArcOfCircle;
 
 pub trait AsEntity {
     fn type_(&self) -> i32;
-    fn workplane(&self) -> Option<Slvs_hEntity>;
     fn points(&self) -> Option<Vec<Slvs_hEntity>>;
     fn normal(&self) -> Option<Slvs_hEntity>;
     fn distance(&self) -> Option<Slvs_hEntity>;
@@ -57,5 +52,12 @@ impl<T: AsEntity> AsHandle for Entity<T> {
     }
 }
 
-pub trait In3d {}
-pub trait OnWorkplane {}
+trait SketchTarget {}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OnWorkplane {}
+impl SketchTarget for OnWorkplane {}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FreeIn3d {}
+impl SketchTarget for FreeIn3d {}

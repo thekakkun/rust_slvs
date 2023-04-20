@@ -83,10 +83,10 @@ impl Slvs_System {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// System
+// Quaternion
 ////////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
+pub fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
     let mut x = MaybeUninit::<f64>::uninit();
@@ -108,7 +108,7 @@ pub(crate) fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
-pub(crate) fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
+pub fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
     let mut x = MaybeUninit::<f64>::uninit();
@@ -130,7 +130,7 @@ pub(crate) fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
-pub(crate) fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
+pub fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
     let mut x = MaybeUninit::<f64>::uninit();
@@ -152,7 +152,7 @@ pub(crate) fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
-pub(crate) fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4] {
+pub fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4] {
     let [ux, uy, uz] = basis_vec_1;
     let [vx, vy, vz] = basic_vec_2;
 

@@ -1,4 +1,4 @@
-use super::{AsEntity, Entity, NormalIn2d, PointIn2d, Workplane};
+use super::{AsEntity, Entity, Normal, OnWorkplane, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     AsHandle,
@@ -6,23 +6,21 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ArcOfCircle {
-    pub workplane: Entity<Workplane>,
-    pub center: Entity<PointIn2d>,
-    pub arc_begin: Entity<PointIn2d>,
-    pub arc_end: Entity<PointIn2d>,
-    pub normal: Entity<NormalIn2d>,
+    // How to show that this can only exist in 2d?
+    pub center: Entity<Point<OnWorkplane>>,
+    pub arc_begin: Entity<Point<OnWorkplane>>,
+    pub arc_end: Entity<Point<OnWorkplane>>,
+    pub normal: Entity<Normal<OnWorkplane>>,
 }
 
 impl ArcOfCircle {
     pub fn new(
-        workplane: Entity<Workplane>,
-        center: Entity<PointIn2d>,
-        arc_begin: Entity<PointIn2d>,
-        arc_end: Entity<PointIn2d>,
-        normal: Entity<NormalIn2d>,
+        center: Entity<Point<OnWorkplane>>,
+        arc_begin: Entity<Point<OnWorkplane>>,
+        arc_end: Entity<Point<OnWorkplane>>,
+        normal: Entity<Normal<OnWorkplane>>,
     ) -> Self {
         Self {
-            workplane,
             center,
             arc_begin,
             arc_end,
@@ -34,10 +32,6 @@ impl ArcOfCircle {
 impl AsEntity for ArcOfCircle {
     fn type_(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.as_handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {

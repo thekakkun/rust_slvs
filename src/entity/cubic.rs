@@ -1,49 +1,24 @@
-use super::{AsEntity, Entity, PointIn2d, PointIn3d, Workplane};
+use super::{AsEntity, Entity, Point, SketchTarget};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_CUBIC, SLVS_FREE_IN_3D},
+    bindings::{Slvs_hEntity, SLVS_E_CUBIC},
     AsHandle,
 };
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Cubic {
-    OnWorkplane {
-        workplane: Entity<Workplane>,
-        start_point: Entity<PointIn2d>,
-        start_control: Entity<PointIn2d>,
-        end_control: Entity<PointIn2d>,
-        end_point: Entity<PointIn2d>,
-    },
-    In3d {
-        start_point: Entity<PointIn3d>,
-        start_control: Entity<PointIn3d>,
-        end_control: Entity<PointIn3d>,
-        end_point: Entity<PointIn3d>,
-    },
+pub struct Cubic<T: SketchTarget> {
+    start_point: Entity<Point<T>>,
+    start_control: Entity<Point<T>>,
+    end_control: Entity<Point<T>>,
+    end_point: Entity<Point<T>>,
 }
 
-impl Cubic {
-    pub fn new_on_workplane(
-        workplane: Entity<Workplane>,
-        start_point: Entity<PointIn2d>,
-        start_control: Entity<PointIn2d>,
-        end_control: Entity<PointIn2d>,
-        end_point: Entity<PointIn2d>,
+impl<T: SketchTarget> Cubic<T> {
+    pub fn new(
+        start_point: Entity<Point<T>>,
+        start_control: Entity<Point<T>>,
+        end_control: Entity<Point<T>>,
+        end_point: Entity<Point<T>>,
     ) -> Self {
-        Self::OnWorkplane {
-            workplane,
-            start_point,
-            start_control,
-            end_control,
-            end_point,
-        }
-    }
-
-    pub fn new_in_3d(
-        start_point: Entity<PointIn3d>,
-        start_control: Entity<PointIn3d>,
-        end_control: Entity<PointIn3d>,
-        end_point: Entity<PointIn3d>,
-    ) -> Self {
-        Self::In3d {
+        Self {
             start_point,
             start_control,
             end_control,
@@ -52,44 +27,18 @@ impl Cubic {
     }
 }
 
-impl AsEntity for Cubic {
+impl<T: SketchTarget> AsEntity for Cubic<T> {
     fn type_(&self) -> i32 {
         SLVS_E_CUBIC as _
     }
 
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        match self {
-            Self::OnWorkplane { workplane, .. } => Some(workplane.as_handle()),
-            Self::In3d { .. } => Some(SLVS_FREE_IN_3D),
-        }
-    }
-
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(match self {
-            Self::OnWorkplane {
-                start_point,
-                start_control,
-                end_control,
-                end_point,
-                ..
-            } => vec![
-                start_point.as_handle(),
-                start_control.as_handle(),
-                end_control.as_handle(),
-                end_point.as_handle(),
-            ],
-            Self::In3d {
-                start_point,
-                start_control,
-                end_control,
-                end_point,
-            } => vec![
-                start_point.as_handle(),
-                start_control.as_handle(),
-                end_control.as_handle(),
-                end_point.as_handle(),
-            ],
-        })
+        Some(vec![
+            self.start_point.as_handle(),
+            self.start_control.as_handle(),
+            self.end_control.as_handle(),
+            self.end_point.as_handle(),
+        ])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {

@@ -1,31 +1,33 @@
-use super::{AsEntity, Distance, Entity, NormalIn2d, NormalIn3d, PointIn2d, PointIn3d, Workplane};
+use super::{AsEntity, Distance, Entity, Normal, Point, SketchTarget};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CIRCLE},
     AsHandle,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Circle {
-    OnWorkplane {
-        workplane: Entity<Workplane>,
-        center: Entity<PointIn2d>,
-        radius: Entity<Distance>,
-        normal: Entity<NormalIn2d>,
-    },
-    In3d {
-        center: Entity<PointIn3d>,
-        radius: Entity<Distance>,
-        normal: Entity<NormalIn3d>,
-    },
+pub struct Circle<T: SketchTarget> {
+    center: Entity<Point<T>>,
+    radius: Entity<Distance<T>>,
+    normal: Entity<Normal<T>>,
 }
 
-impl AsEntity for Circle {
+impl<T: SketchTarget> Circle<T> {
+    pub fn new(
+        center: Entity<Point<T>>,
+        radius: Entity<Distance<T>>,
+        normal: Entity<Normal<T>>,
+    ) -> Self {
+        Self {
+            center,
+            radius,
+            normal,
+        }
+    }
+}
+
+impl<T: SketchTarget> AsEntity for Circle<T> {
     fn type_(&self) -> i32 {
         SLVS_E_CIRCLE as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        None
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {

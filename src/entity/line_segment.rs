@@ -1,68 +1,32 @@
-use super::{AsEntity, Entity, PointIn2d, PointIn3d, Workplane};
-use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_LINE_SEGMENT, SLVS_FREE_IN_3D},
-    AsHandle,
-};
+use super::{AsEntity, Entity, Point, SketchTarget};
+use crate::{bindings::SLVS_E_LINE_SEGMENT, AsHandle};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum LineSegment {
-    OnWorkplane {
-        workplane: Entity<Workplane>,
-        point_a: Entity<PointIn2d>,
-        point_b: Entity<PointIn2d>,
-    },
-    In3d {
-        point_a: Entity<PointIn3d>,
-        point_b: Entity<PointIn3d>,
-    },
+pub struct LineSegment<T: SketchTarget> {
+    point_a: Entity<Point<T>>,
+    point_b: Entity<Point<T>>,
 }
 
-impl LineSegment {
-    pub fn new_on_workplane(
-        workplane: Entity<Workplane>,
-        point_a: Entity<PointIn2d>,
-        point_b: Entity<PointIn2d>,
-    ) -> Self {
-        Self::OnWorkplane {
-            workplane,
-            point_a,
-            point_b,
-        }
-    }
-
-    pub fn new_in_3d(point_a: Entity<PointIn3d>, point_b: Entity<PointIn3d>) -> Self {
-        Self::In3d { point_a, point_b }
+impl<T: SketchTarget> LineSegment<T> {
+    pub fn new(point_a: Entity<Point<T>>, point_b: Entity<Point<T>>) -> Self {
+        Self { point_a, point_b }
     }
 }
 
-impl AsEntity for LineSegment {
+impl<T: SketchTarget> AsEntity for LineSegment<T> {
     fn type_(&self) -> i32 {
         SLVS_E_LINE_SEGMENT as _
     }
 
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        match self {
-            Self::OnWorkplane { workplane, .. } => Some(workplane.as_handle()),
-            Self::In3d { .. } => Some(SLVS_FREE_IN_3D),
-        }
+    fn points(&self) -> Option<Vec<crate::bindings::Slvs_hEntity>> {
+        Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(match self {
-            Self::OnWorkplane {
-                point_a, point_b, ..
-            } => vec![point_a.as_handle(), point_b.as_handle()],
-            Self::In3d { point_a, point_b } => {
-                vec![point_a.as_handle(), point_b.as_handle()]
-            }
-        })
-    }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
+    fn normal(&self) -> Option<crate::bindings::Slvs_hEntity> {
         None
     }
 
-    fn distance(&self) -> Option<Slvs_hEntity> {
+    fn distance(&self) -> Option<crate::bindings::Slvs_hEntity> {
         None
     }
 
