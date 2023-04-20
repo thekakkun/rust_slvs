@@ -1,10 +1,13 @@
 use std::marker::PhantomData;
 
-use super::{AsEntity, FreeIn3d, OnWorkplane, SketchTarget};
-use crate::bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
+use super::AsEntity;
+use crate::{
+    bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    element::{In3D, OnWorkplane, Target},
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point<T: SketchTarget> {
+pub struct Point<T: Target> {
     pub coords: PointCoords,
     phantom: PhantomData<T>,
 }
@@ -18,17 +21,17 @@ impl Point<OnWorkplane> {
     }
 }
 
-impl Point<FreeIn3d> {
+impl Point<In3D> {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self {
             coords: PointCoords::In3d { x, y, z },
-            phantom: PhantomData::<FreeIn3d>,
+            phantom: PhantomData::<In3D>,
         }
     }
 }
 
-impl<T: SketchTarget> AsEntity for Point<T> {
-    type SketchedOn = T;
+impl<T: Target> AsEntity for Point<T> {
+    type Sketch = T;
 
     fn type_(&self) -> i32 {
         match self.coords {

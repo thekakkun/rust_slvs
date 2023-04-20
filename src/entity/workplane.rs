@@ -1,23 +1,23 @@
-use super::{AsEntity, Entity, FreeIn3d, Normal, Point};
+use super::{AsEntity, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_WORKPLANE},
-    element::AsHandle,
+    element::{AsHandle, In3D},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Workplane {
-    pub origin: Entity<Point<FreeIn3d>>,
-    pub normal: Entity<Normal<FreeIn3d>>,
+    pub origin: Entity<Point<In3D>>,
+    pub normal: Entity<Normal<In3D>>,
 }
 
 impl Workplane {
-    pub fn new(origin: Entity<Point<FreeIn3d>>, normal: Entity<Normal<FreeIn3d>>) -> Self {
+    pub fn new(origin: Entity<Point<In3D>>, normal: Entity<Normal<In3D>>) -> Self {
         Self { origin, normal }
     }
 }
 
 impl AsEntity for Workplane {
-    type SketchedOn = FreeIn3d;
+    type Sketch = In3D;
 
     fn type_(&self) -> i32 {
         SLVS_E_WORKPLANE as _

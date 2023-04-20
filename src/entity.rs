@@ -24,7 +24,7 @@ pub use arc_of_circle::ArcOfCircle;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait AsEntity {
-    type SketchedOn;
+    type Sketch;
 
     fn type_(&self) -> i32;
     fn points(&self) -> Option<Vec<Slvs_hEntity>>;
@@ -53,13 +53,3 @@ impl<T: AsEntity> AsHandle for Entity<T> {
         self.handle
     }
 }
-
-trait SketchTarget {}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct OnWorkplane {}
-impl SketchTarget for OnWorkplane {}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct FreeIn3d {}
-impl SketchTarget for FreeIn3d {}

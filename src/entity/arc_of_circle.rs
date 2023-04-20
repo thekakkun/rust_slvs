@@ -1,7 +1,7 @@
-use super::{AsEntity, Entity, Normal, OnWorkplane, Point};
+use super::{AsEntity, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
-    element::AsHandle,
+    element::{AsHandle, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -29,7 +29,7 @@ impl ArcOfCircle {
 }
 
 impl AsEntity for ArcOfCircle {
-    type SketchedOn = OnWorkplane;
+    type Sketch = OnWorkplane;
 
     fn type_(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
