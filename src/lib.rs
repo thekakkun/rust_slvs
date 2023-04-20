@@ -11,13 +11,16 @@ use bindings::{
 };
 use bindings::{Slvs_Param, Slvs_hParam};
 use bindings::{
-    Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
+    Slvs_Solve, Slvs_System, SLVS_FREE_IN_3D, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
 pub use element::Group;
 use element::{AsHandle, Elements};
-use entity::{AsEntity, Entity, LineSegment};
+use entity::{
+    ArcOfCircle, AsEntity, Circle, Cubic, Distance, Entity, FreeIn3d, LineSegment, Normal,
+    OnWorkplane, Point, Workplane,
+};
 
 mod bindings;
 pub mod constraint;
@@ -58,24 +61,62 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch_in_3d<T>(&mut self, group: &Group, entity_data: T) {}
-
-    pub fn add_entity<T: AsEntity>(
+    pub fn sketch_in_3d<T>(
         &mut self,
         group: &Group,
         entity_data: T,
-    ) -> Result<Entity<T>, &'static str> {
-        self.validate_entity_data(&entity_data)?;
-
+    ) -> Result<Entity<T>, &'static str>
+    where
+        T: AsEntity<SketchedOn = FreeIn3d>,
+    {
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
             group.as_handle(),
             entity_data.type_(),
         );
 
-        if let Some(workplane) = entity_data.workplane() {
-            new_slvs_entity.set_workplane(workplane);
+        if let Some(points) = entity_data.points() {
+            new_slvs_entity.set_point(points);
         }
+        if let Some(normal) = entity_data.normal() {
+            new_slvs_entity.set_normal(normal);
+        }
+        if let Some(distance) = entity_data.distance() {
+            new_slvs_entity.set_distance(distance);
+        }
+        if let Some(param_vals) = entity_data.param_vals() {
+            new_slvs_entity.set_param(
+                param_vals
+                    .into_iter()
+                    .map(|val| self.add_param(group, val))
+                    .collect(),
+            );
+        }
+
+        self.entities.list.push(new_slvs_entity);
+        Ok(Entity {
+            handle: new_slvs_entity.h,
+            phantom: PhantomData,
+        })
+    }
+
+    pub fn sketch_on_workplane<T>(
+        &mut self,
+        group: &Group,
+        workplane: Entity<Workplane>,
+        entity_data: T,
+    ) -> Result<Entity<T>, &'static str>
+    where
+        T: AsEntity<SketchedOn = OnWorkplane>,
+    {
+        let mut new_slvs_entity = Slvs_Entity::new(
+            self.entities.get_next_h(),
+            group.as_handle(),
+            entity_data.type_(),
+        );
+
+        new_slvs_entity.set_workplane(workplane.as_handle());
+
         if let Some(points) = entity_data.points() {
             new_slvs_entity.set_point(points);
         }
