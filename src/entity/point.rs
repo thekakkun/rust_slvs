@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::AsEntity;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    element::{In3D, OnWorkplane, Target},
+    element::{In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -21,11 +21,11 @@ impl Point<OnWorkplane> {
     }
 }
 
-impl Point<In3D> {
+impl Point<In3d> {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self {
             coords: PointCoords::In3d { x, y, z },
-            phantom: PhantomData::<In3D>,
+            phantom: PhantomData::<In3d>,
         }
     }
 }
@@ -61,7 +61,7 @@ impl<T: Target> AsEntity for Point<T> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum PointCoords {
+pub enum PointCoords {
     In2d { u: f64, v: f64 },
     In3d { x: f64, y: f64, z: f64 },
 }

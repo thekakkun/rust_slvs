@@ -59,6 +59,67 @@ impl Slvs_Entity {
 // Constraint
 ////////////////////////////////////////////////////////////////////////////////
 
+impl Slvs_Constraint {
+    pub(crate) fn new(h: Slvs_hEntity, group: Slvs_hGroup, type_: i32) -> Self {
+        Self {
+            h,
+            group,
+            type_,
+            wrkpl: SLVS_FREE_IN_3D,
+            valA: 0.0,
+            ptA: 0,
+            ptB: 0,
+            entityA: 0,
+            entityB: 0,
+            entityC: 0,
+            entityD: 0,
+            other: 0,
+            other2: 0,
+        }
+    }
+
+    pub(crate) fn set_group(&mut self, group: Slvs_hGroup) {
+        self.group = group;
+    }
+
+    pub(crate) fn set_workplane(&mut self, workplane: Slvs_hEntity) {
+        self.wrkpl = workplane;
+    }
+
+    pub(crate) fn set_val(&mut self, val: f64) {
+        self.valA = val;
+    }
+
+    pub(crate) fn set_points(&mut self, points: Vec<Slvs_hEntity>) {
+        if let Some(point) = points.get(0) {
+            self.ptA = *point;
+        }
+        if let Some(point) = points.get(1) {
+            self.ptB = *point;
+        }
+    }
+
+    pub(crate) fn set_entities(&mut self, entities: Vec<Slvs_hEntity>) {
+        if let Some(entity) = entities.get(0) {
+            self.entityA = *entity;
+        }
+        if let Some(entity) = entities.get(1) {
+            self.entityB = *entity;
+        }
+        if let Some(entity) = entities.get(2) {
+            self.entityC = *entity;
+        }
+        if let Some(entity) = entities.get(3) {
+            self.entityD = *entity;
+        }
+    }
+
+    pub(crate) fn set_others(&mut self, others: [bool; 2]) {
+        self.other = others[0] as _;
+        self.other2 = others[1] as _;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // System
 ////////////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::{AsEntity, Entity, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{In3D, OnWorkplane, Target},
+    element::{In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -21,12 +21,12 @@ impl Normal<OnWorkplane> {
     }
 }
 
-impl Normal<In3D> {
+impl Normal<In3d> {
     pub fn new(quaternion: [f64; 4]) -> Self {
         let [w, x, y, z] = quaternion;
         Self {
             data: NormalDef::In3d { w, x, y, z },
-            phantom: PhantomData::<In3D>,
+            phantom: PhantomData::<In3d>,
         }
     }
 }

@@ -14,8 +14,8 @@ use bindings::{
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 use constraint::{AsConstraint, Constraint, SomeConstraint};
-pub use element::Group;
-use element::{AsHandle, Elements, In3D, OnWorkplane};
+use element::{AsHandle, Elements};
+pub use element::{Group, In3d, OnWorkplane};
 use entity::{
     ArcOfCircle, AsEntity, Circle, Cubic, Distance, Entity, LineSegment, Normal, Point, Workplane,
 };
@@ -59,44 +59,6 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch_in_3d<T: AsEntity<Sketch = In3D>>(
-        &mut self,
-        group: &Group,
-        entity_data: T,
-    ) -> Result<Entity<T>, &'static str> {
-        self.validate_entity_data(&entity_data, None)?;
-
-        let mut new_slvs_entity = Slvs_Entity::new(
-            self.entities.get_next_h(),
-            group.as_handle(),
-            entity_data.type_(),
-        );
-
-        if let Some(points) = entity_data.points() {
-            new_slvs_entity.set_point(points);
-        }
-        if let Some(normal) = entity_data.normal() {
-            new_slvs_entity.set_normal(normal);
-        }
-        if let Some(distance) = entity_data.distance() {
-            new_slvs_entity.set_distance(distance);
-        }
-        if let Some(param_vals) = entity_data.param_vals() {
-            new_slvs_entity.set_param(
-                param_vals
-                    .into_iter()
-                    .map(|val| self.add_param(group, val))
-                    .collect(),
-            );
-        }
-
-        self.entities.list.push(new_slvs_entity);
-        Ok(Entity {
-            handle: new_slvs_entity.h,
-            phantom: PhantomData,
-        })
-    }
-
     pub fn sketch_on_workplane<T: AsEntity<Sketch = OnWorkplane>>(
         &mut self,
         group: &Group,
@@ -138,37 +100,101 @@ impl System {
         })
     }
 
-    pub fn add_constraint<T: AsConstraint>(
+    pub fn sketch_in_3d<T: AsEntity<Sketch = In3d>>(
         &mut self,
         group: &Group,
-        constraint: T,
-    ) -> Result<Constraint<T>, &'static str> {
-        let [point_a, point_b] = constraint.point();
-        let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
-        let [other, other_2] = constraint.other();
+        entity_data: T,
+    ) -> Result<Entity<T>, &'static str> {
+        self.validate_entity_data(&entity_data, None)?;
 
-        let new_constraint = Slvs_Constraint {
-            h: self.constraints.get_next_h(),
-            group: group.as_handle(),
-            type_: constraint.type_() as _,
-            wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
-            valA: constraint.val(),
-            ptA: point_a.unwrap_or(0),      // TODO: ditto
-            ptB: point_b.unwrap_or(0),      // TODO: ditto
-            entityA: entity_a.unwrap_or(0), // TODO: ditto
-            entityB: entity_b.unwrap_or(0), // TODO: ditto
-            entityC: entity_c.unwrap_or(0), // TODO: ditto
-            entityD: entity_d.unwrap_or(0), // TODO: ditto
-            other: other as _,
-            other2: other_2 as _,
-        };
+        let mut new_slvs_entity = Slvs_Entity::new(
+            self.entities.get_next_h(),
+            group.as_handle(),
+            entity_data.type_(),
+        );
 
-        self.constraints.list.push(new_constraint);
-        Ok(Constraint {
-            handle: new_constraint.h,
-            phantom: PhantomData,
-        })
+        if let Some(points) = entity_data.points() {
+            new_slvs_entity.set_point(points);
+        }
+        if let Some(normal) = entity_data.normal() {
+            new_slvs_entity.set_normal(normal);
+        }
+        if let Some(distance) = entity_data.distance() {
+            new_slvs_entity.set_distance(distance);
+        }
+        if let Some(param_vals) = entity_data.param_vals() {
+            new_slvs_entity.set_param(
+                param_vals
+                    .into_iter()
+                    .map(|val| self.add_param(group, val))
+                    .collect(),
+            );
+        }
+
+        self.entities.list.push(new_slvs_entity);
+        Ok(Entity::new(new_slvs_entity.h))
     }
+
+    pub fn constrain_in_3d<T: AsConstraint<Apply = In3d>>(
+        &mut self,
+        group: &Group,
+        constraint_data: T,
+    ) -> Result<Constraint<T>, &'static str> {
+        // TODO: validate constraint_data
+
+        let mut new_slvs_constraint = Slvs_Constraint::new(
+            self.constraints.get_next_h(),
+            group.as_handle(),
+            constraint_data.type_(),
+        );
+
+        if let Some(val) = constraint_data.val() {
+            new_slvs_constraint.set_val(val);
+        }
+        if let Some(points) = constraint_data.points() {
+            new_slvs_constraint.set_points(points);
+        }
+        if let Some(entities) = constraint_data.entities() {
+            new_slvs_constraint.set_entities(entities)
+        }
+        new_slvs_constraint.set_others(constraint_data.others());
+
+        self.constraints.list.push(new_slvs_constraint);
+
+        Ok(Constraint::new(new_slvs_constraint.h))
+    }
+
+    // pub fn add_constraint<T: AsConstraint>(
+    //     &mut self,
+    //     group: &Group,
+    //     constraint: T,
+    // ) -> Result<Constraint<T>, &'static str> {
+    //     let [point_a, point_b] = constraint.point();
+    //     let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
+    //     let [other, other_2] = constraint.other();
+
+    //     let new_constraint = Slvs_Constraint {
+    //         h: self.constraints.get_next_h(),
+    //         group: group.as_handle(),
+    //         type_: constraint.type_() as _,
+    //         wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
+    //         valA: constraint.val(),
+    //         ptA: point_a.unwrap_or(0),      // TODO: ditto
+    //         ptB: point_b.unwrap_or(0),      // TODO: ditto
+    //         entityA: entity_a.unwrap_or(0), // TODO: ditto
+    //         entityB: entity_b.unwrap_or(0), // TODO: ditto
+    //         entityC: entity_c.unwrap_or(0), // TODO: ditto
+    //         entityD: entity_d.unwrap_or(0), // TODO: ditto
+    //         other: other as _,
+    //         other2: other_2 as _,
+    //     };
+
+    //     self.constraints.list.push(new_constraint);
+    //     Ok(Constraint {
+    //         handle: new_constraint.h,
+    //         phantom: PhantomData,
+    //     })
+    // }
 
     // Private as user has no reason to create bare param without linking to an entity.
     fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
@@ -194,7 +220,7 @@ impl System {
     ) -> Result<T, &'static str> {
         self.slvs_entity(entity.as_handle()).map(|slvs_entity| {
             let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
-                SLVS_E_POINT_IN_3D => Box::new(Point::<In3D>::new(
+                SLVS_E_POINT_IN_3D => Box::new(Point::<In3d>::new(
                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     self.slvs_param(slvs_entity.param[1]).unwrap().val,
                     self.slvs_param(slvs_entity.param[2]).unwrap().val,
@@ -203,7 +229,7 @@ impl System {
                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     self.slvs_param(slvs_entity.param[1]).unwrap().val,
                 )),
-                SLVS_E_NORMAL_IN_3D => Box::new(Normal::<In3D>::new([
+                SLVS_E_NORMAL_IN_3D => Box::new(Normal::<In3d>::new([
                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     self.slvs_param(slvs_entity.param[1]).unwrap().val,
                     self.slvs_param(slvs_entity.param[2]).unwrap().val,
@@ -213,7 +239,7 @@ impl System {
                     Box::new(Normal::<OnWorkplane>::new(Entity::new(slvs_entity.wrkpl)))
                 }
                 SLVS_E_DISTANCE => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Distance::<In3D>::new(
+                    SLVS_FREE_IN_3D => Box::new(Distance::<In3d>::new(
                         self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     )),
                     _ => Box::new(Distance::<OnWorkplane>::new(
@@ -225,7 +251,7 @@ impl System {
                     Entity::new(slvs_entity.normal),
                 )),
                 SLVS_E_LINE_SEGMENT => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(LineSegment::<In3D>::new(
+                    SLVS_FREE_IN_3D => Box::new(LineSegment::<In3d>::new(
                         Entity::new(slvs_entity.point[0]),
                         Entity::new(slvs_entity.point[1]),
                     )),
@@ -235,7 +261,7 @@ impl System {
                     )),
                 },
                 SLVS_E_CUBIC => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Cubic::<In3D>::new(
+                    SLVS_FREE_IN_3D => Box::new(Cubic::<In3d>::new(
                         Entity::new(slvs_entity.point[0]),
                         Entity::new(slvs_entity.point[1]),
                         Entity::new(slvs_entity.point[2]),
@@ -249,7 +275,7 @@ impl System {
                     )),
                 },
                 SLVS_E_CIRCLE => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Circle::<In3D>::new(
+                    SLVS_FREE_IN_3D => Box::new(Circle::<In3d>::new(
                         Entity::new(slvs_entity.point[0]),
                         Entity::new(slvs_entity.distance),
                         Entity::new(slvs_entity.normal),

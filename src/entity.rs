@@ -1,9 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::{bindings::Slvs_hEntity, element::AsHandle};
+use crate::{
+    bindings::Slvs_hEntity,
+    element::{AsHandle, Target},
+};
 
 mod point;
-pub use point::Point;
+pub use point::{Point, PointCoords};
 mod normal;
 pub use normal::Normal;
 mod distance;
@@ -24,7 +27,7 @@ pub use arc_of_circle::ArcOfCircle;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait AsEntity {
-    type Sketch;
+    type Sketch: Target;
 
     fn type_(&self) -> i32;
     fn points(&self) -> Option<Vec<Slvs_hEntity>>;

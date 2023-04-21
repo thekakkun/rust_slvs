@@ -33,15 +33,15 @@ impl<T: Target> AsConstraint for PtPtDistance<T> {
         Some(self.val)
     }
 
-    fn point(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
     }
 
-    fn entity(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         None
     }
 
-    fn other(&self) -> [bool; 2] {
+    fn others(&self) -> [bool; 2] {
         [false, false]
     }
 }

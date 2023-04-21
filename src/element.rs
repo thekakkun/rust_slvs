@@ -38,12 +38,12 @@ impl AsHandle for Group {
     }
 }
 
-pub(crate) trait Target {}
+pub trait Target {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct OnWorkplane {}
+pub struct OnWorkplane {}
 impl Target for OnWorkplane {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct In3D {}
-impl Target for In3D {}
+pub struct In3d {}
+impl Target for In3d {}

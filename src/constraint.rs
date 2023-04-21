@@ -26,9 +26,9 @@ pub trait AsConstraint {
 
     fn type_(&self) -> i32;
     fn val(&self) -> Option<f64>;
-    fn point(&self) -> Option<Vec<Slvs_hEntity>>;
-    fn entity(&self) -> Option<Vec<Slvs_hEntity>>;
-    fn other(&self) -> [bool; 2];
+    fn points(&self) -> Option<Vec<Slvs_hEntity>>;
+    fn entities(&self) -> Option<Vec<Slvs_hEntity>>;
+    fn others(&self) -> [bool; 2];
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
