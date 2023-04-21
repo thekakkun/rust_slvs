@@ -1,14 +1,11 @@
 use slvs::{
-    self,
-    entity::{
-        point::{In3d, Point},
-        PointIn3d,
-    },
+    entity::{Point, PointCoords},
+    In3d, System,
 };
 
 #[test]
 fn add_entity() {
-    let mut sys = slvs::System::new();
+    let mut sys = System::new();
     let g = sys.add_group();
 
     let p_x = 10.0;
@@ -16,14 +13,15 @@ fn add_entity() {
     let p_z = 30.0;
 
     let p = sys
-        .add_entity(&g, PointIn3d::new(p_x, p_y, p_z))
+        .sketch_in_3d(&g, Point::<In3d>::new(p_x, p_y, p_z))
         .expect("point in 3d created");
 
     let p_data = sys.entity_data(&p).expect("point found");
-
-    assert_eq!(p_data.x, p_x);
-    assert_eq!(p_data.y, p_y);
-    assert_eq!(p_data.z, p_z);
+    if let PointCoords::In3d { x, y, z } = p_data.coords {
+        assert_eq!(x, p_x);
+        assert_eq!(y, p_y);
+        assert_eq!(z, p_z);
+    }
 }
 
 #[test]
@@ -32,7 +30,7 @@ fn update_entity() {
     let g = sys.add_group();
 
     let p = sys
-        .add_entity(&g, PointIn3d::new(0.0, 0.0, 0.0))
+        .sketch_in_3d(&g, Point::<In3d>::new(0.0, 0.0, 0.0))
         .expect("point in 3d created");
 
     let updated_p_x = 10.0;
@@ -40,18 +38,18 @@ fn update_entity() {
     let updated_p_z = 30.0;
 
     let updated_p_data = sys
-        .update_entity(
-            &p,
-            |mut entity| {
-                entity.x = updated_p_x;
-                entity.y = updated_p_y;
-                entity.z = updated_p_z;
-            },
-            None,
-        )
+        .update_entity(&p, |mut entity| {
+            entity.coords = PointCoords::In3d {
+                x: updated_p_x,
+                y: updated_p_y,
+                z: updated_p_z,
+            }
+        })
         .expect("should get updated point data");
 
-    assert_eq!(updated_p_data.x, updated_p_x);
-    assert_eq!(updated_p_data.y, updated_p_y);
-    assert_eq!(updated_p_data.z, updated_p_z);
+    if let PointCoords::In3d { x, y, z } = updated_p_data.coords {
+        assert_eq!(x, updated_p_x);
+        assert_eq!(y, updated_p_y);
+        assert_eq!(z, updated_p_z);
+    }
 }
