@@ -15,18 +15,19 @@ use crate::{
         SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE, SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL,
         SLVS_C_WHERE_DRAGGED,
     },
-    element::AsHandle,
+    element::{AsHandle, Target},
 };
 
-pub mod pt_pt_distance;
+mod pt_pt_distance;
 pub use pt_pt_distance::PtPtDistance;
 
 pub trait AsConstraint {
-    fn type_(&self) -> Slvs_hConstraint;
-    fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn val(&self) -> f64;
-    fn point(&self) -> [Option<Slvs_hEntity>; 2];
-    fn entity(&self) -> [Option<Slvs_hEntity>; 4];
+    type Apply: Target;
+
+    fn type_(&self) -> i32;
+    fn val(&self) -> Option<f64>;
+    fn point(&self) -> Option<Vec<Slvs_hEntity>>;
+    fn entity(&self) -> Option<Vec<Slvs_hEntity>>;
     fn other(&self) -> [bool; 2];
 }
 
@@ -54,7 +55,7 @@ impl<T: AsConstraint> AsHandle for Constraint<T> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SomeConstraint {
     // PointsCoincident(Constraint<PointsCoincident>),
-    PtPtDistance(Constraint<PtPtDistance>),
+    // PtPtDistance(Constraint<PtPtDistance>),
     // PtPlaneDistance(Constraint<PtPlaneDistance>),
     // PtLineDistance(Constraint<PtLineDistance>),
     // PtFaceDistance(Constraint<PtFaceDistance>),
@@ -97,7 +98,7 @@ impl SomeConstraint {
     pub(super) fn new(type_: u32, h: Slvs_hConstraint) -> Self {
         match type_ {
             SLVS_C_POINTS_COINCIDENT => todo!(),
-            SLVS_C_PT_PT_DISTANCE => SomeConstraint::PtPtDistance(Constraint::new(h)),
+            SLVS_C_PT_PT_DISTANCE => todo!(),
             SLVS_C_PT_PLANE_DISTANCE => todo!(),
             SLVS_C_PT_LINE_DISTANCE => todo!(),
             SLVS_C_PT_FACE_DISTANCE => todo!(),

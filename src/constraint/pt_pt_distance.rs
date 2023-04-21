@@ -1,75 +1,47 @@
+use super::AsConstraint;
 use crate::{
-    bindings,
-    entity::{Entity, PointIn3d},
-    AsHandle,
+    bindings::{Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
+    element::{AsHandle, Target},
+    entity::{Entity, Point},
 };
 
-use super::{AsConstraint, Constraint, SomeConstraint};
-
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum PtPtDistance {
-    _2d {
-        val: f64,
-        workplane: Entity<PointIn3d>, // Not really the correct type. fix later.
-        point_a: Entity<PointIn3d>,
-        point_b: Entity<PointIn3d>,
-    },
-    _3d {
-        val: f64,
-        point_a: Entity<PointIn3d>,
-        point_b: Entity<PointIn3d>,
-    },
+pub struct PtPtDistance<T: Target> {
+    val: f64,
+    point_a: Entity<Point<T>>,
+    point_b: Entity<Point<T>>,
 }
 
-impl AsConstraint for PtPtDistance {
-    fn type_(&self) -> bindings::Slvs_hConstraint {
-        bindings::SLVS_C_PT_PT_DISTANCE
-    }
-
-    fn workplane(&self) -> Option<bindings::Slvs_hEntity> {
-        None // TODO: necessary for 2d distances.
-    }
-
-    fn val(&self) -> f64 {
-        match self {
-            PtPtDistance::_2d { val, .. } | PtPtDistance::_3d { val, .. } => *val,
+impl<T: Target> PtPtDistance<T> {
+    pub fn new(val: f64, point_a: Entity<Point<T>>, point_b: Entity<Point<T>>) -> Self {
+        Self {
+            val,
+            point_a,
+            point_b,
         }
     }
+}
 
-    fn point(&self) -> [Option<bindings::Slvs_hEntity>; 2] {
-        match self {
-            PtPtDistance::_2d {
-                point_a, point_b, ..
-            }
-            | PtPtDistance::_3d {
-                point_a, point_b, ..
-            } => [Some((*point_a).as_handle()), Some((*point_b).as_handle())],
-        }
+impl<T: Target> AsConstraint for PtPtDistance<T> {
+    type Apply = T;
+
+    fn type_(&self) -> i32 {
+        SLVS_C_PT_PT_DISTANCE as _
     }
 
-    fn entity(&self) -> [Option<bindings::Slvs_hEntity>; 4] {
-        [None; 4]
+    fn val(&self) -> Option<f64> {
+        Some(self.val)
+    }
+
+    fn point(&self) -> Option<Vec<Slvs_hEntity>> {
+        Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
+    }
+
+    fn entity(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
     }
 
     fn other(&self) -> [bool; 2] {
-        [false; 2]
-    }
-}
-
-impl TryFrom<SomeConstraint> for Constraint<PtPtDistance> {
-    type Error = &'static str;
-
-    fn try_from(value: SomeConstraint) -> Result<Self, Self::Error> {
-        if let SomeConstraint::PtPtDistance(constraint) = value {
-            Ok(constraint)
-        } else {
-            Err("Expected SomeConstraint::PtPtDistance")
-        }
-    }
-}
-
-impl From<Constraint<PtPtDistance>> for SomeConstraint {
-    fn from(value: Constraint<PtPtDistance>) -> Self {
-        SomeConstraint::PtPtDistance(value)
+        [false, false]
     }
 }
