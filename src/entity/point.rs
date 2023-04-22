@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point<T: Target> {
+pub struct Point<T: Target + ?Sized> {
     pub coords: Coords,
     phantom: PhantomData<T>,
 }
@@ -30,7 +30,7 @@ impl Point<In3d> {
     }
 }
 
-impl<T: Target> AsEntity for Point<T> {
+impl<T: Target + ?Sized> AsEntity for Point<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

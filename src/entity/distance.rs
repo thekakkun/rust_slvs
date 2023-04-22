@@ -7,12 +7,12 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Distance<T: Target> {
+pub struct Distance<T: Target + ?Sized> {
     pub d: f64,
     phantom: PhantomData<T>,
 }
 
-impl<T: Target> Distance<T> {
+impl<T: Target + ?Sized> Distance<T> {
     pub fn new(d: f64) -> Self {
         Self {
             d,
@@ -21,7 +21,7 @@ impl<T: Target> Distance<T> {
     }
 }
 
-impl<T: Target> AsEntity for Distance<T> {
+impl<T: Target + ?Sized> AsEntity for Distance<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

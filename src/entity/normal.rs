@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Normal<T: Target> {
+pub struct Normal<T: Target + ?Sized> {
     data: NormalDef,
     phantom: PhantomData<T>,
 }
@@ -31,7 +31,7 @@ impl Normal<In3d> {
     }
 }
 
-impl<T: Target> AsEntity for Normal<T> {
+impl<T: Target + ?Sized> AsEntity for Normal<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

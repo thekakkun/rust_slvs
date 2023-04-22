@@ -5,13 +5,13 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Circle<T: Target> {
+pub struct Circle<T: Target + ?Sized> {
     center: Entity<Point<T>>,
     radius: Entity<Distance<T>>,
     normal: Entity<Normal<T>>,
 }
 
-impl<T: Target> Circle<T> {
+impl<T: Target + ?Sized> Circle<T> {
     pub fn new(
         center: Entity<Point<T>>,
         radius: Entity<Distance<T>>,
@@ -25,7 +25,7 @@ impl<T: Target> Circle<T> {
     }
 }
 
-impl<T: Target> AsEntity for Circle<T> {
+impl<T: Target + ?Sized> AsEntity for Circle<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

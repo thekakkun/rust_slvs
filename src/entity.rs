@@ -27,7 +27,7 @@ pub use arc_of_circle::ArcOfCircle;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait AsEntity {
-    type Sketch: Target;
+    type Sketch: Target + ?Sized;
 
     fn type_(&self) -> i32;
     fn points(&self) -> Option<Vec<Slvs_hEntity>>;
@@ -37,7 +37,7 @@ pub trait AsEntity {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Entity<T: AsEntity> {
+pub struct Entity<T: AsEntity + ?Sized> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
 }

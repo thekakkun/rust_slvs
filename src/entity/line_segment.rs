@@ -5,18 +5,18 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct LineSegment<T: Target> {
+pub struct LineSegment<T: Target + ?Sized> {
     pub point_a: Entity<Point<T>>,
     pub point_b: Entity<Point<T>>,
 }
 
-impl<T: Target> LineSegment<T> {
+impl<T: Target + ?Sized> LineSegment<T> {
     pub fn new(point_a: Entity<Point<T>>, point_b: Entity<Point<T>>) -> Self {
         Self { point_a, point_b }
     }
 }
 
-impl<T: Target> AsEntity for LineSegment<T> {
+impl<T: Target + ?Sized> AsEntity for LineSegment<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {
