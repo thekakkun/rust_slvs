@@ -7,17 +7,17 @@ use crate::{
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct PtPtDistance<T: Target> {
-    val: f64,
     point_a: Entity<Point<T>>,
     point_b: Entity<Point<T>>,
+    distance: f64,
 }
 
 impl<T: Target> PtPtDistance<T> {
-    pub fn new(val: f64, point_a: Entity<Point<T>>, point_b: Entity<Point<T>>) -> Self {
+    pub fn new(point_a: Entity<Point<T>>, point_b: Entity<Point<T>>, distance: f64) -> Self {
         Self {
-            val,
             point_a,
             point_b,
+            distance,
         }
     }
 }
@@ -30,7 +30,7 @@ impl<T: Target> AsConstraint for PtPtDistance<T> {
     }
 
     fn val(&self) -> Option<f64> {
-        Some(self.val)
+        Some(self.distance)
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
