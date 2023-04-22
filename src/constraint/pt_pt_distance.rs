@@ -6,14 +6,22 @@ use crate::{
 };
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct PtPtDistance<T: Target> {
+pub struct PtPtDistance<T, U>
+where
+    T: Target + ?Sized,
+    U: Target + ?Sized,
+{
     point_a: Entity<Point<T>>,
-    point_b: Entity<Point<T>>,
+    point_b: Entity<Point<U>>,
     distance: f64,
 }
 
-impl<T: Target> PtPtDistance<T> {
-    pub fn new(point_a: Entity<Point<T>>, point_b: Entity<Point<T>>, distance: f64) -> Self {
+impl<T, U> PtPtDistance<T, U>
+where
+    T: Target + ?Sized,
+    U: Target + ?Sized,
+{
+    pub fn new(point_a: Entity<Point<T>>, point_b: Entity<Point<U>>, distance: f64) -> Self {
         Self {
             point_a,
             point_b,
@@ -22,8 +30,12 @@ impl<T: Target> PtPtDistance<T> {
     }
 }
 
-impl<T: Target> AsConstraint for PtPtDistance<T> {
-    type Apply = T;
+impl<T, U> AsConstraint for PtPtDistance<T, U>
+where
+    T: Target + ?Sized,
+    U: Target + ?Sized,
+{
+    type Apply = dyn Target;
 
     fn type_(&self) -> i32 {
         SLVS_C_PT_PT_DISTANCE as _

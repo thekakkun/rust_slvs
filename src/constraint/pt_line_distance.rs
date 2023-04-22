@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
     element::{AsHandle, Target},
@@ -7,23 +9,29 @@ use crate::{
 use super::AsConstraint;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct PtLineDistance<T: Target> {
-    point: Entity<Point<T>>,
-    line: Entity<LineSegment<T>>,
+pub struct PtLineDistance<T: Target + ?Sized> {
+    point: Entity<Point<dyn Target>>,
+    line: Entity<LineSegment<dyn Target>>,
     distance: f64,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Target> PtLineDistance<T> {
-    pub fn new(point: Entity<Point<T>>, line: Entity<LineSegment<T>>, distance: f64) -> Self {
+impl<T: Target + ?Sized> PtLineDistance<T> {
+    pub fn new(
+        point: Entity<Point<dyn Target>>,
+        line: Entity<LineSegment<dyn Target>>,
+        distance: f64,
+    ) -> Self {
         Self {
             point,
             line,
             distance,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<T: Target> AsConstraint for PtLineDistance<T> {
+impl<T: Target + ?Sized> AsConstraint for PtLineDistance<T> {
     type Apply = T;
 
     fn type_(&self) -> i32 {
