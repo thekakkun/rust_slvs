@@ -1,7 +1,10 @@
 use std::any::Any;
-use std::{iter::zip, marker::PhantomData};
+use std::iter::zip;
+use std::marker::PhantomData;
 
+mod bindings;
 use bindings::Slvs_hGroup;
+pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 use bindings::{Slvs_Constraint, Slvs_hConstraint};
 use bindings::{
     Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
@@ -13,17 +16,18 @@ use bindings::{
     Slvs_Solve, Slvs_System, SLVS_FREE_IN_3D, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
-use constraint::{AsConstraint, Constraint, SomeConstraint};
-use element::{AsHandle, Elements};
+
+pub mod constraint;
+use constraint::{AsConstraint, Constraint, PtLineDistance, PtPtDistance, SomeConstraint};
+
+mod element;
+use element::{AsHandle, Elements, Target};
 pub use element::{Group, In3d, OnWorkplane};
+
+pub mod entity;
 use entity::{
     ArcOfCircle, AsEntity, Circle, Cubic, Distance, Entity, LineSegment, Normal, Point, Workplane,
 };
-
-mod bindings;
-pub mod constraint;
-mod element;
-pub mod entity;
 
 pub struct System {
     groups: Elements<Group>,
@@ -135,6 +139,18 @@ impl System {
         Ok(Entity::new(new_slvs_entity.h))
     }
 
+    pub fn constrain_on_workplane<T: AsConstraint<Apply = OnWorkplane>>(
+        &mut self,
+        group: &Group,
+        workplane: Entity<Workplane>,
+        entity_data: T,
+    ) -> Result<Constraint<T>, &'static str> {
+        // TODO: validate constraint data
+
+        // let mut new_slvs_constraint =
+        unimplemented!()
+    }
+
     pub fn constrain_in_3d<T: AsConstraint<Apply = In3d>>(
         &mut self,
         group: &Group,
@@ -163,38 +179,6 @@ impl System {
 
         Ok(Constraint::new(new_slvs_constraint.h))
     }
-
-    // pub fn add_constraint<T: AsConstraint>(
-    //     &mut self,
-    //     group: &Group,
-    //     constraint: T,
-    // ) -> Result<Constraint<T>, &'static str> {
-    //     let [point_a, point_b] = constraint.point();
-    //     let [entity_a, entity_b, entity_c, entity_d] = constraint.entity();
-    //     let [other, other_2] = constraint.other();
-
-    //     let new_constraint = Slvs_Constraint {
-    //         h: self.constraints.get_next_h(),
-    //         group: group.as_handle(),
-    //         type_: constraint.type_() as _,
-    //         wrkpl: constraint.workplane().unwrap_or(0), // TODO: check that entity exists and is the correct type
-    //         valA: constraint.val(),
-    //         ptA: point_a.unwrap_or(0),      // TODO: ditto
-    //         ptB: point_b.unwrap_or(0),      // TODO: ditto
-    //         entityA: entity_a.unwrap_or(0), // TODO: ditto
-    //         entityB: entity_b.unwrap_or(0), // TODO: ditto
-    //         entityC: entity_c.unwrap_or(0), // TODO: ditto
-    //         entityD: entity_d.unwrap_or(0), // TODO: ditto
-    //         other: other as _,
-    //         other2: other_2 as _,
-    //     };
-
-    //     self.constraints.list.push(new_constraint);
-    //     Ok(Constraint {
-    //         handle: new_constraint.h,
-    //         phantom: PhantomData,
-    //     })
-    // }
 
     // Private as user has no reason to create bare param without linking to an entity.
     fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
@@ -298,6 +282,13 @@ impl System {
             *some_entity_data.downcast::<T>().unwrap()
         })
     }
+
+    pub fn constraint_data<T: AsConstraint + 'static>(
+        &self,
+        constraint: &Constraint<T>,
+    ) -> Result<T, &'static str> {
+        todo!()
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,6 +336,18 @@ impl System {
         }
         Ok(entity_data)
     }
+
+    pub fn update_constraint<T, F>(
+        &mut self,
+        constraint: &Constraint<T>,
+        f: F,
+    ) -> Result<T, &'static str>
+    where
+        T: AsConstraint + 'static,
+        F: FnOnce(&mut T),
+    {
+        todo!()
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +383,10 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint(&mut self) {
+    pub fn delete_constraint<T: AsConstraint + 'static>(
+        &mut self,
+        constraint: Constraint<T>,
+    ) -> Result<T, &'static str> {
         unimplemented!()
     }
 }
@@ -577,9 +583,24 @@ impl System {
         Ok(&mut self.constraints.list[ix])
     }
 
+    fn validate_constraint_data(
+        &self,
+        constraint_data: &impl AsConstraint,
+        workplane: Option<&Entity<Workplane>>,
+    ) -> Result<(), &'static str> {
+        todo!()
+    }
+
+    // fn some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
+    //     self.slvs_constraint(h).map(
+    //         |Slvs_Constraint {
+    //              h, type_, wrkpl, ..
+    //          }| SomeConstraint::new(*type_ as _, *h),
+    //     )
+    // }
     fn some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
         self.slvs_constraint(h)
-            .map(|Slvs_Constraint { h, type_, .. }| SomeConstraint::new(*type_ as _, *h))
+            .map(|Slvs_Constraint { h, .. }| SomeConstraint::new(*h))
     }
 }
 
