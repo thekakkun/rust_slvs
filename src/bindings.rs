@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::mem::MaybeUninit;
+use std::{iter::zip, mem::MaybeUninit};
 
 use crate::System;
 
@@ -91,27 +91,24 @@ impl Slvs_Constraint {
     }
 
     pub(crate) fn set_points(&mut self, points: Vec<Slvs_hEntity>) {
-        if let Some(point) = points.get(0) {
-            self.ptA = *point;
-        }
-        if let Some(point) = points.get(1) {
-            self.ptB = *point;
-        }
+        zip([&mut self.ptA, &mut self.ptB], points).for_each(|(data, point)| {
+            *data = point;
+        });
     }
 
     pub(crate) fn set_entities(&mut self, entities: Vec<Slvs_hEntity>) {
-        if let Some(entity) = entities.get(0) {
-            self.entityA = *entity;
-        }
-        if let Some(entity) = entities.get(1) {
-            self.entityB = *entity;
-        }
-        if let Some(entity) = entities.get(2) {
-            self.entityC = *entity;
-        }
-        if let Some(entity) = entities.get(3) {
-            self.entityD = *entity;
-        }
+        zip(
+            [
+                &mut self.entityA,
+                &mut self.entityB,
+                &mut self.entityC,
+                &mut self.entityD,
+            ],
+            entities,
+        )
+        .for_each(|(data, entities)| {
+            *data = entities;
+        });
     }
 
     pub(crate) fn set_others(&mut self, others: [bool; 2]) {
