@@ -8,14 +8,14 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point<T: Target> {
-    pub coords: PointCoords,
+    pub coords: Coords,
     phantom: PhantomData<T>,
 }
 
 impl Point<OnWorkplane> {
     pub fn new(u: f64, v: f64) -> Self {
         Self {
-            coords: PointCoords::In2d { u, v },
+            coords: Coords::OnWorkplane { u, v },
             phantom: PhantomData::<OnWorkplane>,
         }
     }
@@ -24,7 +24,7 @@ impl Point<OnWorkplane> {
 impl Point<In3d> {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self {
-            coords: PointCoords::In3d { x, y, z },
+            coords: Coords::In3d { x, y, z },
             phantom: PhantomData::<In3d>,
         }
     }
@@ -35,8 +35,8 @@ impl<T: Target> AsEntity for Point<T> {
 
     fn type_(&self) -> i32 {
         match self.coords {
-            PointCoords::In2d { .. } => SLVS_E_POINT_IN_2D as _,
-            PointCoords::In3d { .. } => SLVS_E_POINT_IN_3D as _,
+            Coords::OnWorkplane { .. } => SLVS_E_POINT_IN_2D as _,
+            Coords::In3d { .. } => SLVS_E_POINT_IN_3D as _,
         }
     }
 
@@ -54,14 +54,14 @@ impl<T: Target> AsEntity for Point<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         match self.coords {
-            PointCoords::In2d { u, v } => Some(vec![u, v]),
-            PointCoords::In3d { x, y, z } => Some(vec![x, y, z]),
+            Coords::OnWorkplane { u, v } => Some(vec![u, v]),
+            Coords::In3d { x, y, z } => Some(vec![x, y, z]),
         }
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PointCoords {
-    In2d { u: f64, v: f64 },
+pub enum Coords {
+    OnWorkplane { u: f64, v: f64 },
     In3d { x: f64, y: f64, z: f64 },
 }
