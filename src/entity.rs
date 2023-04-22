@@ -6,9 +6,9 @@ use crate::{
 };
 
 mod point;
-pub use point::{Point, PointCoords};
+pub use point::{Coords, Point};
 mod normal;
-pub use normal::Normal;
+pub use normal::{Normal, NormalDef};
 mod distance;
 pub use distance::Distance;
 mod workplane;

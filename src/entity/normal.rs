@@ -62,7 +62,7 @@ impl<T: Target> AsEntity for Normal<T> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum NormalDef {
+pub enum NormalDef {
     OnWorkplane { workplane: Entity<Workplane> },
     In3d { w: f64, x: f64, y: f64, z: f64 },
 }
