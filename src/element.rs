@@ -47,3 +47,7 @@ impl Target for OnWorkplane {}
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct In3d;
 impl Target for In3d {}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SomeTarget;
+impl Target for SomeTarget {}

@@ -1,56 +1,51 @@
-use std::marker::PhantomData;
-
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
     element::{AsHandle, Target},
-    entity::{Entity, LineSegment, Point},
+    entity::{Entity, LineSegment, Point, SomeLineSegment, SomePoint},
 };
 
-use super::AsConstraint;
+use super::AsConstraintData;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct PtLineDistance<T: Target + ?Sized> {
-    point: Entity<Point<dyn Target>>,
-    line: Entity<LineSegment<dyn Target>>,
+pub struct PtLineDistance {
+    point: Entity<SomePoint>,
+    line: Entity<SomeLineSegment>,
     distance: f64,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Target + ?Sized> PtLineDistance<T> {
-    pub fn new(
-        point: Entity<Point<dyn Target>>,
-        line: Entity<LineSegment<dyn Target>>,
-        distance: f64,
-    ) -> Self {
-        Self {
-            point,
-            line,
-            distance,
-            phantom: PhantomData,
-        }
-    }
-}
+// impl PtLineDistance {
+//     pub fn new(
+//         point: Entity<Point<dyn Target>>,
+//         line: Entity<LineSegment<dyn Target>>,
+//         distance: f64,
+//     ) -> Self {
+//         Self {
+//             point,
+//             line,
+//             distance,
+//         }
+//     }
+// }
 
-impl<T: Target + ?Sized> AsConstraint for PtLineDistance<T> {
-    type Apply = T;
+// impl AsConstraintData for PtLineDistance {
+//     type Apply = dyn Target;
 
-    fn type_(&self) -> i32 {
-        SLVS_C_PT_LINE_DISTANCE as _
-    }
+//     fn type_(&self) -> i32 {
+//         SLVS_C_PT_LINE_DISTANCE as _
+//     }
 
-    fn val(&self) -> Option<f64> {
-        Some(self.distance)
-    }
+//     fn val(&self) -> Option<f64> {
+//         Some(self.distance)
+//     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.as_handle()])
-    }
+//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//         Some(vec![self.point.as_handle(), self.line.as_handle()])
+//     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
+//     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+//         None
+//     }
 
-    fn others(&self) -> [bool; 2] {
-        [false, false]
-    }
-}
+//     fn others(&self) -> [bool; 2] {
+//         [false, false]
+//     }
+// }

@@ -3,11 +3,10 @@ use std::marker::PhantomData;
 use crate::{
     bindings::Slvs_hEntity,
     element::{AsHandle, Target},
-    In3d, OnWorkplane, SomeTarget,
 };
 
 mod point;
-pub use point::{Coords, Point};
+pub use point::{Coords, Point, SomePoint};
 mod normal;
 pub use normal::{Normal, NormalDef};
 mod distance;
@@ -59,17 +58,11 @@ pub trait AsEntityData {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Conversions for use when we don't care about the sketch target
+// Conversions for use when we don't care about specific sketch argets
 ////////////////////////////////////////////////////////////////////////////////
 
-impl From<Entity<Point<OnWorkplane>>> for Entity<Point<SomeTarget>> {
-    fn from(value: Entity<Point<OnWorkplane>>) -> Self {
-        Entity::new(value.handle)
-    }
-}
-
-impl From<Entity<Point<In3d>>> for Entity<Point<SomeTarget>> {
-    fn from(value: Entity<Point<In3d>>) -> Self {
+impl<T: Target> From<Entity<Point<T>>> for Entity<SomePoint> {
+    fn from(value: Entity<Point<T>>) -> Self {
         Entity::new(value.handle)
     }
 }

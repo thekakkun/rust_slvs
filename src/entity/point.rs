@@ -4,6 +4,7 @@ use super::AsEntityData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::{In3d, OnWorkplane, Target},
+    SomeTarget,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -67,6 +68,28 @@ pub enum Coords {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct SomePoint {
-    pub coords: Coords,
+pub struct SomePoint;
+
+impl AsEntityData for SomePoint {
+    type Sketch = SomeTarget;
+
+    fn type_(&self) -> i32 {
+        unimplemented!()
+    }
+
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        unimplemented!()
+    }
+
+    fn normal(&self) -> Option<Slvs_hEntity> {
+        unimplemented!()
+    }
+
+    fn distance(&self) -> Option<Slvs_hEntity> {
+        unimplemented!()
+    }
+
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        unimplemented!()
+    }
 }

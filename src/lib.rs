@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 mod bindings;
 use bindings::Slvs_hGroup;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
-use bindings::{Slvs_Constraint, Slvs_hConstraint};
+use bindings::{Slvs_Constraint, Slvs_hConstraint, SLVS_C_PT_PT_DISTANCE};
 use bindings::{
     Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
     SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
@@ -18,15 +18,16 @@ use bindings::{
 };
 
 pub mod constraint;
-use constraint::{AsConstraint, Constraint, PtLineDistance, PtPtDistance, SomeConstraint};
+use constraint::{AsConstraintData, Constraint, PtPtDistance, SomeConstraint};
 
 mod element;
 use element::{AsHandle, Elements, Target};
-pub use element::{Group, In3d, OnWorkplane};
+pub use element::{Group, In3d, OnWorkplane, SomeTarget};
 
 pub mod entity;
 use entity::{
-    ArcOfCircle, AsEntity, Circle, Cubic, Distance, Entity, LineSegment, Normal, Point, Workplane,
+    ArcOfCircle, AsEntityData, Circle, Cubic, Distance, Entity, LineSegment, Normal, Point,
+    Workplane,
 };
 
 pub struct System {
@@ -63,7 +64,7 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch_on_workplane<T: AsEntity<Sketch = OnWorkplane>>(
+    pub fn sketch_on_workplane<T: AsEntityData<Sketch = OnWorkplane>>(
         &mut self,
         group: &Group,
         workplane: Entity<Workplane>,
@@ -104,7 +105,7 @@ impl System {
         })
     }
 
-    pub fn sketch_in_3d<T: AsEntity<Sketch = In3d>>(
+    pub fn sketch_in_3d<T: AsEntityData<Sketch = In3d>>(
         &mut self,
         group: &Group,
         entity_data: T,
@@ -139,24 +140,44 @@ impl System {
         Ok(Entity::new(new_slvs_entity.h))
     }
 
-    pub fn constrain_on_workplane<T: AsConstraint<Apply = OnWorkplane>>(
+    pub fn constrain_on_workplane<T: AsConstraintData>(
         &mut self,
         group: &Group,
         workplane: Entity<Workplane>,
-        entity_data: T,
-    ) -> Result<Constraint<T>, &'static str> {
-        // TODO: validate constraint data
+        constraint_data: T,
+    ) -> Result<Constraint<T, OnWorkplane>, &'static str> {
+        self.validate_constraint_data(&constraint_data)?;
 
-        // let mut new_slvs_constraint =
-        unimplemented!()
+        let mut new_slvs_constraint = Slvs_Constraint::new(
+            self.constraints.get_next_h(),
+            group.as_handle(),
+            constraint_data.type_(),
+        );
+
+        new_slvs_constraint.set_workplane(workplane.as_handle());
+
+        if let Some(val) = constraint_data.val() {
+            new_slvs_constraint.set_val(val);
+        }
+        if let Some(points) = constraint_data.points() {
+            new_slvs_constraint.set_points(points);
+        }
+        if let Some(entities) = constraint_data.entities() {
+            new_slvs_constraint.set_entities(entities)
+        }
+        new_slvs_constraint.set_others(constraint_data.others());
+
+        self.constraints.list.push(new_slvs_constraint);
+
+        Ok(Constraint::new(new_slvs_constraint.h))
     }
 
-    pub fn constrain_in_3d<T: AsConstraint<Apply = In3d>>(
+    pub fn constrain_in_3d<T: AsConstraintData>(
         &mut self,
         group: &Group,
         constraint_data: T,
-    ) -> Result<Constraint<T>, &'static str> {
-        // TODO: validate constraint_data
+    ) -> Result<Constraint<T, In3d>, &'static str> {
+        self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
             self.constraints.get_next_h(),
@@ -198,7 +219,7 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn entity_data<T: AsEntity + 'static>(
+    pub fn entity_data<T: AsEntityData + 'static>(
         &self,
         entity: &Entity<T>,
     ) -> Result<T, &'static str> {
@@ -283,11 +304,23 @@ impl System {
         })
     }
 
-    pub fn constraint_data<T: AsConstraint + 'static>(
+    pub fn constraint_data<T: AsConstraintData + 'static, U: Target>(
         &self,
-        constraint: &Constraint<T>,
+        constraint: &Constraint<T, U>,
     ) -> Result<T, &'static str> {
-        todo!()
+        self.slvs_constraint(constraint.as_handle())
+            .map(|slvs_constraint| {
+                let some_constraint_data: Box<dyn Any> = match slvs_constraint.type_ as _ {
+                    SLVS_C_PT_PT_DISTANCE => Box::new(PtPtDistance::new(
+                        Entity::new(slvs_constraint.ptA),
+                        Entity::new(slvs_constraint.ptB),
+                        slvs_constraint.valA,
+                    )),
+                    _ => panic!("Unknown constraint type: {}", slvs_constraint.type_),
+                };
+
+                *some_constraint_data.downcast::<T>().unwrap()
+            })
     }
 }
 
@@ -305,7 +338,7 @@ impl System {
 
     pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntity + 'static,
+        T: AsEntityData + 'static,
         F: FnOnce(&mut T),
     {
         let mut entity_data = self.entity_data(entity)?;
@@ -337,16 +370,35 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn update_constraint<T, F>(
+    pub fn update_constraint<T, U, F>(
         &mut self,
-        constraint: &Constraint<T>,
+        constraint: &Constraint<T, U>,
         f: F,
     ) -> Result<T, &'static str>
     where
-        T: AsConstraint + 'static,
+        T: AsConstraintData + 'static,
+        U: Target,
         F: FnOnce(&mut T),
     {
-        todo!()
+        let mut constraint_data = self.constraint_data(constraint)?;
+
+        f(&mut constraint_data);
+        self.validate_constraint_data(&constraint_data)?;
+
+        let slvs_constraint = self.mut_slvs_constraint(constraint.as_handle()).unwrap();
+
+        if let Some(val) = constraint_data.val() {
+            slvs_constraint.set_val(val);
+        }
+        if let Some(points) = constraint_data.points() {
+            slvs_constraint.set_points(points);
+        }
+        if let Some(entities) = constraint_data.entities() {
+            slvs_constraint.set_entities(entities);
+        }
+        slvs_constraint.set_others(constraint_data.others());
+
+        Ok(constraint_data)
     }
 }
 
@@ -368,7 +420,7 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<T: AsEntity + 'static>(
+    pub fn delete_entity<T: AsEntityData + 'static>(
         &mut self,
         entity: Entity<T>,
     ) -> Result<T, &'static str> {
@@ -383,11 +435,16 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<T: AsConstraint + 'static>(
+    pub fn delete_constraint<T: AsConstraintData + 'static, U: Target>(
         &mut self,
-        constraint: Constraint<T>,
+        constraint: Constraint<T, U>,
     ) -> Result<T, &'static str> {
-        unimplemented!()
+        let constraint_data = self.constraint_data(&constraint)?;
+
+        let ix = self.constraint_ix(constraint.as_handle())?;
+        self.constraints.list.remove(ix);
+
+        Ok(constraint_data)
     }
 }
 
@@ -396,7 +453,7 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn set_dragged(&mut self, entity: &Entity<impl AsEntity>) {
+    pub fn set_dragged(&mut self, entity: &Entity<impl AsEntityData>) {
         if let Ok(slvs_entity) = self.slvs_entity(entity.as_handle()) {
             self.dragged = slvs_entity.param;
         }
@@ -522,7 +579,7 @@ impl System {
     // Checks that all elements referenced within entity_data exist and are on the expected workplane
     fn validate_entity_data(
         &self,
-        entity_data: &impl AsEntity,
+        entity_data: &impl AsEntityData,
         workplane: Option<&Entity<Workplane>>,
     ) -> Result<(), &'static str> {
         if let Some(points) = entity_data.points() {
@@ -585,19 +642,27 @@ impl System {
 
     fn validate_constraint_data(
         &self,
-        constraint_data: &impl AsConstraint,
-        workplane: Option<&Entity<Workplane>>,
+        constraint_data: &impl AsConstraintData,
     ) -> Result<(), &'static str> {
-        todo!()
+        if let Some(points) = constraint_data.points() {
+            let all_points_valid: Result<Vec<_>, _> = points
+                .into_iter()
+                .map(|point| self.slvs_entity(point).map(|_| ()))
+                .collect();
+            all_points_valid?;
+        }
+
+        if let Some(entities) = constraint_data.entities() {
+            let all_entities_valid: Result<Vec<_>, _> = entities
+                .into_iter()
+                .map(|entity| self.slvs_entity(entity).map(|_| ()))
+                .collect();
+            all_entities_valid?;
+        }
+
+        Ok(())
     }
 
-    // fn some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
-    //     self.slvs_constraint(h).map(
-    //         |Slvs_Constraint {
-    //              h, type_, wrkpl, ..
-    //          }| SomeConstraint::new(*type_ as _, *h),
-    //     )
-    // }
     fn some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
         self.slvs_constraint(h)
             .map(|Slvs_Constraint { h, .. }| SomeConstraint::new(*h))
