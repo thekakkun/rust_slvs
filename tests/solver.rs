@@ -1,7 +1,7 @@
 use slvs::{
     constraint::PtPtDistance,
     entity::{Coords, LineSegment, Point},
-    In3d, System,
+    FailReason, In3d, System,
 };
 
 const SOLVE_TOLERANCE: f64 = 1e-8;
@@ -52,32 +52,32 @@ fn solve_3d_demo() {
     }
 }
 
-// #[test]
-// fn inconsistent_constraints() {
-//     let mut sys = System::new();
-//     let g = sys.add_group();
+#[test]
+fn inconsistent_constraints() {
+    let mut sys = System::new();
+    let g = sys.add_group();
 
-//     let p1 = sys
-//         .sketch_in_3d(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
-//         .expect("p1 created");
-//     let p2 = sys
-//         .sketch_in_3d(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
-//         .expect("p2 created");
+    let p1 = sys
+        .sketch_in_3d(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .expect("p1 created");
+    let p2 = sys
+        .sketch_in_3d(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .expect("p2 created");
 
-//     // distance between p1 and p2 is 10
-//     let c1 = sys
-//         .constrain_in_3d(&g, PtPtDistance::<In3d>::new(p1, p2, 10.0))
-//         .expect("distance constraint added");
-//     // distance between p1 and p2 is 20
-//     let c2 = sys
-//         .constrain_in_3d(&g, PtPtDistance::<In3d>::new(p1, p2, 20.0))
-//         .expect("distance constraint added");
+    // distance between p1 and p2 is 10
+    let c1 = sys
+        .constrain_in_3d(&g, PtPtDistance::new(p1.into(), p2.into(), 10.0))
+        .expect("distance constraint added");
+    // distance between p1 and p2 is 20
+    let c2 = sys
+        .constrain_in_3d(&g, PtPtDistance::new(p1.into(), p2.into(), 20.0))
+        .expect("distance constraint added");
 
-//     let solve_result = sys.solve(&g);
+    let solve_result = sys.solve(&g);
 
-//     if let Err(fail_result) = solve_result {
-//         assert_eq!(fail_result.reason, FailReason::Inconsistent);
-//         assert!(fail_result.failed_constraints.contains(&c1.into()));
-//         assert!(fail_result.failed_constraints.contains(&c2.into()));
-//     }
-// }
+    if let Err(fail_result) = solve_result {
+        assert_eq!(fail_result.reason, FailReason::Inconsistent);
+        assert!(fail_result.constraint_did_fail(&c1));
+        assert!(fail_result.constraint_did_fail(&c2));
+    }
+}

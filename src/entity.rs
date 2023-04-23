@@ -58,7 +58,7 @@ pub trait AsEntityData {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Conversions for use when we don't care about specific sketch argets
+// Conversions for use when we don't care about specific sketch targets
 ////////////////////////////////////////////////////////////////////////////////
 
 impl<T: Target> From<Entity<Point<T>>> for Entity<SomePoint> {

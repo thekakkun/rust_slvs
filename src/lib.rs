@@ -18,7 +18,7 @@ use bindings::{
 };
 
 pub mod constraint;
-use constraint::{AsConstraintData, Constraint, PtPtDistance, SomeConstraint};
+use constraint::{AsConstraintData, Constraint, PtPtDistance};
 
 mod element;
 use element::{AsHandle, Elements, Target};
@@ -475,10 +475,7 @@ impl System {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
-                failed_constraints: failed_handles
-                    .into_iter()
-                    .map(|h| self.some_constraint(h).unwrap())
-                    .collect(),
+                failed_constraints: failed_handles,
             }),
             Err(_) => Ok(SolveOkay {
                 dof: slvs_system.dof,
@@ -494,7 +491,16 @@ pub struct SolveOkay {
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
-    pub failed_constraints: Vec<SomeConstraint>,
+    failed_constraints: Vec<Slvs_hConstraint>,
+}
+
+impl SolveFail {
+    pub fn constraint_did_fail<T: AsConstraintData, U: Target>(
+        &self,
+        constraint: &Constraint<T, U>,
+    ) -> bool {
+        self.failed_constraints.contains(&constraint.as_handle())
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -661,11 +667,6 @@ impl System {
         }
 
         Ok(())
-    }
-
-    fn some_constraint(&self, h: Slvs_hConstraint) -> Result<SomeConstraint, &'static str> {
-        self.slvs_constraint(h)
-            .map(|Slvs_Constraint { h, .. }| SomeConstraint::new(*h))
     }
 }
 
