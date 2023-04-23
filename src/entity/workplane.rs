@@ -1,4 +1,4 @@
-use super::{AsEntity, Entity, Normal, Point};
+use super::{AsEntityData, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_WORKPLANE},
     element::{AsHandle, In3d},
@@ -16,7 +16,7 @@ impl Workplane {
     }
 }
 
-impl AsEntity for Workplane {
+impl AsEntityData for Workplane {
     type Sketch = In3d;
 
     fn type_(&self) -> i32 {

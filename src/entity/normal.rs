@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use super::{AsEntity, Entity, Workplane};
+use super::{AsEntityData, Entity, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Normal<T: Target + ?Sized> {
+pub struct Normal<T: Target> {
     data: NormalDef,
     phantom: PhantomData<T>,
 }
@@ -31,7 +31,7 @@ impl Normal<In3d> {
     }
 }
 
-impl<T: Target + ?Sized> AsEntity for Normal<T> {
+impl<T: Target> AsEntityData for Normal<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

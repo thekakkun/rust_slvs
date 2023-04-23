@@ -1,18 +1,18 @@
 use std::marker::PhantomData;
 
-use super::AsEntity;
+use super::AsEntityData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_DISTANCE},
     element::Target,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Distance<T: Target + ?Sized> {
+pub struct Distance<T: Target> {
     pub d: f64,
     phantom: PhantomData<T>,
 }
 
-impl<T: Target + ?Sized> Distance<T> {
+impl<T: Target> Distance<T> {
     pub fn new(d: f64) -> Self {
         Self {
             d,
@@ -21,7 +21,7 @@ impl<T: Target + ?Sized> Distance<T> {
     }
 }
 
-impl<T: Target + ?Sized> AsEntity for Distance<T> {
+impl<T: Target> AsEntityData for Distance<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {
