@@ -1,10 +1,9 @@
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
     element::AsHandle,
     entity::{AsEntityData, AsLineSegment, AsPoint, Entity},
 };
-
-use super::AsConstraintData;
 
 pub struct PtLineDistance<P, L>
 where

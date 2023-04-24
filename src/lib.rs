@@ -30,10 +30,13 @@ use bindings::{
 };
 
 pub mod constraint;
-use constraint::{AsConstraintData, Constraint, PtLineDistance, PtPtDistance};
+use constraint::{
+    AsConstraintData, Constraint, HorizontalLine, HorizontalPoints, PtLineDistance, PtPtDistance,
+    VerticalLine, VerticalPoints,
+};
 
 mod element;
-use element::{AsHandle, AsTarget, Elements};
+use element::{AsHandle, Elements};
 pub use element::{Group, In3d, OnWorkplane};
 
 pub mod entity;
@@ -350,8 +353,24 @@ impl System {
                     SLVS_C_SYMMETRIC_VERT => todo!(),
                     SLVS_C_SYMMETRIC_LINE => todo!(),
                     SLVS_C_AT_MIDPOINT => todo!(),
-                    SLVS_C_HORIZONTAL => todo!(),
-                    SLVS_C_VERTICAL => todo!(),
+                    SLVS_C_HORIZONTAL => match slvs_constraint.entityA {
+                        0 => Box::new(HorizontalPoints::new(
+                            Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
+                            Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
+                        )),
+                        _ => Box::new(HorizontalLine::new(
+                            Entity::<LineSegment<OnWorkplane>>::new(slvs_constraint.entityA),
+                        )),
+                    },
+                    SLVS_C_VERTICAL => match slvs_constraint.entityA {
+                        0 => Box::new(VerticalPoints::new(
+                            Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
+                            Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
+                        )),
+                        _ => Box::new(VerticalLine::new(Entity::<LineSegment<OnWorkplane>>::new(
+                            slvs_constraint.entityA,
+                        ))),
+                    },
                     SLVS_C_DIAMETER => todo!(),
                     SLVS_C_PT_ON_CIRCLE => todo!(),
                     SLVS_C_SAME_ORIENTATION => todo!(),

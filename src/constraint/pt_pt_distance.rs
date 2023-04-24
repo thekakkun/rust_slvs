@@ -1,10 +1,9 @@
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
     element::AsHandle,
     entity::{AsEntityData, AsPoint, Entity},
 };
-
-use super::AsConstraintData;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct PtPtDistance<PA, PB>

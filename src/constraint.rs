@@ -1,14 +1,15 @@
 use std::marker::PhantomData;
 
-use crate::{
-    bindings::Slvs_hEntity,
-    element::{AsHandle},
-};
+use crate::{bindings::Slvs_hEntity, element::AsHandle};
 
 mod pt_pt_distance;
 pub use pt_pt_distance::PtPtDistance;
 mod pt_line_distance;
 pub use pt_line_distance::PtLineDistance;
+mod horizontal;
+pub use horizontal::{HorizontalLine, HorizontalPoints};
+mod vertical;
+pub use vertical::{VerticalLine, VerticalPoints};
 
 pub trait AsConstraintData {
     fn type_(&self) -> i32;
