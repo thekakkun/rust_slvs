@@ -33,7 +33,7 @@ pub mod constraint;
 use constraint::{AsConstraintData, Constraint, PtLineDistance, PtPtDistance};
 
 mod element;
-use element::{AsHandle, Elements, AsTarget};
+use element::{AsHandle, AsTarget, Elements};
 pub use element::{Group, In3d, OnWorkplane};
 
 pub mod entity;
@@ -157,7 +157,7 @@ impl System {
         group: &Group,
         workplane: Entity<Workplane>,
         constraint_data: T,
-    ) -> Result<Constraint<T, OnWorkplane>, &'static str> {
+    ) -> Result<Constraint<T>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
@@ -188,7 +188,7 @@ impl System {
         &mut self,
         group: &Group,
         constraint_data: T,
-    ) -> Result<Constraint<T, In3d>, &'static str> {
+    ) -> Result<Constraint<T>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
@@ -316,9 +316,9 @@ impl System {
         })
     }
 
-    pub fn constraint_data<T: AsConstraintData + 'static, U: AsTarget>(
+    pub fn constraint_data<T: AsConstraintData + 'static>(
         &self,
-        constraint: &Constraint<T, U>,
+        constraint: &Constraint<T>,
     ) -> Result<T, &'static str> {
         self.slvs_constraint(constraint.as_handle())
             .map(|slvs_constraint| {
@@ -424,14 +424,13 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn update_constraint<T, U, F>(
+    pub fn update_constraint<T, F>(
         &mut self,
-        constraint: &Constraint<T, U>,
+        constraint: &Constraint<T>,
         f: F,
     ) -> Result<T, &'static str>
     where
         T: AsConstraintData + 'static,
-        U: AsTarget,
         F: FnOnce(&mut T),
     {
         let mut constraint_data = self.constraint_data(constraint)?;
@@ -489,9 +488,9 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<T: AsConstraintData + 'static, U: AsTarget>(
+    pub fn delete_constraint<T: AsConstraintData + 'static>(
         &mut self,
-        constraint: Constraint<T, U>,
+        constraint: Constraint<T>,
     ) -> Result<T, &'static str> {
         let constraint_data = self.constraint_data(&constraint)?;
 
@@ -549,10 +548,7 @@ pub struct SolveFail {
 }
 
 impl SolveFail {
-    pub fn constraint_did_fail<T: AsConstraintData, U: AsTarget>(
-        &self,
-        constraint: &Constraint<T, U>,
-    ) -> bool {
+    pub fn constraint_did_fail<T: AsConstraintData>(&self, constraint: &Constraint<T>) -> bool {
         self.failed_constraints.contains(&constraint.as_handle())
     }
 }

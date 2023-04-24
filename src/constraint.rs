@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     bindings::Slvs_hEntity,
-    element::{AsHandle, AsTarget},
+    element::{AsHandle},
 };
 
 mod pt_pt_distance;
@@ -27,12 +27,12 @@ pub trait AsConstraintData {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Constraint<T: AsConstraintData, U: AsTarget> {
+pub struct Constraint<T: AsConstraintData> {
     pub(super) handle: u32,
-    pub(super) phantom: PhantomData<(T, U)>,
+    pub(super) phantom: PhantomData<T>,
 }
 
-impl<T: AsConstraintData, U: AsTarget> Constraint<T, U> {
+impl<T: AsConstraintData> Constraint<T> {
     pub fn new(handle: u32) -> Self {
         Self {
             handle,
@@ -41,7 +41,7 @@ impl<T: AsConstraintData, U: AsTarget> Constraint<T, U> {
     }
 }
 
-impl<T: AsConstraintData, U: AsTarget> AsHandle for Constraint<T, U> {
+impl<T: AsConstraintData> AsHandle for Constraint<T> {
     fn as_handle(&self) -> u32 {
         self.handle
     }
