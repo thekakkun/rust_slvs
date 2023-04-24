@@ -1,20 +1,28 @@
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
     element::AsHandle,
-    entity::{Entity, SomePoint},
+    entity::{AsEntityData, AsPoint, Entity},
 };
 
 use super::AsConstraintData;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct PtPtDistance {
-    point_a: Entity<SomePoint>,
-    point_b: Entity<SomePoint>,
+pub struct PtPtDistance<A, B>
+where
+    A: AsPoint + AsEntityData,
+    B: AsPoint + AsEntityData,
+{
+    point_a: Entity<A>,
+    point_b: Entity<B>,
     distance: f64,
 }
 
-impl PtPtDistance {
-    pub fn new(point_a: Entity<SomePoint>, point_b: Entity<SomePoint>, distance: f64) -> Self {
+impl<A, B> PtPtDistance<A, B>
+where
+    A: AsPoint + AsEntityData,
+    B: AsPoint + AsEntityData,
+{
+    pub fn new(point_a: Entity<A>, point_b: Entity<B>, distance: f64) -> Self {
         Self {
             point_a,
             point_b,
@@ -23,7 +31,11 @@ impl PtPtDistance {
     }
 }
 
-impl AsConstraintData for PtPtDistance {
+impl<A, B> AsConstraintData for PtPtDistance<A, B>
+where
+    A: AsPoint + AsEntityData,
+    B: AsPoint + AsEntityData,
+{
     fn type_(&self) -> i32 {
         SLVS_C_PT_PT_DISTANCE as _
     }

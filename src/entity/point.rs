@@ -4,11 +4,12 @@ use super::AsEntityData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::{In3d, OnWorkplane, Target},
-    SomeTarget,
 };
 
+pub trait AsPoint {}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point<T: Target> {
+pub struct Point<T: Target + ?Sized> {
     pub coords: Coords,
     phantom: PhantomData<T>,
 }
@@ -30,6 +31,8 @@ impl Point<In3d> {
         }
     }
 }
+
+impl<T: Target> AsPoint for Point<T> {}
 
 impl<T: Target> AsEntityData for Point<T> {
     type Sketch = T;
@@ -65,31 +68,4 @@ impl<T: Target> AsEntityData for Point<T> {
 pub enum Coords {
     OnWorkplane { u: f64, v: f64 },
     In3d { x: f64, y: f64, z: f64 },
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct SomePoint;
-
-impl AsEntityData for SomePoint {
-    type Sketch = SomeTarget;
-
-    fn type_(&self) -> i32 {
-        unimplemented!()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        unimplemented!()
-    }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        unimplemented!()
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        unimplemented!()
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        unimplemented!()
-    }
 }

@@ -22,7 +22,7 @@ use constraint::{AsConstraintData, Constraint, PtPtDistance};
 
 mod element;
 use element::{AsHandle, Elements, Target};
-pub use element::{Group, In3d, OnWorkplane, SomeTarget};
+pub use element::{Group, In3d, OnWorkplane};
 
 pub mod entity;
 use entity::{
@@ -312,8 +312,9 @@ impl System {
             .map(|slvs_constraint| {
                 let some_constraint_data: Box<dyn Any> = match slvs_constraint.type_ as _ {
                     SLVS_C_PT_PT_DISTANCE => Box::new(PtPtDistance::new(
-                        Entity::new(slvs_constraint.ptA),
-                        Entity::new(slvs_constraint.ptB),
+                        // not necessarily on workplane, these get downcast anyway
+                        Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
+                        Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
                         slvs_constraint.valA,
                     )),
                     _ => panic!("Unknown constraint type: {}", slvs_constraint.type_),

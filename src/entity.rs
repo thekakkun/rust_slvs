@@ -6,7 +6,7 @@ use crate::{
 };
 
 mod point;
-pub use point::{Coords, Point, SomePoint};
+pub use point::{AsPoint, Coords, Point};
 mod normal;
 pub use normal::{Normal, NormalDef};
 mod distance;
@@ -27,7 +27,7 @@ pub use arc_of_circle::ArcOfCircle;
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Entity<T: AsEntityData> {
+pub struct Entity<T: AsEntityData + ?Sized> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
@@ -61,8 +61,8 @@ pub trait AsEntityData {
 // Conversions for use when we don't care about specific sketch targets
 ////////////////////////////////////////////////////////////////////////////////
 
-impl<T: Target> From<Entity<Point<T>>> for Entity<SomePoint> {
-    fn from(value: Entity<Point<T>>) -> Self {
-        Entity::new(value.handle)
-    }
-}
+// impl<T: Target> From<Entity<Point<T>>> for Entity<SomePoint> {
+//     fn from(value: Entity<Point<T>>) -> Self {
+//         Entity::new(value.handle)
+//     }
+// }
