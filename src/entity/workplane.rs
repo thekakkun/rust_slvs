@@ -30,12 +30,4 @@ impl AsEntityData for Workplane {
     fn normal(&self) -> Option<Slvs_hEntity> {
         Some(self.normal.as_handle())
     }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
-    }
 }

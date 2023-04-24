@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use super::{AsEntityData, Entity, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
+    bindings::{SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{In3d, OnWorkplane, Target},
 };
 
@@ -39,18 +39,6 @@ impl<T: Target> AsEntityData for Normal<T> {
             NormalDef::OnWorkplane { .. } => SLVS_E_NORMAL_IN_2D as _,
             NormalDef::In3d { .. } => SLVS_E_NORMAL_IN_3D as _,
         }
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {

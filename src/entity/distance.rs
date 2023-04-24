@@ -1,10 +1,7 @@
 use std::marker::PhantomData;
 
 use super::AsEntityData;
-use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_DISTANCE},
-    element::Target,
-};
+use crate::{bindings::SLVS_E_DISTANCE, element::Target};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Distance<T: Target> {
@@ -26,18 +23,6 @@ impl<T: Target> AsEntityData for Distance<T> {
 
     fn type_(&self) -> i32 {
         SLVS_E_DISTANCE as _
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {

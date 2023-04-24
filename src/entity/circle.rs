@@ -43,8 +43,4 @@ impl<T: Target> AsEntityData for Circle<T> {
     fn distance(&self) -> Option<Slvs_hEntity> {
         Some(self.radius.as_handle())
     }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
-    }
 }

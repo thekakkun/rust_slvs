@@ -42,16 +42,4 @@ impl<T: Target> AsEntityData for Cubic<T> {
             self.end_point.as_handle(),
         ])
     }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
-    }
 }

@@ -312,7 +312,7 @@ impl System {
             .map(|slvs_constraint| {
                 let some_constraint_data: Box<dyn Any> = match slvs_constraint.type_ as _ {
                     SLVS_C_PT_PT_DISTANCE => Box::new(PtPtDistance::new(
-                        // not necessarily on workplane, these get downcast anyway
+                        // not necessarily on workplane, these get downcast anyway, but I don't like this...
                         Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
                         Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
                         slvs_constraint.valA,

@@ -27,7 +27,7 @@ pub use arc_of_circle::ArcOfCircle;
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Entity<T: AsEntityData + ?Sized> {
+pub struct Entity<T: AsEntityData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
@@ -51,18 +51,16 @@ pub trait AsEntityData {
     type Sketch: Target;
 
     fn type_(&self) -> i32;
-    fn points(&self) -> Option<Vec<Slvs_hEntity>>;
-    fn normal(&self) -> Option<Slvs_hEntity>;
-    fn distance(&self) -> Option<Slvs_hEntity>;
-    fn param_vals(&self) -> Option<Vec<f64>>;
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn normal(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn distance(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        None
+    }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Conversions for use when we don't care about specific sketch targets
-////////////////////////////////////////////////////////////////////////////////
-
-// impl<T: Target> From<Entity<Point<T>>> for Entity<SomePoint> {
-//     fn from(value: Entity<Point<T>>) -> Self {
-//         Entity::new(value.handle)
-//     }
-// }

@@ -26,16 +26,4 @@ impl<T: Target> AsEntityData for LineSegment<T> {
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
     }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
-    }
 }

@@ -2,14 +2,14 @@ use std::marker::PhantomData;
 
 use super::AsEntityData;
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::{In3d, OnWorkplane, Target},
 };
 
 pub trait AsPoint {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point<T: Target + ?Sized> {
+pub struct Point<T: Target> {
     pub coords: Coords,
     phantom: PhantomData<T>,
 }
@@ -42,18 +42,6 @@ impl<T: Target> AsEntityData for Point<T> {
             Coords::OnWorkplane { .. } => SLVS_E_POINT_IN_2D as _,
             Coords::In3d { .. } => SLVS_E_POINT_IN_3D as _,
         }
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
