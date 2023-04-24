@@ -14,24 +14,10 @@ pub struct Distance<T: AsTarget> {
     phantom: PhantomData<T>,
 }
 
-impl<T: AsTarget> AsEntityData for Distance<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_DISTANCE as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(vec![self.d])
-    }
-}
-
 impl Distance<OnWorkplane> {
-    pub fn new(workplane: &Entity<Workplane>, d: f64) -> Self {
+    pub fn new(workplane: Entity<Workplane>, d: f64) -> Self {
         Self {
-            workplane: Some(*workplane),
+            workplane: Some(workplane),
             d,
             phantom: PhantomData,
         }
@@ -45,5 +31,19 @@ impl Distance<In3d> {
             d,
             phantom: PhantomData,
         }
+    }
+}
+
+impl<T: AsTarget> AsEntityData for Distance<T> {
+    fn type_(&self) -> i32 {
+        SLVS_E_DISTANCE as _
+    }
+
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        self.workplane.map(|workplane| workplane.as_handle())
+    }
+
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        Some(vec![self.d])
     }
 }

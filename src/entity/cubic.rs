@@ -13,6 +13,41 @@ pub struct Cubic<T: AsTarget> {
     pub end_point: Entity<Point<T>>,
 }
 
+impl Cubic<OnWorkplane> {
+    pub fn new(
+        workplane: Entity<Workplane>,
+        start_point: Entity<Point<OnWorkplane>>,
+        start_control: Entity<Point<OnWorkplane>>,
+        end_control: Entity<Point<OnWorkplane>>,
+        end_point: Entity<Point<OnWorkplane>>,
+    ) -> Self {
+        Self {
+            workplane: Some(workplane),
+            start_point,
+            start_control,
+            end_control,
+            end_point,
+        }
+    }
+}
+
+impl Cubic<In3d> {
+    pub fn new(
+        start_point: Entity<Point<In3d>>,
+        start_control: Entity<Point<In3d>>,
+        end_control: Entity<Point<In3d>>,
+        end_point: Entity<Point<In3d>>,
+    ) -> Self {
+        Self {
+            workplane: None,
+            start_point,
+            start_control,
+            end_control,
+            end_point,
+        }
+    }
+}
+
 impl<T: AsTarget> AsEntityData for Cubic<T> {
     fn type_(&self) -> i32 {
         SLVS_E_CUBIC as _
@@ -29,40 +64,5 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
             self.end_control.as_handle(),
             self.end_point.as_handle(),
         ])
-    }
-}
-
-impl Cubic<OnWorkplane> {
-    pub fn new(
-        workplane: &Entity<Workplane>,
-        start_point: &Entity<Point<OnWorkplane>>,
-        start_control: &Entity<Point<OnWorkplane>>,
-        end_control: &Entity<Point<OnWorkplane>>,
-        end_point: &Entity<Point<OnWorkplane>>,
-    ) -> Self {
-        Self {
-            workplane: Some(*workplane),
-            start_point: *start_point,
-            start_control: *start_control,
-            end_control: *end_control,
-            end_point: *end_point,
-        }
-    }
-}
-
-impl Cubic<In3d> {
-    pub fn new(
-        start_point: &Entity<Point<In3d>>,
-        start_control: &Entity<Point<In3d>>,
-        end_control: &Entity<Point<In3d>>,
-        end_point: &Entity<Point<In3d>>,
-    ) -> Self {
-        Self {
-            workplane: None,
-            start_point: *start_point,
-            start_control: *start_control,
-            end_control: *end_control,
-            end_point: *end_point,
-        }
     }
 }

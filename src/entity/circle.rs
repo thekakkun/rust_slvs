@@ -13,7 +13,36 @@ pub struct Circle<T: AsTarget> {
     pub normal: Entity<Normal<T>>,
 }
 
-impl<T: AsTarget> AsArc for Circle<T> {}
+impl Circle<OnWorkplane> {
+    pub fn new(
+        workplane: Entity<Workplane>,
+        center: Entity<Point<OnWorkplane>>,
+        radius: Entity<Distance<OnWorkplane>>,
+        normal: Entity<Normal<OnWorkplane>>,
+    ) -> Self {
+        Self {
+            workplane: Some(workplane),
+            center,
+            radius,
+            normal,
+        }
+    }
+}
+
+impl Circle<In3d> {
+    pub fn new(
+        center: Entity<Point<In3d>>,
+        radius: Entity<Distance<In3d>>,
+        normal: Entity<Normal<In3d>>,
+    ) -> Self {
+        Self {
+            workplane: None,
+            center,
+            radius,
+            normal,
+        }
+    }
+}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
     fn type_(&self) -> i32 {
@@ -37,33 +66,4 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
     }
 }
 
-impl Circle<OnWorkplane> {
-    pub fn new(
-        workplane: &Entity<Workplane>,
-        center: &Entity<Point<OnWorkplane>>,
-        radius: &Entity<Distance<OnWorkplane>>,
-        normal: &Entity<Normal<OnWorkplane>>,
-    ) -> Self {
-        Self {
-            workplane: Some(*workplane),
-            center: *center,
-            radius: *radius,
-            normal: *normal,
-        }
-    }
-}
-
-impl Circle<In3d> {
-    pub fn new(
-        center: &Entity<Point<In3d>>,
-        radius: &Entity<Distance<In3d>>,
-        normal: &Entity<Normal<In3d>>,
-    ) -> Self {
-        Self {
-            workplane: None,
-            center: *center,
-            radius: *radius,
-            normal: *normal,
-        }
-    }
-}
+impl<T: AsTarget> AsArc for Circle<T> {}

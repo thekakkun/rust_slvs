@@ -37,9 +37,9 @@ pub trait AsEntityData {
     }
 }
 
-pub trait AsPoint {}
-pub trait AsLineSegment {}
-pub trait AsArc {}
+pub trait AsPoint: AsEntityData {}
+pub trait AsLineSegment: AsEntityData {}
+pub trait AsArc: AsEntityData {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntityData> {

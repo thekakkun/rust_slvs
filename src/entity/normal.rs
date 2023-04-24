@@ -18,6 +18,25 @@ pub struct Normal<T: AsTarget> {
     phantom: PhantomData<T>,
 }
 
+impl Normal<OnWorkplane> {
+    pub fn new(workplane: Entity<Workplane>) -> Self {
+        Self {
+            data: NormalDef::OnWorkplane { workplane },
+            phantom: PhantomData::<OnWorkplane>,
+        }
+    }
+}
+
+impl Normal<In3d> {
+    pub fn new(quaternion: [f64; 4]) -> Self {
+        let [w, x, y, z] = quaternion;
+        Self {
+            data: NormalDef::In3d { w, x, y, z },
+            phantom: PhantomData::<In3d>,
+        }
+    }
+}
+
 impl<T: AsTarget> AsEntityData for Normal<T> {
     fn type_(&self) -> i32 {
         match self.data {
@@ -37,27 +56,6 @@ impl<T: AsTarget> AsEntityData for Normal<T> {
         match self.data {
             NormalDef::OnWorkplane { .. } => None,
             NormalDef::In3d { w, x, y, z } => Some(vec![w, x, y, z]),
-        }
-    }
-}
-
-impl Normal<OnWorkplane> {
-    pub fn new(workplane: &Entity<Workplane>) -> Self {
-        Self {
-            data: NormalDef::OnWorkplane {
-                workplane: *workplane,
-            },
-            phantom: PhantomData::<OnWorkplane>,
-        }
-    }
-}
-
-impl Normal<In3d> {
-    pub fn new(quaternion: [f64; 4]) -> Self {
-        let [w, x, y, z] = quaternion;
-        Self {
-            data: NormalDef::In3d { w, x, y, z },
-            phantom: PhantomData::<In3d>,
         }
     }
 }

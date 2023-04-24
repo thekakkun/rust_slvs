@@ -15,18 +15,18 @@ pub struct ArcOfCircle {
 
 impl ArcOfCircle {
     pub fn new(
-        workplane: &Entity<Workplane>,
-        center: &Entity<Point<OnWorkplane>>,
-        arc_begin: &Entity<Point<OnWorkplane>>,
-        arc_end: &Entity<Point<OnWorkplane>>,
-        normal: &Entity<Normal<OnWorkplane>>,
+        workplane: Entity<Workplane>,
+        center: Entity<Point<OnWorkplane>>,
+        arc_begin: Entity<Point<OnWorkplane>>,
+        arc_end: Entity<Point<OnWorkplane>>,
+        normal: Entity<Normal<OnWorkplane>>,
     ) -> Self {
         Self {
-            workplane: *workplane,
-            center: *center,
-            arc_begin: *arc_begin,
-            arc_end: *arc_end,
-            normal: *normal,
+            workplane,
+            center,
+            arc_begin,
+            arc_end,
+            normal,
         }
     }
 }

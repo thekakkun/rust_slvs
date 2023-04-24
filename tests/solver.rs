@@ -18,11 +18,11 @@ fn solve_3d_demo() {
         .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
         .expect("p2 created");
 
-    sys.sketch(&g, LineSegment::<In3d>::new(&p1, &p2))
+    sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
         .expect("line segment created");
 
     let target_dist = 30.0;
-    sys.constrain_in_3d(&g, PtPtDistance::new(p1, p2, target_dist))
+    sys.constrain(&g, PtPtDistance::new(p1, p2, target_dist, None))
         .expect("distance constraint added");
 
     sys.set_dragged(&p2);
@@ -66,11 +66,11 @@ fn inconsistent_constraints() {
 
     // distance between p1 and p2 is 10
     let c1 = sys
-        .constrain_in_3d(&g, PtPtDistance::new(p1, p2, 10.0))
+        .constrain(&g, PtPtDistance::new(p1, p2, 10.0, None))
         .expect("distance constraint added");
     // distance between p1 and p2 is 20
     let c2 = sys
-        .constrain_in_3d(&g, PtPtDistance::new(p1, p2, 20.0))
+        .constrain(&g, PtPtDistance::new(p1, p2, 20.0, None))
         .expect("distance constraint added");
 
     let solve_result = sys.solve(&g);

@@ -12,18 +12,16 @@ pub struct LineSegment<T: AsTarget> {
     pub point_b: Entity<Point<T>>,
 }
 
-impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
-
 impl LineSegment<OnWorkplane> {
     pub fn new(
-        workplane: &Entity<Workplane>,
-        point_a: &Entity<Point<OnWorkplane>>,
-        point_b: &Entity<Point<OnWorkplane>>,
+        workplane: Entity<Workplane>,
+        point_a: Entity<Point<OnWorkplane>>,
+        point_b: Entity<Point<OnWorkplane>>,
     ) -> Self {
         Self {
-            workplane: Some(*workplane),
-            point_a: *point_a,
-            point_b: *point_b,
+            workplane: Some(workplane),
+            point_a,
+            point_b,
         }
     }
 }
@@ -43,11 +41,13 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 }
 
 impl LineSegment<In3d> {
-    pub fn new(point_a: &Entity<Point<In3d>>, point_b: &Entity<Point<In3d>>) -> Self {
+    pub fn new(point_a: Entity<Point<In3d>>, point_b: Entity<Point<In3d>>) -> Self {
         Self {
             workplane: None,
-            point_a: *point_a,
-            point_b: *point_b,
+            point_a,
+            point_b,
         }
     }
 }
+
+impl<T: AsTarget> AsLineSegment for LineSegment<T> {}

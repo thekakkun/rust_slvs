@@ -2,41 +2,52 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
     element::AsHandle,
-    entity::{AsEntityData, AsPoint, Entity},
+    entity::{AsPoint, Entity, Workplane},
 };
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct PtPtDistance<PA, PB>
 where
-    PA: AsPoint + AsEntityData,
-    PB: AsPoint + AsEntityData,
+    PA: AsPoint,
+    PB: AsPoint,
 {
     point_a: Entity<PA>,
     point_b: Entity<PB>,
     distance: f64,
+    workplane: Option<Entity<Workplane>>,
 }
 
 impl<PA, PB> PtPtDistance<PA, PB>
 where
-    PA: AsPoint + AsEntityData,
-    PB: AsPoint + AsEntityData,
+    PA: AsPoint,
+    PB: AsPoint,
 {
-    pub fn new(point_a: Entity<PA>, point_b: Entity<PB>, distance: f64) -> Self {
+    pub fn new(
+        point_a: Entity<PA>,
+        point_b: Entity<PB>,
+        distance: f64,
+        workplane: Option<Entity<Workplane>>,
+    ) -> Self {
         Self {
             point_a,
             point_b,
             distance,
+            workplane,
         }
     }
 }
 
 impl<PA, PB> AsConstraintData for PtPtDistance<PA, PB>
 where
-    PA: AsPoint + AsEntityData,
-    PB: AsPoint + AsEntityData,
+    PA: AsPoint,
+    PB: AsPoint,
 {
     fn type_(&self) -> i32 {
         SLVS_C_PT_PT_DISTANCE as _
+    }
+
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        self.workplane.map(|workplane| workplane.as_handle())
     }
 
     fn val(&self) -> Option<f64> {

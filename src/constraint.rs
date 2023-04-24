@@ -48,6 +48,8 @@ pub use equal_radius::EqualRadius;
 
 pub trait AsConstraintData {
     fn type_(&self) -> i32;
+    fn workplane(&self) -> Option<Slvs_hEntity>;
+
     fn val(&self) -> Option<f64> {
         None
     }

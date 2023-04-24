@@ -19,6 +19,26 @@ pub struct Point<T: AsTarget> {
     phantom: PhantomData<T>,
 }
 
+impl Point<OnWorkplane> {
+    pub fn new(workplane: Entity<Workplane>, u: f64, v: f64) -> Self {
+        Self {
+            workplane: Some(workplane),
+            coords: Coords::OnWorkplane { u, v },
+            phantom: PhantomData::<OnWorkplane>,
+        }
+    }
+}
+
+impl Point<In3d> {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self {
+            workplane: None,
+            coords: Coords::In3d { x, y, z },
+            phantom: PhantomData::<In3d>,
+        }
+    }
+}
+
 impl<T: AsTarget> AsPoint for Point<T> {}
 
 impl<T: AsTarget> AsEntityData for Point<T> {
@@ -37,26 +57,6 @@ impl<T: AsTarget> AsEntityData for Point<T> {
         match self.coords {
             Coords::OnWorkplane { u, v } => Some(vec![u, v]),
             Coords::In3d { x, y, z } => Some(vec![x, y, z]),
-        }
-    }
-}
-
-impl Point<OnWorkplane> {
-    pub fn new(workplane: &Entity<Workplane>, u: f64, v: f64) -> Self {
-        Self {
-            workplane: Some(*workplane),
-            coords: Coords::OnWorkplane { u, v },
-            phantom: PhantomData::<OnWorkplane>,
-        }
-    }
-}
-
-impl Point<In3d> {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self {
-            workplane: None,
-            coords: Coords::In3d { x, y, z },
-            phantom: PhantomData::<In3d>,
         }
     }
 }
