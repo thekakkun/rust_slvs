@@ -20,7 +20,25 @@ pub use cubic::Cubic;
 mod circle;
 pub use circle::Circle;
 mod arc_of_circle;
-pub use arc_of_circle::ArcOfCircle;
+pub use arc_of_circle::{ArcOfCircle, AsArc};
+
+pub trait AsEntityData {
+    type Sketch: AsTarget;
+
+    fn type_(&self) -> i32;
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn normal(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn distance(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        None
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntityData> {
@@ -40,23 +58,5 @@ impl<T: AsEntityData> Entity<T> {
 impl<T: AsEntityData> AsHandle for Entity<T> {
     fn as_handle(&self) -> u32 {
         self.handle
-    }
-}
-
-pub trait AsEntityData {
-    type Sketch: AsTarget;
-
-    fn type_(&self) -> i32;
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
     }
 }

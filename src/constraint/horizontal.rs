@@ -1,8 +1,9 @@
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_HORIZONTAL},
-    element::AsHandle,
+    element::{AsHandle, AsTarget},
     entity::{AsEntityData, AsLineSegment, AsPoint, Entity},
+    In3d,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,7 @@ where
         Self { line }
     }
 }
+
 impl<L> AsConstraintData for HorizontalLine<L>
 where
     L: AsLineSegment + AsEntityData,

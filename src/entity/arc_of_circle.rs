@@ -4,6 +4,8 @@ use crate::{
     element::{AsHandle, OnWorkplane},
 };
 
+pub trait AsArc {}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ArcOfCircle {
     pub center: Entity<Point<OnWorkplane>>,
@@ -27,6 +29,8 @@ impl ArcOfCircle {
         }
     }
 }
+
+impl AsArc for ArcOfCircle {}
 
 impl AsEntityData for ArcOfCircle {
     type Sketch = OnWorkplane;

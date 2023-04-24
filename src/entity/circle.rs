@@ -1,4 +1,4 @@
-use super::{AsEntityData, Distance, Entity, Normal, Point};
+use super::{AsArc, AsEntityData, Distance, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CIRCLE},
     element::{AsHandle, AsTarget},
@@ -24,6 +24,8 @@ impl<T: AsTarget> Circle<T> {
         }
     }
 }
+
+impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
     type Sketch = T;
