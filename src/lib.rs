@@ -31,8 +31,8 @@ use bindings::{
 
 pub mod constraint;
 use constraint::{
-    AsConstraintData, Constraint, HorizontalLine, HorizontalPoints, PtLineDistance, PtPtDistance,
-    VerticalLine, VerticalPoints,
+    AsConstraintData, Constraint, Diameter, EqualRadius, HorizontalLine, HorizontalPoints,
+    PtLineDistance, PtPtDistance, VerticalLine, VerticalPoints,
 };
 
 mod element;
@@ -321,7 +321,10 @@ impl System {
                             slvs_constraint.entityA,
                         ))),
                     },
-                    SLVS_C_DIAMETER => todo!(),
+                    SLVS_C_DIAMETER => Box::new(Diameter::new(
+                        Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityA),
+                        Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityB),
+                    )),
                     SLVS_C_PT_ON_CIRCLE => todo!(),
                     SLVS_C_SAME_ORIENTATION => todo!(),
                     SLVS_C_ANGLE => todo!(),
@@ -329,7 +332,10 @@ impl System {
                     SLVS_C_PERPENDICULAR => todo!(),
                     SLVS_C_ARC_LINE_TANGENT => todo!(),
                     SLVS_C_CUBIC_LINE_TANGENT => todo!(),
-                    SLVS_C_EQUAL_RADIUS => todo!(),
+                    SLVS_C_EQUAL_RADIUS => Box::new(EqualRadius::new(
+                        Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityA),
+                        Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityB),
+                    )),
                     SLVS_C_PROJ_PT_DISTANCE => todo!(),
                     SLVS_C_WHERE_DRAGGED => todo!(),
                     SLVS_C_CURVE_CURVE_TANGENT => todo!(),
