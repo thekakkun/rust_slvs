@@ -1,4 +1,4 @@
-use super::{AsArc, AsEntityData, Entity, Normal, Point};
+use super::{AsArc, AsEntityData, Entity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, OnWorkplane},
@@ -6,6 +6,7 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ArcOfCircle {
+    pub workplane: Entity<Workplane>,
     pub center: Entity<Point<OnWorkplane>>,
     pub arc_begin: Entity<Point<OnWorkplane>>,
     pub arc_end: Entity<Point<OnWorkplane>>,
@@ -14,16 +15,18 @@ pub struct ArcOfCircle {
 
 impl ArcOfCircle {
     pub fn new(
-        center: Entity<Point<OnWorkplane>>,
-        arc_begin: Entity<Point<OnWorkplane>>,
-        arc_end: Entity<Point<OnWorkplane>>,
-        normal: Entity<Normal<OnWorkplane>>,
+        workplane: &Entity<Workplane>,
+        center: &Entity<Point<OnWorkplane>>,
+        arc_begin: &Entity<Point<OnWorkplane>>,
+        arc_end: &Entity<Point<OnWorkplane>>,
+        normal: &Entity<Normal<OnWorkplane>>,
     ) -> Self {
         Self {
-            center,
-            arc_begin,
-            arc_end,
-            normal,
+            workplane: *workplane,
+            center: *center,
+            arc_begin: *arc_begin,
+            arc_end: *arc_end,
+            normal: *normal,
         }
     }
 }
@@ -31,12 +34,13 @@ impl ArcOfCircle {
 impl AsArc for ArcOfCircle {}
 
 impl AsEntityData for ArcOfCircle {
-    type Sketch = OnWorkplane;
-
     fn type_(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
     }
 
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        Some(self.workplane.as_handle())
+    }
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
             self.arc_begin.as_handle(),

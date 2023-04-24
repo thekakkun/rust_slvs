@@ -79,13 +79,12 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch_on_workplane<T: AsEntityData<Sketch = OnWorkplane>>(
+    pub fn sketch<T: AsEntityData>(
         &mut self,
         group: &Group,
-        workplane: Entity<Workplane>,
         entity_data: T,
     ) -> Result<Entity<T>, &'static str> {
-        self.validate_entity_data(&entity_data, Some(&workplane))?;
+        self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
@@ -93,8 +92,9 @@ impl System {
             entity_data.type_(),
         );
 
-        new_slvs_entity.set_workplane(workplane.as_handle());
-
+        if let Some(workplane) = entity_data.workplane() {
+            new_slvs_entity.set_workplane(workplane);
+        }
         if let Some(points) = entity_data.points() {
             new_slvs_entity.set_point(points);
         }
@@ -118,41 +118,6 @@ impl System {
             handle: new_slvs_entity.h,
             phantom: PhantomData,
         })
-    }
-
-    pub fn sketch_in_3d<T: AsEntityData<Sketch = In3d>>(
-        &mut self,
-        group: &Group,
-        entity_data: T,
-    ) -> Result<Entity<T>, &'static str> {
-        self.validate_entity_data(&entity_data, None)?;
-
-        let mut new_slvs_entity = Slvs_Entity::new(
-            self.entities.get_next_h(),
-            group.as_handle(),
-            entity_data.type_(),
-        );
-
-        if let Some(points) = entity_data.points() {
-            new_slvs_entity.set_point(points);
-        }
-        if let Some(normal) = entity_data.normal() {
-            new_slvs_entity.set_normal(normal);
-        }
-        if let Some(distance) = entity_data.distance() {
-            new_slvs_entity.set_distance(distance);
-        }
-        if let Some(param_vals) = entity_data.param_vals() {
-            new_slvs_entity.set_param(
-                param_vals
-                    .into_iter()
-                    .map(|val| self.add_param(group, val))
-                    .collect(),
-            );
-        }
-
-        self.entities.list.push(new_slvs_entity);
-        Ok(Entity::new(new_slvs_entity.h))
     }
 
     pub fn constrain_on_workplane<T: AsConstraintData>(
@@ -246,6 +211,7 @@ impl System {
                     self.slvs_param(slvs_entity.param[2]).unwrap().val,
                 )),
                 SLVS_E_POINT_IN_2D => Box::new(Point::<OnWorkplane>::new(
+                    &Entity::new(slvs_entity.wrkpl),
                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     self.slvs_param(slvs_entity.param[1]).unwrap().val,
                 )),
@@ -256,13 +222,14 @@ impl System {
                     self.slvs_param(slvs_entity.param[3]).unwrap().val,
                 ])),
                 SLVS_E_NORMAL_IN_2D => {
-                    Box::new(Normal::<OnWorkplane>::new(Entity::new(slvs_entity.wrkpl)))
+                    Box::new(Normal::<OnWorkplane>::new(&Entity::new(slvs_entity.wrkpl)))
                 }
                 SLVS_E_DISTANCE => match slvs_entity.wrkpl {
                     SLVS_FREE_IN_3D => Box::new(Distance::<In3d>::new(
                         self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     )),
                     _ => Box::new(Distance::<OnWorkplane>::new(
+                        &Entity::new(slvs_entity.wrkpl),
                         self.slvs_param(slvs_entity.param[0]).unwrap().val,
                     )),
                 },
@@ -272,45 +239,49 @@ impl System {
                 )),
                 SLVS_E_LINE_SEGMENT => match slvs_entity.wrkpl {
                     SLVS_FREE_IN_3D => Box::new(LineSegment::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.point[1]),
                     )),
                     _ => Box::new(LineSegment::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
+                        &Entity::new(slvs_entity.wrkpl),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.point[1]),
                     )),
                 },
                 SLVS_E_CUBIC => match slvs_entity.wrkpl {
                     SLVS_FREE_IN_3D => Box::new(Cubic::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                        Entity::new(slvs_entity.point[2]),
-                        Entity::new(slvs_entity.point[3]),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.point[1]),
+                        &Entity::new(slvs_entity.point[2]),
+                        &Entity::new(slvs_entity.point[3]),
                     )),
                     _ => Box::new(Cubic::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                        Entity::new(slvs_entity.point[2]),
-                        Entity::new(slvs_entity.point[3]),
+                        &Entity::new(slvs_entity.wrkpl),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.point[1]),
+                        &Entity::new(slvs_entity.point[2]),
+                        &Entity::new(slvs_entity.point[3]),
                     )),
                 },
                 SLVS_E_CIRCLE => match slvs_entity.wrkpl {
                     SLVS_FREE_IN_3D => Box::new(Circle::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.distance),
-                        Entity::new(slvs_entity.normal),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.distance),
+                        &Entity::new(slvs_entity.normal),
                     )),
                     _ => Box::new(Circle::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.distance),
-                        Entity::new(slvs_entity.normal),
+                        &Entity::new(slvs_entity.wrkpl),
+                        &Entity::new(slvs_entity.point[0]),
+                        &Entity::new(slvs_entity.distance),
+                        &Entity::new(slvs_entity.normal),
                     )),
                 },
                 SLVS_E_ARC_OF_CIRCLE => Box::new(ArcOfCircle::new(
-                    Entity::new(slvs_entity.point[0]),
-                    Entity::new(slvs_entity.point[1]),
-                    Entity::new(slvs_entity.point[2]),
-                    Entity::new(slvs_entity.normal),
+                    &Entity::new(slvs_entity.wrkpl),
+                    &Entity::new(slvs_entity.point[0]),
+                    &Entity::new(slvs_entity.point[1]),
+                    &Entity::new(slvs_entity.point[2]),
+                    &Entity::new(slvs_entity.normal),
                 )),
                 _ => panic!("Unknown entity type: {}", slvs_entity.type_),
             };
@@ -417,7 +388,7 @@ impl System {
         let mut entity_data = self.entity_data(entity)?;
 
         f(&mut entity_data);
-        self.validate_entity_data(&entity_data, None)?;
+        self.validate_entity_data(&entity_data)?;
 
         let param_h = {
             let slvs_entity = self.mut_slvs_entity(entity.as_handle()).unwrap();
@@ -652,17 +623,13 @@ impl System {
     }
 
     // Checks that all elements referenced within entity_data exist and are on the expected workplane
-    fn validate_entity_data(
-        &self,
-        entity_data: &impl AsEntityData,
-        workplane: Option<&Entity<Workplane>>,
-    ) -> Result<(), &'static str> {
+    fn validate_entity_data(&self, entity_data: &impl AsEntityData) -> Result<(), &'static str> {
         if let Some(points) = entity_data.points() {
             let all_points_valid: Result<Vec<_>, _> = points
                 .into_iter()
                 .map(|point| {
-                    if let Some(workplane) = workplane {
-                        self.entity_on_workplane(point, workplane.as_handle())
+                    if let Some(workplane_h) = entity_data.workplane() {
+                        self.entity_on_workplane(point, workplane_h)
                             .map_err(|_| "Point not on expected workplane.")
                     } else {
                         self.slvs_entity(point).map(|_| ())
@@ -673,8 +640,8 @@ impl System {
         }
 
         if let Some(normal) = entity_data.normal() {
-            let normal_valid = if let Some(workplane) = workplane {
-                self.entity_on_workplane(normal, workplane.as_handle())
+            let normal_valid = if let Some(workplane_h) = entity_data.workplane() {
+                self.entity_on_workplane(normal, workplane_h)
                     .map_err(|_| "Normal not on expected workplane.")
             } else {
                 self.slvs_entity(normal).map(|_| ())
@@ -683,8 +650,8 @@ impl System {
         }
 
         if let Some(distance) = entity_data.distance() {
-            let distance_valid = if let Some(workplane) = workplane {
-                self.entity_on_workplane(distance, workplane.as_handle())
+            let distance_valid = if let Some(workplane_h) = entity_data.workplane() {
+                self.entity_on_workplane(distance, workplane_h)
                     .map_err(|_| "Distance not on expected workplane.")
             } else {
                 self.slvs_entity(distance).map(|_| ())

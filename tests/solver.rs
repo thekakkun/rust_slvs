@@ -12,13 +12,13 @@ fn solve_3d_demo() {
     let g = sys.add_group();
 
     let p1 = sys
-        .sketch_in_3d(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
         .expect("p1 created");
     let p2 = sys
-        .sketch_in_3d(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
         .expect("p2 created");
 
-    sys.sketch_in_3d(&g, LineSegment::<In3d>::new(p1, p2))
+    sys.sketch(&g, LineSegment::<In3d>::new(&p1, &p2))
         .expect("line segment created");
 
     let target_dist = 30.0;
@@ -58,10 +58,10 @@ fn inconsistent_constraints() {
     let g = sys.add_group();
 
     let p1 = sys
-        .sketch_in_3d(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
         .expect("p1 created");
     let p2 = sys
-        .sketch_in_3d(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
         .expect("p2 created");
 
     // distance between p1 and p2 is 10

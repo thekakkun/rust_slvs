@@ -17,10 +17,12 @@ impl Workplane {
 }
 
 impl AsEntityData for Workplane {
-    type Sketch = In3d;
-
     fn type_(&self) -> i32 {
         SLVS_E_WORKPLANE as _
+    }
+
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        None
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {

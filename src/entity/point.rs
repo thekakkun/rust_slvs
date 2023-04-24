@@ -1,45 +1,36 @@
 use std::marker::PhantomData;
 
-use super::{AsEntityData, AsPoint};
+use super::{AsEntityData, AsPoint, Entity, Workplane};
 use crate::{
-    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    element::{AsTarget, In3d, OnWorkplane},
+    bindings::{Slvs_hEntity, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    element::{AsHandle, AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Coords {
+    OnWorkplane { u: f64, v: f64 },
+    In3d { x: f64, y: f64, z: f64 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point<T: AsTarget> {
+    pub workplane: Option<Entity<Workplane>>,
     pub coords: Coords,
     phantom: PhantomData<T>,
-}
-
-impl Point<OnWorkplane> {
-    pub fn new(u: f64, v: f64) -> Self {
-        Self {
-            coords: Coords::OnWorkplane { u, v },
-            phantom: PhantomData::<OnWorkplane>,
-        }
-    }
-}
-
-impl Point<In3d> {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self {
-            coords: Coords::In3d { x, y, z },
-            phantom: PhantomData::<In3d>,
-        }
-    }
 }
 
 impl<T: AsTarget> AsPoint for Point<T> {}
 
 impl<T: AsTarget> AsEntityData for Point<T> {
-    type Sketch = T;
-
     fn type_(&self) -> i32 {
         match self.coords {
             Coords::OnWorkplane { .. } => SLVS_E_POINT_IN_2D as _,
             Coords::In3d { .. } => SLVS_E_POINT_IN_3D as _,
         }
+    }
+
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        self.workplane.map(|workplane| workplane.as_handle())
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
@@ -50,8 +41,22 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Coords {
-    OnWorkplane { u: f64, v: f64 },
-    In3d { x: f64, y: f64, z: f64 },
+impl Point<OnWorkplane> {
+    pub fn new(workplane: &Entity<Workplane>, u: f64, v: f64) -> Self {
+        Self {
+            workplane: Some(*workplane),
+            coords: Coords::OnWorkplane { u, v },
+            phantom: PhantomData::<OnWorkplane>,
+        }
+    }
+}
+
+impl Point<In3d> {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self {
+            workplane: None,
+            coords: Coords::In3d { x, y, z },
+            phantom: PhantomData::<In3d>,
+        }
+    }
 }
