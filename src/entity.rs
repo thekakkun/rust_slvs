@@ -14,17 +14,13 @@ pub use distance::Distance;
 mod workplane;
 pub use workplane::Workplane;
 mod line_segment;
-pub use line_segment::LineSegment;
+pub use line_segment::{AsLineSegment, LineSegment};
 mod cubic;
 pub use cubic::Cubic;
 mod circle;
 pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity of a specific type
-////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntityData> {

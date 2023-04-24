@@ -7,20 +7,24 @@ use crate::{
 
 mod pt_pt_distance;
 pub use pt_pt_distance::PtPtDistance;
-// mod pt_line_distance;
-// pub use pt_line_distance::PtLineDistance;
+mod pt_line_distance;
+pub use pt_line_distance::PtLineDistance;
 
 pub trait AsConstraintData {
     fn type_(&self) -> i32;
-    fn val(&self) -> Option<f64>;
-    fn points(&self) -> Option<Vec<Slvs_hEntity>>;
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>>;
-    fn others(&self) -> [bool; 2];
+    fn val(&self) -> Option<f64> {
+        None
+    }
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn others(&self) -> [bool; 2] {
+        [false, false]
+    }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Constraint of a specific type
-////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Constraint<T: AsConstraintData, U: Target> {

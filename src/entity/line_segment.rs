@@ -4,6 +4,8 @@ use crate::{
     element::{AsHandle, Target},
 };
 
+pub trait AsLineSegment {}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LineSegment<T: Target> {
     pub point_a: Entity<Point<T>>,
@@ -15,6 +17,8 @@ impl<T: Target> LineSegment<T> {
         Self { point_a, point_b }
     }
 }
+
+impl<T: Target> AsLineSegment for LineSegment<T> {}
 
 impl<T: Target> AsEntityData for LineSegment<T> {
     type Sketch = T;

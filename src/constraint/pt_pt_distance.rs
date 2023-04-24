@@ -7,22 +7,22 @@ use crate::{
 use super::AsConstraintData;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct PtPtDistance<A, B>
+pub struct PtPtDistance<PA, PB>
 where
-    A: AsPoint + AsEntityData,
-    B: AsPoint + AsEntityData,
+    PA: AsPoint + AsEntityData,
+    PB: AsPoint + AsEntityData,
 {
-    point_a: Entity<A>,
-    point_b: Entity<B>,
+    point_a: Entity<PA>,
+    point_b: Entity<PB>,
     distance: f64,
 }
 
-impl<A, B> PtPtDistance<A, B>
+impl<PA, PB> PtPtDistance<PA, PB>
 where
-    A: AsPoint + AsEntityData,
-    B: AsPoint + AsEntityData,
+    PA: AsPoint + AsEntityData,
+    PB: AsPoint + AsEntityData,
 {
-    pub fn new(point_a: Entity<A>, point_b: Entity<B>, distance: f64) -> Self {
+    pub fn new(point_a: Entity<PA>, point_b: Entity<PB>, distance: f64) -> Self {
         Self {
             point_a,
             point_b,
@@ -31,10 +31,10 @@ where
     }
 }
 
-impl<A, B> AsConstraintData for PtPtDistance<A, B>
+impl<PA, PB> AsConstraintData for PtPtDistance<PA, PB>
 where
-    A: AsPoint + AsEntityData,
-    B: AsPoint + AsEntityData,
+    PA: AsPoint + AsEntityData,
+    PB: AsPoint + AsEntityData,
 {
     fn type_(&self) -> i32 {
         SLVS_C_PT_PT_DISTANCE as _
@@ -46,13 +46,5 @@ where
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
-    }
-
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-
-    fn others(&self) -> [bool; 2] {
-        [false, false]
     }
 }

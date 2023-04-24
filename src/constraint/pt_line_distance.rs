@@ -1,51 +1,53 @@
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
-    element::{AsHandle, Target},
-    entity::{Entity, LineSegment, Point, SomeLineSegment, SomePoint},
+    element::AsHandle,
+    entity::{AsEntityData, AsLineSegment, AsPoint, Entity},
 };
 
 use super::AsConstraintData;
 
-pub struct PtLineDistance {
-    point: Entity<SomePoint>,
-    line: Entity<SomeLineSegment>,
+pub struct PtLineDistance<P, L>
+where
+    P: AsPoint + AsEntityData,
+    L: AsLineSegment + AsEntityData,
+{
+    point: Entity<P>,
+    line: Entity<L>,
     distance: f64,
 }
 
-// impl PtLineDistance {
-//     pub fn new(
-//         point: Entity<Point<dyn Target>>,
-//         line: Entity<LineSegment<dyn Target>>,
-//         distance: f64,
-//     ) -> Self {
-//         Self {
-//             point,
-//             line,
-//             distance,
-//         }
-//     }
-// }
+impl<P, L> PtLineDistance<P, L>
+where
+    P: AsPoint + AsEntityData,
+    L: AsLineSegment + AsEntityData,
+{
+    pub fn new(point: Entity<P>, line: Entity<L>, distance: f64) -> Self {
+        Self {
+            point,
+            line,
+            distance,
+        }
+    }
+}
 
-// impl AsConstraintData for PtLineDistance {
-//     type Apply = dyn Target;
+impl<P, L> AsConstraintData for PtLineDistance<P, L>
+where
+    P: AsPoint + AsEntityData,
+    L: AsLineSegment + AsEntityData,
+{
+    fn type_(&self) -> i32 {
+        SLVS_C_PT_LINE_DISTANCE as _
+    }
 
-//     fn type_(&self) -> i32 {
-//         SLVS_C_PT_LINE_DISTANCE as _
-//     }
+    fn val(&self) -> Option<f64> {
+        Some(self.distance)
+    }
 
-//     fn val(&self) -> Option<f64> {
-//         Some(self.distance)
-//     }
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        Some(vec![self.point.as_handle()])
+    }
 
-//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-//         Some(vec![self.point.as_handle(), self.line.as_handle()])
-//     }
-
-//     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-//         None
-//     }
-
-//     fn others(&self) -> [bool; 2] {
-//         [false, false]
-//     }
-// }
+    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+        Some(vec![self.line.as_handle()])
+    }
+}

@@ -5,7 +5,19 @@ use std::marker::PhantomData;
 mod bindings;
 use bindings::Slvs_hGroup;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
-use bindings::{Slvs_Constraint, Slvs_hConstraint, SLVS_C_PT_PT_DISTANCE};
+use bindings::{
+    Slvs_Constraint, Slvs_hConstraint, SLVS_C_ANGLE, SLVS_C_ARC_ARC_DIFFERENCE,
+    SLVS_C_ARC_ARC_LEN_RATIO, SLVS_C_ARC_LINE_DIFFERENCE, SLVS_C_ARC_LINE_LEN_RATIO,
+    SLVS_C_ARC_LINE_TANGENT, SLVS_C_AT_MIDPOINT, SLVS_C_CUBIC_LINE_TANGENT,
+    SLVS_C_CURVE_CURVE_TANGENT, SLVS_C_DIAMETER, SLVS_C_EQUAL_ANGLE, SLVS_C_EQUAL_LENGTH_LINES,
+    SLVS_C_EQUAL_LINE_ARC_LEN, SLVS_C_EQUAL_RADIUS, SLVS_C_EQ_LEN_PT_LINE_D,
+    SLVS_C_EQ_PT_LN_DISTANCES, SLVS_C_HORIZONTAL, SLVS_C_LENGTH_DIFFERENCE, SLVS_C_LENGTH_RATIO,
+    SLVS_C_PARALLEL, SLVS_C_PERPENDICULAR, SLVS_C_POINTS_COINCIDENT, SLVS_C_PROJ_PT_DISTANCE,
+    SLVS_C_PT_FACE_DISTANCE, SLVS_C_PT_IN_PLANE, SLVS_C_PT_LINE_DISTANCE, SLVS_C_PT_ON_CIRCLE,
+    SLVS_C_PT_ON_FACE, SLVS_C_PT_ON_LINE, SLVS_C_PT_PLANE_DISTANCE, SLVS_C_PT_PT_DISTANCE,
+    SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
+    SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
+};
 use bindings::{
     Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
     SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
@@ -18,7 +30,7 @@ use bindings::{
 };
 
 pub mod constraint;
-use constraint::{AsConstraintData, Constraint, PtPtDistance};
+use constraint::{AsConstraintData, Constraint, PtLineDistance, PtPtDistance};
 
 mod element;
 use element::{AsHandle, Elements, Target};
@@ -311,12 +323,53 @@ impl System {
         self.slvs_constraint(constraint.as_handle())
             .map(|slvs_constraint| {
                 let some_constraint_data: Box<dyn Any> = match slvs_constraint.type_ as _ {
+                    SLVS_C_POINTS_COINCIDENT => todo!(),
                     SLVS_C_PT_PT_DISTANCE => Box::new(PtPtDistance::new(
-                        // not necessarily on workplane, these get downcast anyway, but I don't like this...
                         Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
                         Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
                         slvs_constraint.valA,
                     )),
+                    SLVS_C_PT_PLANE_DISTANCE => todo!(),
+                    SLVS_C_PT_LINE_DISTANCE => Box::new(PtLineDistance::new(
+                        Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
+                        Entity::<LineSegment<OnWorkplane>>::new(slvs_constraint.entityA),
+                        slvs_constraint.valA,
+                    )),
+                    SLVS_C_PT_FACE_DISTANCE => todo!(),
+                    SLVS_C_PT_IN_PLANE => todo!(),
+                    SLVS_C_PT_ON_LINE => todo!(),
+                    SLVS_C_PT_ON_FACE => todo!(),
+                    SLVS_C_EQUAL_LENGTH_LINES => todo!(),
+                    SLVS_C_LENGTH_RATIO => todo!(),
+                    SLVS_C_EQ_LEN_PT_LINE_D => todo!(),
+                    SLVS_C_EQ_PT_LN_DISTANCES => todo!(),
+                    SLVS_C_EQUAL_ANGLE => todo!(),
+                    SLVS_C_EQUAL_LINE_ARC_LEN => todo!(),
+                    SLVS_C_SYMMETRIC => todo!(),
+                    SLVS_C_SYMMETRIC_HORIZ => todo!(),
+                    SLVS_C_SYMMETRIC_VERT => todo!(),
+                    SLVS_C_SYMMETRIC_LINE => todo!(),
+                    SLVS_C_AT_MIDPOINT => todo!(),
+                    SLVS_C_HORIZONTAL => todo!(),
+                    SLVS_C_VERTICAL => todo!(),
+                    SLVS_C_DIAMETER => todo!(),
+                    SLVS_C_PT_ON_CIRCLE => todo!(),
+                    SLVS_C_SAME_ORIENTATION => todo!(),
+                    SLVS_C_ANGLE => todo!(),
+                    SLVS_C_PARALLEL => todo!(),
+                    SLVS_C_PERPENDICULAR => todo!(),
+                    SLVS_C_ARC_LINE_TANGENT => todo!(),
+                    SLVS_C_CUBIC_LINE_TANGENT => todo!(),
+                    SLVS_C_EQUAL_RADIUS => todo!(),
+                    SLVS_C_PROJ_PT_DISTANCE => todo!(),
+                    SLVS_C_WHERE_DRAGGED => todo!(),
+                    SLVS_C_CURVE_CURVE_TANGENT => todo!(),
+                    SLVS_C_LENGTH_DIFFERENCE => todo!(),
+                    SLVS_C_ARC_ARC_LEN_RATIO => todo!(),
+                    SLVS_C_ARC_LINE_LEN_RATIO => todo!(),
+                    SLVS_C_ARC_ARC_DIFFERENCE => todo!(),
+                    SLVS_C_ARC_LINE_DIFFERENCE => todo!(),
+
                     _ => panic!("Unknown constraint type: {}", slvs_constraint.type_),
                 };
 
