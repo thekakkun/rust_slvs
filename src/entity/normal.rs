@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::{AsEntityData, Entity, Workplane};
 use crate::{
     bindings::{SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{In3d, OnWorkplane, AsTarget},
+    element::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]

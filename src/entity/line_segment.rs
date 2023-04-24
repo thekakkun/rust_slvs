@@ -1,10 +1,8 @@
-use super::{AsEntityData, Entity, Point};
+use super::{AsEntityData, AsLineSegment, Entity, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_LINE_SEGMENT},
     element::{AsHandle, AsTarget},
 };
-
-pub trait AsLineSegment {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LineSegment<T: AsTarget> {

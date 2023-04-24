@@ -1,12 +1,10 @@
 use std::marker::PhantomData;
 
-use super::AsEntityData;
+use super::{AsEntityData, AsPoint};
 use crate::{
     bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    element::{In3d, OnWorkplane, AsTarget},
+    element::{AsTarget, In3d, OnWorkplane},
 };
-
-pub trait AsPoint {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point<T: AsTarget> {

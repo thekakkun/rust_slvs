@@ -6,7 +6,7 @@ use crate::{
 };
 
 mod point;
-pub use point::{AsPoint, Coords, Point};
+pub use point::{Coords, Point};
 mod normal;
 pub use normal::{Normal, NormalDef};
 mod distance;
@@ -14,13 +14,13 @@ pub use distance::Distance;
 mod workplane;
 pub use workplane::Workplane;
 mod line_segment;
-pub use line_segment::{AsLineSegment, LineSegment};
+pub use line_segment::LineSegment;
 mod cubic;
 pub use cubic::Cubic;
 mod circle;
 pub use circle::Circle;
 mod arc_of_circle;
-pub use arc_of_circle::{ArcOfCircle, AsArc};
+pub use arc_of_circle::ArcOfCircle;
 
 pub trait AsEntityData {
     type Sketch: AsTarget;
@@ -39,6 +39,10 @@ pub trait AsEntityData {
         None
     }
 }
+
+pub trait AsPoint {}
+pub trait AsLineSegment {}
+pub trait AsArc {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntityData> {

@@ -1,9 +1,8 @@
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_HORIZONTAL},
-    element::{AsHandle, AsTarget},
+    element::AsHandle,
     entity::{AsEntityData, AsLineSegment, AsPoint, Entity},
-    In3d,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

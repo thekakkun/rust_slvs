@@ -1,10 +1,8 @@
-use super::{AsEntityData, Entity, Normal, Point};
+use super::{AsArc, AsEntityData, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, OnWorkplane},
 };
-
-pub trait AsArc {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ArcOfCircle {
