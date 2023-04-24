@@ -3,13 +3,13 @@ use std::marker::PhantomData;
 use super::AsEntityData;
 use crate::{
     bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    element::{In3d, OnWorkplane, Target},
+    element::{In3d, OnWorkplane, AsTarget},
 };
 
 pub trait AsPoint {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point<T: Target> {
+pub struct Point<T: AsTarget> {
     pub coords: Coords,
     phantom: PhantomData<T>,
 }
@@ -32,9 +32,9 @@ impl Point<In3d> {
     }
 }
 
-impl<T: Target> AsPoint for Point<T> {}
+impl<T: AsTarget> AsPoint for Point<T> {}
 
-impl<T: Target> AsEntityData for Point<T> {
+impl<T: AsTarget> AsEntityData for Point<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

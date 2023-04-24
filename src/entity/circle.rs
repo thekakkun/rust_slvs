@@ -1,17 +1,17 @@
 use super::{AsEntityData, Distance, Entity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_CIRCLE},
-    element::{AsHandle, Target},
+    element::{AsHandle, AsTarget},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Circle<T: Target> {
+pub struct Circle<T: AsTarget> {
     center: Entity<Point<T>>,
     radius: Entity<Distance<T>>,
     normal: Entity<Normal<T>>,
 }
 
-impl<T: Target> Circle<T> {
+impl<T: AsTarget> Circle<T> {
     pub fn new(
         center: Entity<Point<T>>,
         radius: Entity<Distance<T>>,
@@ -25,7 +25,7 @@ impl<T: Target> Circle<T> {
     }
 }
 
-impl<T: Target> AsEntityData for Circle<T> {
+impl<T: AsTarget> AsEntityData for Circle<T> {
     type Sketch = T;
 
     fn type_(&self) -> i32 {

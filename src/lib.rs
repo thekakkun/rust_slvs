@@ -33,7 +33,7 @@ pub mod constraint;
 use constraint::{AsConstraintData, Constraint, PtLineDistance, PtPtDistance};
 
 mod element;
-use element::{AsHandle, Elements, Target};
+use element::{AsHandle, Elements, AsTarget};
 pub use element::{Group, In3d, OnWorkplane};
 
 pub mod entity;
@@ -316,7 +316,7 @@ impl System {
         })
     }
 
-    pub fn constraint_data<T: AsConstraintData + 'static, U: Target>(
+    pub fn constraint_data<T: AsConstraintData + 'static, U: AsTarget>(
         &self,
         constraint: &Constraint<T, U>,
     ) -> Result<T, &'static str> {
@@ -431,7 +431,7 @@ impl System {
     ) -> Result<T, &'static str>
     where
         T: AsConstraintData + 'static,
-        U: Target,
+        U: AsTarget,
         F: FnOnce(&mut T),
     {
         let mut constraint_data = self.constraint_data(constraint)?;
@@ -489,7 +489,7 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<T: AsConstraintData + 'static, U: Target>(
+    pub fn delete_constraint<T: AsConstraintData + 'static, U: AsTarget>(
         &mut self,
         constraint: Constraint<T, U>,
     ) -> Result<T, &'static str> {
@@ -549,7 +549,7 @@ pub struct SolveFail {
 }
 
 impl SolveFail {
-    pub fn constraint_did_fail<T: AsConstraintData, U: Target>(
+    pub fn constraint_did_fail<T: AsConstraintData, U: AsTarget>(
         &self,
         constraint: &Constraint<T, U>,
     ) -> bool {

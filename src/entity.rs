@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     bindings::Slvs_hEntity,
-    element::{AsHandle, Target},
+    element::{AsHandle, AsTarget},
 };
 
 mod point;
@@ -44,7 +44,7 @@ impl<T: AsEntityData> AsHandle for Entity<T> {
 }
 
 pub trait AsEntityData {
-    type Sketch: Target;
+    type Sketch: AsTarget;
 
     fn type_(&self) -> i32;
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
