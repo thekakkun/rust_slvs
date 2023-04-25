@@ -10,25 +10,25 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Distance<T: AsTarget> {
     pub workplane: Option<Entity<Workplane>>,
-    pub d: f64,
+    pub val: f64,
     phantom: PhantomData<T>,
 }
 
 impl Distance<OnWorkplane> {
-    pub fn new(workplane: Entity<Workplane>, d: f64) -> Self {
+    pub fn new(workplane: Entity<Workplane>, val: f64) -> Self {
         Self {
             workplane: Some(workplane),
-            d,
+            val,
             phantom: PhantomData,
         }
     }
 }
 
 impl Distance<In3d> {
-    pub fn new(d: f64) -> Self {
+    pub fn new(val: f64) -> Self {
         Self {
             workplane: None,
-            d,
+            val,
             phantom: PhantomData,
         }
     }
@@ -44,6 +44,6 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(vec![self.d])
+        Some(vec![self.val])
     }
 }

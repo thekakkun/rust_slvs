@@ -525,7 +525,7 @@ pub struct SolveOkay {
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
-    failed_constraints: Vec<Slvs_hConstraint>,
+    pub failed_constraints: Vec<Slvs_hConstraint>,
 }
 
 impl SolveFail {

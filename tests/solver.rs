@@ -1,10 +1,4 @@
-use slvs::{
-    constraint::PtPtDistance,
-    entity::{Point},
-    FailReason, In3d, System,
-};
-
-const SOLVE_TOLERANCE: f64 = 1e-8;
+use slvs::{constraint::PtPtDistance, entity::Point, FailReason, In3d, System};
 
 #[test]
 fn inconsistent_constraints() {
