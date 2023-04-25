@@ -10,7 +10,7 @@ pub struct Circle<T: AsTarget> {
     pub workplane: Option<Entity<Workplane>>,
     pub center: Entity<Point<T>>,
     pub radius: Entity<Distance<T>>,
-    pub normal: Entity<Normal<T>>,
+    pub normal: Entity<Normal<In3d>>,
 }
 
 impl Circle<OnWorkplane> {
@@ -18,7 +18,7 @@ impl Circle<OnWorkplane> {
         workplane: Entity<Workplane>,
         center: Entity<Point<OnWorkplane>>,
         radius: Entity<Distance<OnWorkplane>>,
-        normal: Entity<Normal<OnWorkplane>>,
+        normal: Entity<Normal<In3d>>,
     ) -> Self {
         Self {
             workplane: Some(workplane),

@@ -31,8 +31,8 @@ use bindings::{
 
 pub mod constraint;
 use constraint::{
-    AsConstraintData, Constraint, Diameter, EqualRadius, HorizontalLine, HorizontalPoints,
-    PtLineDistance, PtPtDistance, VerticalLine, VerticalPoints,
+    AsConstraintData, Constraint, Diameter, EqualRadius, LineHorizontal, LineVertical,
+    PointsHorizontal, PointsVertical, PtLineDistance, PtPtDistance,
 };
 
 mod element;
@@ -304,26 +304,30 @@ impl System {
                     SLVS_C_SYMMETRIC_LINE => todo!(),
                     SLVS_C_AT_MIDPOINT => todo!(),
                     SLVS_C_HORIZONTAL => match slvs_constraint.entityA {
-                        0 => Box::new(HorizontalPoints::new(
+                        0 => Box::new(PointsHorizontal::new(
+                            Entity::<Workplane>::new(slvs_constraint.wrkpl),
                             Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
                             Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
                         )),
-                        _ => Box::new(HorizontalLine::new(
+                        _ => Box::new(LineHorizontal::new(
+                            Entity::<Workplane>::new(slvs_constraint.wrkpl),
                             Entity::<LineSegment<OnWorkplane>>::new(slvs_constraint.entityA),
                         )),
                     },
                     SLVS_C_VERTICAL => match slvs_constraint.entityA {
-                        0 => Box::new(VerticalPoints::new(
+                        0 => Box::new(PointsVertical::new(
+                            Entity::<Workplane>::new(slvs_constraint.wrkpl),
                             Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptA),
                             Entity::<Point<OnWorkplane>>::new(slvs_constraint.ptB),
                         )),
-                        _ => Box::new(VerticalLine::new(Entity::<LineSegment<OnWorkplane>>::new(
-                            slvs_constraint.entityA,
-                        ))),
+                        _ => Box::new(LineVertical::new(
+                            Entity::<Workplane>::new(slvs_constraint.wrkpl),
+                            Entity::<LineSegment<OnWorkplane>>::new(slvs_constraint.entityA),
+                        )),
                     },
                     SLVS_C_DIAMETER => Box::new(Diameter::new(
                         Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityA),
-                        Entity::<Circle<OnWorkplane>>::new(slvs_constraint.entityB),
+                        slvs_constraint.valA,
                     )),
                     SLVS_C_PT_ON_CIRCLE => todo!(),
                     SLVS_C_SAME_ORIENTATION => todo!(),
@@ -503,7 +507,7 @@ impl System {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
-                failed_constraints: failed_handles,
+                failed_constraints: failed_handles.into_iter().filter(|&c_h| c_h != 0).collect(),
             }),
             Err(_) => Ok(SolveOkay {
                 dof: slvs_system.dof,
@@ -512,10 +516,12 @@ impl System {
     }
 }
 
+#[derive(Debug)]
 pub struct SolveOkay {
     pub dof: i32,
 }
 
+#[derive(Debug)]
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
@@ -594,11 +600,17 @@ impl System {
         h: Slvs_hEntity,
         workplane: Slvs_hEntity,
     ) -> Result<(), &'static str> {
-        let entity_workplane = self.slvs_entity(h)?.wrkpl;
+        let entity = self.slvs_entity(h)?;
 
-        match entity_workplane == workplane {
-            true => Ok(()),
-            false => Err("Entity not on expected workplane."),
+        match entity.type_ as _ {
+            SLVS_E_NORMAL_IN_3D => match entity.h == self.slvs_entity(workplane)?.normal {
+                true => Ok(()),
+                false => Err("Normal in 3d does not match workplane's normal."),
+            },
+            _ => match entity.wrkpl == workplane {
+                true => Ok(()),
+                false => Err("Entity not on expected workplane."),
+            },
         }
     }
 

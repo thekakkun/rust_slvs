@@ -2,7 +2,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, SLVS_C_VERTICAL},
     element::AsHandle,
-    entity::{AsLineSegment, AsPoint, Entity},
+    entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10,26 +10,31 @@ use crate::{
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct VerticalPoints<PA, PB>
+pub struct PointsVertical<PA, PB>
 where
     PA: AsPoint,
     PB: AsPoint,
 {
+    workplane: Entity<Workplane>,
     point_a: Entity<PA>,
     point_b: Entity<PB>,
 }
 
-impl<PA, PB> VerticalPoints<PA, PB>
+impl<PA, PB> PointsVertical<PA, PB>
 where
     PA: AsPoint,
     PB: AsPoint,
 {
-    pub fn new(point_a: Entity<PA>, point_b: Entity<PB>) -> Self {
-        Self { point_a, point_b }
+    pub fn new(workplane: Entity<Workplane>, point_a: Entity<PA>, point_b: Entity<PB>) -> Self {
+        Self {
+            workplane,
+            point_a,
+            point_b,
+        }
     }
 }
 
-impl<PA, PB> AsConstraintData for VerticalPoints<PA, PB>
+impl<PA, PB> AsConstraintData for PointsVertical<PA, PB>
 where
     PA: AsPoint,
     PB: AsPoint,
@@ -39,7 +44,7 @@ where
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        None
+        Some(self.workplane.as_handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -52,22 +57,23 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct VerticalLine<L>
+pub struct LineVertical<L>
 where
     L: AsLineSegment,
 {
+    workplane: Entity<Workplane>,
     line: Entity<L>,
 }
 
-impl<L> VerticalLine<L>
+impl<L> LineVertical<L>
 where
     L: AsLineSegment,
 {
-    pub fn new(line: Entity<L>) -> Self {
-        Self { line }
+    pub fn new(workplane: Entity<Workplane>, line: Entity<L>) -> Self {
+        Self { workplane, line }
     }
 }
-impl<L> AsConstraintData for VerticalLine<L>
+impl<L> AsConstraintData for LineVertical<L>
 where
     L: AsLineSegment,
 {
@@ -76,7 +82,7 @@ where
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        None
+        Some(self.workplane.as_handle())
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {

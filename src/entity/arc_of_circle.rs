@@ -2,6 +2,7 @@ use super::{AsArc, AsEntityData, Entity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, OnWorkplane},
+    In3d,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -10,7 +11,7 @@ pub struct ArcOfCircle {
     pub center: Entity<Point<OnWorkplane>>,
     pub arc_begin: Entity<Point<OnWorkplane>>,
     pub arc_end: Entity<Point<OnWorkplane>>,
-    pub normal: Entity<Normal<OnWorkplane>>,
+    pub normal: Entity<Normal<In3d>>,
 }
 
 impl ArcOfCircle {
@@ -19,7 +20,7 @@ impl ArcOfCircle {
         center: Entity<Point<OnWorkplane>>,
         arc_begin: Entity<Point<OnWorkplane>>,
         arc_end: Entity<Point<OnWorkplane>>,
-        normal: Entity<Normal<OnWorkplane>>,
+        normal: Entity<Normal<In3d>>,
     ) -> Self {
         Self {
             workplane,
@@ -43,7 +44,7 @@ impl AsEntityData for ArcOfCircle {
     }
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
-            self.arc_begin.as_handle(),
+            self.center.as_handle(),
             self.arc_begin.as_handle(),
             self.arc_end.as_handle(),
         ])

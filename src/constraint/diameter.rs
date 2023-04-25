@@ -7,29 +7,26 @@ use crate::{
 use super::AsConstraintData;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Diameter<AA, AB>
+pub struct Diameter<A>
 where
-    AA: AsArc,
-    AB: AsArc,
+    A: AsArc,
 {
-    arc_a: Entity<AA>,
-    arc_b: Entity<AB>,
+    arc_a: Entity<A>,
+    diameter: f64,
 }
 
-impl<AA, AB> Diameter<AA, AB>
+impl<A> Diameter<A>
 where
-    AA: AsArc,
-    AB: AsArc,
+    A: AsArc,
 {
-    pub fn new(arc_a: Entity<AA>, arc_b: Entity<AB>) -> Self {
-        Self { arc_a, arc_b }
+    pub fn new(arc_a: Entity<A>, diameter: f64) -> Self {
+        Self { arc_a, diameter }
     }
 }
 
-impl<AA, AB> AsConstraintData for Diameter<AA, AB>
+impl<A> AsConstraintData for Diameter<A>
 where
-    AA: AsArc,
-    AB: AsArc,
+    A: AsArc,
 {
     fn type_(&self) -> i32 {
         SLVS_C_DIAMETER as _
@@ -40,6 +37,10 @@ where
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc_a.as_handle(), self.arc_b.as_handle()])
+        Some(vec![self.arc_a.as_handle()])
+    }
+
+    fn val(&self) -> Option<f64> {
+        Some(self.diameter)
     }
 }
