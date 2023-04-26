@@ -1,6 +1,6 @@
-use super::{AsEntityData, AsLineSegment, Entity, Point, Workplane};
+use super::{AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_LINE_SEGMENT},
+    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_LINE_SEGMENT},
     element::{AsHandle, AsTarget},
     In3d, OnWorkplane,
 };
@@ -51,3 +51,23 @@ impl LineSegment<In3d> {
 }
 
 impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
+
+impl FromSlvsEntity<OnWorkplane> for LineSegment<OnWorkplane> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: Some(Entity::new(slvs_entity.wrkpl)),
+            point_a: Entity::new(slvs_entity.point[0]),
+            point_b: Entity::new(slvs_entity.point[1]),
+        }
+    }
+}
+
+impl FromSlvsEntity<In3d> for LineSegment<In3d> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: None,
+            point_a: Entity::new(slvs_entity.point[0]),
+            point_b: Entity::new(slvs_entity.point[1]),
+        }
+    }
+}

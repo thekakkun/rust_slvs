@@ -5,6 +5,53 @@ use slvs::{
 };
 
 #[test]
+// An example of a constraint in 3d. We create a single group, with some
+// entities and constraints.
+fn example_3d() {
+    let mut sys = System::new();
+
+    // This will contain a single group, which will arbitrarily number 1.
+    let g = sys.add_group();
+
+    // A point, initially at (x y z) = (10 10 10)
+    let p1 = sys
+        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .expect("p1 created");
+    // and a second point at (20 20 20)
+    let p2 = sys
+        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .expect("p2 created");
+    // and a line segment connecting them.
+    sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
+        .expect("line segment created");
+
+    // The distance between the points should be 30.0 units.
+    sys.constrain(&g, PtPtDistance::new(p1, p2, 30.0, None))
+        .expect("distance constraint added");
+
+    // Let's tell the solver to keep the second point as close to constant
+    // as possible, instead moving the first point.
+    sys.set_dragged(&p2);
+
+    // Now that we have written our system, we solve.
+    let result = sys.solve(&g);
+    sys.clear_dragged();
+
+    if let Ok(ok_result) = result {
+        if let Coords::In3d { x, y, z } = sys.entity_data(&p1).expect("p1 should exist").coords {
+            println!("okay; now at ({:.3} {:.3} {:.3})", x, y, z);
+        }
+        if let Coords::In3d { x, y, z } = sys.entity_data(&p2).expect("p2 should exist").coords {
+            println!("             ({:.3} {:.3} {:.3})", x, y, z);
+        }
+
+        println!("{} DOF", ok_result.dof);
+    } else {
+        println!("solve failed");
+    }
+}
+
+#[test]
 // An example of a constraint in 2d. In our first group, we create a workplane
 // along the reference frame's xy plane. In a second group, we create some
 // entities in that group and dimension them.
@@ -183,52 +230,5 @@ fn example_2d() {
             FailReason::Inconsistent => println!("system inconsistent"),
             _ => println!("system nonconvergent"),
         }
-    }
-}
-
-#[test]
-// An example of a constraint in 3d. We create a single group, with some
-// entities and constraints.
-fn solve_3d_demo() {
-    let mut sys = System::new();
-
-    // This will contain a single group, which will arbitrarily number 1.
-    let g = sys.add_group();
-
-    // A point, initially at (x y z) = (10 10 10)
-    let p1 = sys
-        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
-        .expect("p1 created");
-    // and a second point at (20 20 20)
-    let p2 = sys
-        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
-        .expect("p2 created");
-    // and a line segment connecting them.
-    sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
-        .expect("line segment created");
-
-    // The distance between the points should be 30.0 units.
-    sys.constrain(&g, PtPtDistance::new(p1, p2, 30.0, None))
-        .expect("distance constraint added");
-
-    // Let's tell the solver to keep the second point as close to constant
-    // as possible, instead moving the first point.
-    sys.set_dragged(&p2);
-
-    // Now that we have written our system, we solve.
-    let result = sys.solve(&g);
-    sys.clear_dragged();
-
-    if let Ok(ok_result) = result {
-        if let Coords::In3d { x, y, z } = sys.entity_data(&p1).expect("p1 should exist").coords {
-            println!("okay; now at ({:.3} {:.3} {:.3})", x, y, z);
-        }
-        if let Coords::In3d { x, y, z } = sys.entity_data(&p2).expect("p2 should exist").coords {
-            println!("             ({:.3} {:.3} {:.3})", x, y, z);
-        }
-
-        println!("{} DOF", ok_result.dof);
-    } else {
-        println!("solve failed");
     }
 }

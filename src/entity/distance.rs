@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use super::{AsEntityData, Entity, Workplane};
+use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_DISTANCE},
+    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_DISTANCE},
     element::{AsHandle, AsTarget},
     In3d, OnWorkplane,
 };
@@ -45,5 +45,31 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(vec![self.val])
+    }
+}
+
+impl<T: AsTarget> FromSlvsEntity<T> for Distance<T> {
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.val = vals[0]
+    }
+}
+
+impl FromSlvsEntity<Workplane> for Distance<Workplane> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: Some(Entity::new(slvs_entity.wrkpl)),
+            val: 0.0,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl FromSlvsEntity<In3d> for Distance<In3d> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: None,
+            val: 0.0,
+            phantom: PhantomData,
+        }
     }
 }

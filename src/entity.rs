@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::{bindings::Slvs_hEntity, element::AsHandle};
+use crate::{
+    bindings::{Slvs_Entity, Slvs_hEntity},
+    element::{AsHandle, AsTarget},
+};
 
 mod point;
 pub use point::{Coords, Point};
@@ -37,9 +40,16 @@ pub trait AsEntityData {
     }
 }
 
-pub trait AsPoint: AsEntityData {}
-pub trait AsLineSegment: AsEntityData {}
+pub trait FromSlvsEntity<T: AsTarget>: AsEntityData {
+    fn from(slvs_entity: Slvs_Entity) -> Self;
+
+    fn set_vals(&mut self, _vals: Vec<f64>) {}
+}
+
 pub trait AsArc: AsEntityData {}
+pub trait AsLineSegment: AsEntityData {}
+pub trait AsNormal: AsEntityData {}
+pub trait AsPoint: AsEntityData {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Entity<T: AsEntityData> {

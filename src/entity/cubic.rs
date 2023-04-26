@@ -1,6 +1,6 @@
-use super::{AsEntityData, Entity, Point, Workplane};
+use super::{AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_CUBIC},
+    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CUBIC},
     element::{AsHandle, AsTarget},
     In3d, OnWorkplane,
 };
@@ -64,5 +64,29 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
             self.end_control.as_handle(),
             self.end_point.as_handle(),
         ])
+    }
+}
+
+impl FromSlvsEntity<OnWorkplane> for Cubic<OnWorkplane> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: Some(Entity::new(slvs_entity.wrkpl)),
+            start_point: Entity::new(slvs_entity.point[0]),
+            start_control: Entity::new(slvs_entity.point[1]),
+            end_control: Entity::new(slvs_entity.point[2]),
+            end_point: Entity::new(slvs_entity.point[3]),
+        }
+    }
+}
+
+impl<T: AsTarget> FromSlvsEntity<T> for Cubic<T> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            workplane: None,
+            start_point: Entity::new(slvs_entity.point[0]),
+            start_control: Entity::new(slvs_entity.point[1]),
+            end_control: Entity::new(slvs_entity.point[2]),
+            end_point: Entity::new(slvs_entity.point[3]),
+        }
     }
 }

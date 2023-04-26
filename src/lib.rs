@@ -18,14 +18,10 @@ use bindings::{
     SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
     SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
 };
-use bindings::{
-    Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE,
-    SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D,
-    SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
-};
+use bindings::{Slvs_Entity, Slvs_hEntity};
 use bindings::{Slvs_Param, Slvs_hParam};
 use bindings::{
-    Slvs_Solve, Slvs_System, SLVS_FREE_IN_3D, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
+    Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
     SLVS_RESULT_TOO_MANY_UNKNOWNS,
 };
 
@@ -36,14 +32,11 @@ use constraint::{
 };
 
 mod element;
-use element::{AsHandle, Elements};
+use element::{AsHandle, AsTarget, Elements};
 pub use element::{Group, In3d, OnWorkplane};
 
 pub mod entity;
-use entity::{
-    ArcOfCircle, AsEntityData, Circle, Cubic, Distance, Entity, LineSegment, Normal, Point,
-    Workplane,
-};
+use entity::{AsEntityData, Circle, Entity, FromSlvsEntity, LineSegment, Point, Workplane};
 
 pub struct System {
     groups: Elements<Group>,
@@ -170,96 +163,119 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn entity_data<T: AsEntityData + 'static>(
-        &self,
-        entity: &Entity<T>,
-    ) -> Result<T, &'static str> {
-        self.slvs_entity(entity.as_handle()).map(|slvs_entity| {
-            let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
-                SLVS_E_POINT_IN_3D => Box::new(Point::<In3d>::new(
-                    self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[1]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[2]).unwrap().val,
-                )),
-                SLVS_E_POINT_IN_2D => Box::new(Point::<OnWorkplane>::new(
-                    Entity::new(slvs_entity.wrkpl),
-                    self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[1]).unwrap().val,
-                )),
-                SLVS_E_NORMAL_IN_3D => Box::new(Normal::<In3d>::new([
-                    self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[1]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[2]).unwrap().val,
-                    self.slvs_param(slvs_entity.param[3]).unwrap().val,
-                ])),
-                SLVS_E_NORMAL_IN_2D => {
-                    Box::new(Normal::<OnWorkplane>::new(Entity::new(slvs_entity.wrkpl)))
-                }
-                SLVS_E_DISTANCE => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Distance::<In3d>::new(
-                        self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    )),
-                    _ => Box::new(Distance::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.wrkpl),
-                        self.slvs_param(slvs_entity.param[0]).unwrap().val,
-                    )),
-                },
-                SLVS_E_WORKPLANE => Box::new(Workplane::new(
-                    Entity::new(slvs_entity.point[0]),
-                    Entity::new(slvs_entity.normal),
-                )),
-                SLVS_E_LINE_SEGMENT => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(LineSegment::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                    )),
-                    _ => Box::new(LineSegment::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.wrkpl),
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                    )),
-                },
-                SLVS_E_CUBIC => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Cubic::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                        Entity::new(slvs_entity.point[2]),
-                        Entity::new(slvs_entity.point[3]),
-                    )),
-                    _ => Box::new(Cubic::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.wrkpl),
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.point[1]),
-                        Entity::new(slvs_entity.point[2]),
-                        Entity::new(slvs_entity.point[3]),
-                    )),
-                },
-                SLVS_E_CIRCLE => match slvs_entity.wrkpl {
-                    SLVS_FREE_IN_3D => Box::new(Circle::<In3d>::new(
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.distance),
-                        Entity::new(slvs_entity.normal),
-                    )),
-                    _ => Box::new(Circle::<OnWorkplane>::new(
-                        Entity::new(slvs_entity.wrkpl),
-                        Entity::new(slvs_entity.point[0]),
-                        Entity::new(slvs_entity.distance),
-                        Entity::new(slvs_entity.normal),
-                    )),
-                },
-                SLVS_E_ARC_OF_CIRCLE => Box::new(ArcOfCircle::new(
-                    Entity::new(slvs_entity.wrkpl),
-                    Entity::new(slvs_entity.point[0]),
-                    Entity::new(slvs_entity.point[1]),
-                    Entity::new(slvs_entity.point[2]),
-                    Entity::new(slvs_entity.normal),
-                )),
-                _ => panic!("Unknown entity type: {}", slvs_entity.type_),
-            };
+    pub fn entity_data<E, T>(&self, entity: &Entity<T>) -> Result<T, &'static str>
+    where
+        E: FromSlvsEntity<T>,
+        T: AsTarget,
+    {
+        let slvs_entity = self.slvs_entity(entity.as_handle())?;
+        let mut entity_data = T::from(*slvs_entity);
 
-            *some_entity_data.downcast::<T>().unwrap()
-        })
+        let param_vals: Vec<_> = slvs_entity
+            .param
+            .iter()
+            .filter(|&param_h| *param_h != 0)
+            .filter_map(|&param_h| self.slvs_param(param_h).ok())
+            .map(|&slvs_param| slvs_param.val)
+            .collect();
+
+        if !param_vals.is_empty() {
+            entity_data.set_vals(param_vals);
+        }
+
+        Ok(entity_data)
     }
+
+    // pub fn entity_data<T: AsEntityData + 'static>(
+    //     &self,
+    //     entity: &Entity<T>,
+    // ) -> Result<T, &'static str> {
+    //     self.slvs_entity(entity.as_handle()).map(|slvs_entity| {
+    //         let some_entity_data: Box<dyn Any> = match slvs_entity.type_ as _ {
+    //             SLVS_E_POINT_IN_3D => Box::new(Point::<In3d>::new(
+    //                 self.slvs_param(slvs_entity.param[0]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[1]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[2]).unwrap().val,
+    //             )),
+    //             SLVS_E_POINT_IN_2D => Box::new(Point::<OnWorkplane>::new(
+    //                 Entity::new(slvs_entity.wrkpl),
+    //                 self.slvs_param(slvs_entity.param[0]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[1]).unwrap().val,
+    //             )),
+    //             SLVS_E_NORMAL_IN_3D => Box::new(Normal::<In3d>::new([
+    //                 self.slvs_param(slvs_entity.param[0]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[1]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[2]).unwrap().val,
+    //                 self.slvs_param(slvs_entity.param[3]).unwrap().val,
+    //             ])),
+    //             SLVS_E_NORMAL_IN_2D => {
+    //                 Box::new(Normal::<OnWorkplane>::new(Entity::new(slvs_entity.wrkpl)))
+    //             }
+    //             SLVS_E_DISTANCE => match slvs_entity.wrkpl {
+    //                 SLVS_FREE_IN_3D => Box::new(Distance::<In3d>::new(
+    //                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
+    //                 )),
+    //                 _ => Box::new(Distance::<OnWorkplane>::new(
+    //                     Entity::new(slvs_entity.wrkpl),
+    //                     self.slvs_param(slvs_entity.param[0]).unwrap().val,
+    //                 )),
+    //             },
+    //             SLVS_E_WORKPLANE => Box::new(Workplane::new(
+    //                 Entity::new(slvs_entity.point[0]),
+    //                 Entity::new(slvs_entity.normal),
+    //             )),
+    //             SLVS_E_LINE_SEGMENT => match slvs_entity.wrkpl {
+    //                 SLVS_FREE_IN_3D => Box::new(LineSegment::<In3d>::new(
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.point[1]),
+    //                 )),
+    //                 _ => Box::new(LineSegment::<OnWorkplane>::new(
+    //                     Entity::new(slvs_entity.wrkpl),
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.point[1]),
+    //                 )),
+    //             },
+    //             SLVS_E_CUBIC => match slvs_entity.wrkpl {
+    //                 SLVS_FREE_IN_3D => Box::new(Cubic::<In3d>::new(
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.point[1]),
+    //                     Entity::new(slvs_entity.point[2]),
+    //                     Entity::new(slvs_entity.point[3]),
+    //                 )),
+    //                 _ => Box::new(Cubic::<OnWorkplane>::new(
+    //                     Entity::new(slvs_entity.wrkpl),
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.point[1]),
+    //                     Entity::new(slvs_entity.point[2]),
+    //                     Entity::new(slvs_entity.point[3]),
+    //                 )),
+    //             },
+    //             SLVS_E_CIRCLE => match slvs_entity.wrkpl {
+    //                 SLVS_FREE_IN_3D => Box::new(Circle::<In3d>::new(
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.distance),
+    //                     Entity::new(slvs_entity.normal),
+    //                 )),
+    //                 _ => Box::new(Circle::<OnWorkplane>::new(
+    //                     Entity::new(slvs_entity.wrkpl),
+    //                     Entity::new(slvs_entity.point[0]),
+    //                     Entity::new(slvs_entity.distance),
+    //                     Entity::new(slvs_entity.normal),
+    //                 )),
+    //             },
+    //             SLVS_E_ARC_OF_CIRCLE => Box::new(ArcOfCircle::new(
+    //                 Entity::new(slvs_entity.wrkpl),
+    //                 Entity::new(slvs_entity.point[0]),
+    //                 Entity::new(slvs_entity.point[1]),
+    //                 Entity::new(slvs_entity.point[2]),
+    //                 Entity::new(slvs_entity.normal),
+    //             )),
+    //             _ => panic!("Unknown entity type: {}", slvs_entity.type_),
+    //         };
+
+    //         *some_entity_data.downcast::<T>().unwrap()
+    //     })
+    // }
 
     pub fn constraint_data<T: AsConstraintData + 'static>(
         &self,
@@ -273,6 +289,7 @@ impl System {
                     Some(Entity::<Workplane>::new(slvs_constraint.wrkpl))
                 };
 
+                // TODO: This shouldn't be something I'm allowed to do...
                 let some_constraint_data: Box<dyn Any> = match slvs_constraint.type_ as _ {
                     SLVS_C_POINTS_COINCIDENT => todo!(),
                     SLVS_C_PT_PT_DISTANCE => Box::new(PtPtDistance::new(
@@ -371,7 +388,7 @@ impl System {
 
     pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
     where
-        T: AsEntityData + 'static,
+        T: AsEntityData + FromSlvsEntity,
         F: FnOnce(&mut T),
     {
         let mut entity_data = self.entity_data(entity)?;
@@ -402,6 +419,40 @@ impl System {
         }
         Ok(entity_data)
     }
+
+    // pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
+    // where
+    //     T: AsEntityData + 'static,
+    //     F: FnOnce(&mut T),
+    // {
+    //     let mut entity_data = self.entity_data(entity)?;
+
+    //     f(&mut entity_data);
+    //     self.validate_entity_data(&entity_data)?;
+
+    //     let param_h = {
+    //         let slvs_entity = self.mut_slvs_entity(entity.as_handle()).unwrap();
+
+    //         if let Some(points) = entity_data.points() {
+    //             slvs_entity.set_point(points);
+    //         }
+    //         if let Some(normal) = entity_data.normal() {
+    //             slvs_entity.set_normal(normal);
+    //         }
+    //         if let Some(distance) = entity_data.distance() {
+    //             slvs_entity.set_distance(distance);
+    //         }
+
+    //         slvs_entity.param
+    //     };
+
+    //     if let Some(param_vals) = entity_data.param_vals() {
+    //         for (h, val) in zip(param_h, param_vals) {
+    //             self.update_param(h, val)?;
+    //         }
+    //     }
+    //     Ok(entity_data)
+    // }
 
     pub fn update_constraint<T, F>(
         &mut self,
@@ -452,7 +503,7 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<T: AsEntityData + 'static>(
+    pub fn delete_entity<T: AsEntityData + FromSlvsEntity>(
         &mut self,
         entity: Entity<T>,
     ) -> Result<T, &'static str> {

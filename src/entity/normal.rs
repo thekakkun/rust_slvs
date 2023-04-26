@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use super::{AsEntityData, Entity, Workplane};
+use super::{AsEntityData, AsNormal, Entity, FromSlvsEntity, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
+    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{AsHandle, AsTarget, In3d, OnWorkplane},
 };
 
@@ -37,6 +37,8 @@ impl Normal<In3d> {
     }
 }
 
+impl<T: AsTarget> AsNormal for Normal<T> {}
+
 impl<T: AsTarget> AsEntityData for Normal<T> {
     fn type_(&self) -> i32 {
         match self.data {
@@ -56,6 +58,40 @@ impl<T: AsTarget> AsEntityData for Normal<T> {
         match self.data {
             NormalDef::OnWorkplane { .. } => None,
             NormalDef::In3d { w, x, y, z } => Some(vec![w, x, y, z]),
+        }
+    }
+}
+
+impl FromSlvsEntity<OnWorkplane> for Normal<OnWorkplane> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            data: NormalDef::OnWorkplane {
+                workplane: Entity::new(slvs_entity.wrkpl),
+            },
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl FromSlvsEntity<In3d> for Normal<In3d> {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
+        Self {
+            data: NormalDef::In3d {
+                w: 0.0,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            phantom: PhantomData,
+        }
+    }
+
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.data = NormalDef::In3d {
+            w: vals[0],
+            x: vals[1],
+            y: vals[2],
+            z: vals[3],
         }
     }
 }

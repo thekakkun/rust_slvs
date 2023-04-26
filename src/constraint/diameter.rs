@@ -11,7 +11,7 @@ pub struct Diameter<A>
 where
     A: AsArc,
 {
-    arc_a: Entity<A>,
+    arc: Entity<A>,
     diameter: f64,
 }
 
@@ -19,8 +19,8 @@ impl<A> Diameter<A>
 where
     A: AsArc,
 {
-    pub fn new(arc_a: Entity<A>, diameter: f64) -> Self {
-        Self { arc_a, diameter }
+    pub fn new(arc: Entity<A>, diameter: f64) -> Self {
+        Self { arc, diameter }
     }
 }
 
@@ -37,7 +37,7 @@ where
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc_a.as_handle()])
+        Some(vec![self.arc.as_handle()])
     }
 
     fn val(&self) -> Option<f64> {
