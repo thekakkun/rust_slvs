@@ -72,11 +72,11 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch<T: AsEntityData>(
+    pub fn sketch<E: AsEntityData>(
         &mut self,
         group: &Group,
-        entity_data: T,
-    ) -> Result<Entity<T>, &'static str> {
+        entity_data: E,
+    ) -> Result<Entity<E>, &'static str> {
         self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
@@ -113,11 +113,11 @@ impl System {
         })
     }
 
-    pub fn constrain<T: AsConstraintData>(
+    pub fn constrain<C: AsConstraintData>(
         &mut self,
         group: &Group,
-        constraint_data: T,
-    ) -> Result<Constraint<T>, &'static str> {
+        constraint_data: C,
+    ) -> Result<Constraint<C>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
@@ -277,10 +277,10 @@ impl System {
     //     })
     // }
 
-    pub fn constraint_data<T: AsConstraintData + 'static>(
+    pub fn constraint_data<C: AsConstraintData + 'static>(
         &self,
-        constraint: &Constraint<T>,
-    ) -> Result<T, &'static str> {
+        constraint: &Constraint<C>,
+    ) -> Result<C, &'static str> {
         self.slvs_constraint(constraint.as_handle())
             .map(|slvs_constraint| {
                 let workplane = if slvs_constraint.wrkpl == 0 {
@@ -369,7 +369,7 @@ impl System {
                     _ => panic!("Unknown constraint type: {}", slvs_constraint.type_),
                 };
 
-                *some_constraint_data.downcast::<T>().unwrap()
+                *some_constraint_data.downcast::<C>().unwrap()
             })
     }
 }
@@ -386,10 +386,11 @@ impl System {
         Ok(())
     }
 
-    pub fn update_entity<T, F>(&mut self, entity: &Entity<T>, f: F) -> Result<T, &'static str>
+    pub fn update_entity<E, T, F>(&mut self, entity: &Entity<E>, f: F) -> Result<E, &'static str>
     where
-        T: AsEntityData + FromSlvsEntity,
-        F: FnOnce(&mut T),
+        E: FromSlvsEntity<T>,
+        T: AsTarget,
+        F: FnOnce(&mut E),
     {
         let mut entity_data = self.entity_data(entity)?;
 
@@ -454,14 +455,14 @@ impl System {
     //     Ok(entity_data)
     // }
 
-    pub fn update_constraint<T, F>(
+    pub fn update_constraint<C, F>(
         &mut self,
-        constraint: &Constraint<T>,
+        constraint: &Constraint<C>,
         f: F,
-    ) -> Result<T, &'static str>
+    ) -> Result<C, &'static str>
     where
-        T: AsConstraintData + 'static,
-        F: FnOnce(&mut T),
+        C: AsConstraintData + 'static,
+        F: FnOnce(&mut C),
     {
         let mut constraint_data = self.constraint_data(constraint)?;
 
@@ -503,10 +504,11 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<T: AsEntityData + FromSlvsEntity>(
-        &mut self,
-        entity: Entity<T>,
-    ) -> Result<T, &'static str> {
+    pub fn delete_entity<E, T>(&mut self, entity: Entity<E>) -> Result<E, &'static str>
+    where
+        E: FromSlvsEntity<T>,
+        T: AsTarget,
+    {
         let entity_data = self.entity_data(&entity)?;
         let ix = self.entity_ix(entity.as_handle())?;
         let deleted_entity = self.entities.list.remove(ix);
@@ -518,10 +520,10 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<T: AsConstraintData + 'static>(
+    pub fn delete_constraint<C: AsConstraintData + 'static>(
         &mut self,
-        constraint: Constraint<T>,
-    ) -> Result<T, &'static str> {
+        constraint: Constraint<C>,
+    ) -> Result<C, &'static str> {
         let constraint_data = self.constraint_data(&constraint)?;
 
         let ix = self.constraint_ix(constraint.as_handle())?;
@@ -580,7 +582,7 @@ pub struct SolveFail {
 }
 
 impl SolveFail {
-    pub fn constraint_did_fail<T: AsConstraintData>(&self, constraint: &Constraint<T>) -> bool {
+    pub fn constraint_did_fail<C: AsConstraintData>(&self, constraint: &Constraint<C>) -> bool {
         self.failed_constraints.contains(&constraint.as_handle())
     }
 }

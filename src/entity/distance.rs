@@ -48,12 +48,6 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
     }
 }
 
-impl<T: AsTarget> FromSlvsEntity<T> for Distance<T> {
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
-    }
-}
-
 impl FromSlvsEntity<Workplane> for Distance<Workplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
@@ -61,6 +55,10 @@ impl FromSlvsEntity<Workplane> for Distance<Workplane> {
             val: 0.0,
             phantom: PhantomData,
         }
+    }
+
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.val = vals[0]
     }
 }
 
@@ -71,5 +69,9 @@ impl FromSlvsEntity<In3d> for Distance<In3d> {
             val: 0.0,
             phantom: PhantomData,
         }
+    }
+
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.val = vals[0]
     }
 }
