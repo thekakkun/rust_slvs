@@ -79,7 +79,7 @@ impl FromSlvsEntity<OnWorkplane> for Cubic<OnWorkplane> {
     }
 }
 
-impl<T: AsTarget> FromSlvsEntity<T> for Cubic<T> {
+impl FromSlvsEntity<In3d> for Cubic<In3d> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: None,

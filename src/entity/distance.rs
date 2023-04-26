@@ -48,7 +48,7 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
     }
 }
 
-impl FromSlvsEntity<Workplane> for Distance<Workplane> {
+impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: Some(Entity::new(slvs_entity.wrkpl)),

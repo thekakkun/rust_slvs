@@ -18,7 +18,7 @@ use bindings::{
     SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
     SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
 };
-use bindings::{Slvs_Entity, Slvs_hEntity};
+use bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_3D};
 use bindings::{Slvs_Param, Slvs_hParam};
 use bindings::{
     Slvs_Solve, Slvs_System, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
@@ -163,13 +163,13 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn entity_data<E, T>(&self, entity: &Entity<T>) -> Result<T, &'static str>
+    pub fn entity_data<E, T>(&self, entity: &Entity<E>) -> Result<E, &'static str>
     where
         E: FromSlvsEntity<T>,
         T: AsTarget,
     {
         let slvs_entity = self.slvs_entity(entity.as_handle())?;
-        let mut entity_data = T::from(*slvs_entity);
+        let mut entity_data = E::from(*slvs_entity);
 
         let param_vals: Vec<_> = slvs_entity
             .param
