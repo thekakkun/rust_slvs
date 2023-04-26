@@ -7,11 +7,11 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Workplane {
     pub origin: Entity<Point<In3d>>,
-    pub normal: Entity<Normal<In3d>>,
+    pub normal: Entity<Normal>,
 }
 
 impl Workplane {
-    pub fn new(origin: Entity<Point<In3d>>, normal: Entity<Normal<In3d>>) -> Self {
+    pub fn new(origin: Entity<Point<In3d>>, normal: Entity<Normal>) -> Self {
         Self { origin, normal }
     }
 }

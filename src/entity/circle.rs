@@ -1,4 +1,4 @@
-use super::{AsArc, AsEntityData, AsNormal, Distance, Entity, FromSlvsEntity, Point, Workplane};
+use super::{AsArc, AsEntityData, Distance, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CIRCLE},
     element::{AsHandle, AsTarget},
@@ -6,19 +6,19 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Circle<T: AsTarget, N: AsNormal> {
+pub struct Circle<T: AsTarget> {
     pub workplane: Option<Entity<Workplane>>,
     pub center: Entity<Point<T>>,
     pub radius: Entity<Distance<T>>,
-    pub normal: Entity<N>,
+    pub normal: Entity<Normal>,
 }
 
-impl<N: AsNormal> Circle<OnWorkplane, N> {
+impl Circle<OnWorkplane> {
     pub fn new(
         workplane: Entity<Workplane>,
         center: Entity<Point<OnWorkplane>>,
         radius: Entity<Distance<OnWorkplane>>,
-        normal: Entity<N>,
+        normal: Entity<Normal>,
     ) -> Self {
         Self {
             workplane: Some(workplane),
@@ -29,11 +29,11 @@ impl<N: AsNormal> Circle<OnWorkplane, N> {
     }
 }
 
-impl<N: AsNormal> Circle<In3d, N> {
+impl Circle<In3d> {
     pub fn new(
         center: Entity<Point<In3d>>,
         radius: Entity<Distance<In3d>>,
-        normal: Entity<N>,
+        normal: Entity<Normal>,
     ) -> Self {
         Self {
             workplane: None,
@@ -44,7 +44,7 @@ impl<N: AsNormal> Circle<In3d, N> {
     }
 }
 
-impl<T: AsTarget, N: AsNormal> AsEntityData for Circle<T, N> {
+impl<T: AsTarget> AsEntityData for Circle<T> {
     fn type_(&self) -> i32 {
         SLVS_E_CIRCLE as _
     }
@@ -66,9 +66,9 @@ impl<T: AsTarget, N: AsNormal> AsEntityData for Circle<T, N> {
     }
 }
 
-impl<T: AsTarget, N: AsNormal> AsArc for Circle<T, N> {}
+impl<T: AsTarget> AsArc for Circle<T> {}
 
-impl<N: AsNormal> FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane, N> {
+impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: Some(Entity::new(slvs_entity.wrkpl)),
@@ -79,7 +79,7 @@ impl<N: AsNormal> FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane, N> {
     }
 }
 
-impl<N: AsNormal> FromSlvsEntity<In3d> for Circle<In3d, N> {
+impl FromSlvsEntity<In3d> for Circle<In3d> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: None,

@@ -8,7 +8,7 @@ use crate::{
 mod point;
 pub use point::{Coords, Point};
 mod normal;
-pub use normal::{Normal, NormalDef};
+pub use normal::Normal;
 mod distance;
 pub use distance::Distance;
 mod workplane;
@@ -48,7 +48,7 @@ pub trait FromSlvsEntity<T: AsTarget>: AsEntityData {
 
 pub trait AsArc: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
-pub trait AsNormal: AsEntityData {}
+// pub trait AsNormal: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]

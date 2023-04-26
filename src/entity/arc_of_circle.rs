@@ -1,25 +1,25 @@
-use super::{AsArc, AsEntityData, AsNormal, Entity, FromSlvsEntity, Point, Workplane};
+use super::{AsArc, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct ArcOfCircle<N: AsNormal> {
+pub struct ArcOfCircle {
     pub workplane: Entity<Workplane>,
     pub center: Entity<Point<OnWorkplane>>,
     pub arc_begin: Entity<Point<OnWorkplane>>,
     pub arc_end: Entity<Point<OnWorkplane>>,
-    pub normal: Entity<N>,
+    pub normal: Entity<Normal>,
 }
 
-impl<N: AsNormal> ArcOfCircle<N> {
+impl ArcOfCircle {
     pub fn new(
         workplane: Entity<Workplane>,
         center: Entity<Point<OnWorkplane>>,
         arc_begin: Entity<Point<OnWorkplane>>,
         arc_end: Entity<Point<OnWorkplane>>,
-        normal: Entity<N>,
+        normal: Entity<Normal>,
     ) -> Self {
         Self {
             workplane,
@@ -31,9 +31,9 @@ impl<N: AsNormal> ArcOfCircle<N> {
     }
 }
 
-impl<N: AsNormal> AsArc for ArcOfCircle<N> {}
+impl AsArc for ArcOfCircle {}
 
-impl<N: AsNormal> AsEntityData for ArcOfCircle<N> {
+impl AsEntityData for ArcOfCircle {
     fn type_(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
     }
@@ -54,7 +54,7 @@ impl<N: AsNormal> AsEntityData for ArcOfCircle<N> {
     }
 }
 
-impl<N: AsNormal> FromSlvsEntity<OnWorkplane> for ArcOfCircle<N> {
+impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: Entity::new(slvs_entity.wrkpl),

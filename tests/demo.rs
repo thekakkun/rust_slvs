@@ -70,7 +70,7 @@ fn example_2d() {
     let normal = sys
         .sketch(
             &g1,
-            Normal::<In3d>::new(make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0])),
+            Normal::new_in_3d(make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0])),
         )
         .expect("normal created");
     let workplane = sys
@@ -126,12 +126,7 @@ fn example_2d() {
     let circle = sys
         .sketch(
             &g2,
-            Circle::<OnWorkplane, Normal<In3d>>::new(
-                workplane,
-                circle_center,
-                circle_radius,
-                normal,
-            ),
+            Circle::<OnWorkplane>::new(workplane, circle_center, circle_radius, normal),
         )
         .expect("circle created");
 
