@@ -1,5 +1,5 @@
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_C_EQUAL_RADIUS},
+    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_EQUAL_RADIUS},
     element::AsHandle,
     entity::{AsArc, Entity},
 };
@@ -41,5 +41,18 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.arc_a.as_handle(), self.arc_b.as_handle()])
+    }
+}
+
+impl<AA, AB> From<Slvs_Constraint> for EqualRadius<AA, AB>
+where
+    AA: AsArc,
+    AB: AsArc,
+{
+    fn from(value: Slvs_Constraint) -> Self {
+        Self {
+            arc_a: Entity::new(value.entityA),
+            arc_b: Entity::new(value.entityB),
+        }
     }
 }

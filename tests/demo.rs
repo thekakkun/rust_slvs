@@ -126,7 +126,12 @@ fn example_2d() {
     let circle = sys
         .sketch(
             &g2,
-            Circle::<OnWorkplane>::new(workplane, circle_center, circle_radius, normal),
+            Circle::<OnWorkplane, Normal<In3d>>::new(
+                workplane,
+                circle_center,
+                circle_radius,
+                normal,
+            ),
         )
         .expect("circle created");
 

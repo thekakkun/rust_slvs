@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
+    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_PT_DISTANCE},
     element::AsHandle,
     entity::{AsPoint, Entity, Workplane},
 };
@@ -56,5 +56,23 @@ where
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
+    }
+}
+
+impl<PA, PB> From<Slvs_Constraint> for PtPtDistance<PA, PB>
+where
+    PA: AsPoint,
+    PB: AsPoint,
+{
+    fn from(value: Slvs_Constraint) -> Self {
+        Self {
+            point_a: Entity::new(value.ptA),
+            point_b: Entity::new(value.ptB),
+            distance: value.valA,
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(Entity::new(h)),
+            },
+        }
     }
 }

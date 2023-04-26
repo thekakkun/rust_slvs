@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_C_VERTICAL},
+    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_VERTICAL},
     element::AsHandle,
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
@@ -52,31 +52,37 @@ where
     }
 }
 
+impl<PA, PB> From<Slvs_Constraint> for PointsVertical<PA, PB>
+where
+    PA: AsPoint,
+    PB: AsPoint,
+{
+    fn from(value: Slvs_Constraint) -> Self {
+        Self {
+            workplane: Entity::new(value.wrkpl),
+            point_a: Entity::new(value.ptA),
+            point_b: Entity::new(value.ptB),
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // From line segment
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct LineVertical<L>
-where
-    L: AsLineSegment,
-{
+pub struct LineVertical<L: AsLineSegment> {
     workplane: Entity<Workplane>,
     line: Entity<L>,
 }
 
-impl<L> LineVertical<L>
-where
-    L: AsLineSegment,
-{
+impl<L: AsLineSegment> LineVertical<L> {
     pub fn new(workplane: Entity<Workplane>, line: Entity<L>) -> Self {
         Self { workplane, line }
     }
 }
-impl<L> AsConstraintData for LineVertical<L>
-where
-    L: AsLineSegment,
-{
+
+impl<L: AsLineSegment> AsConstraintData for LineVertical<L> {
     fn type_(&self) -> i32 {
         SLVS_C_VERTICAL as _
     }
@@ -87,5 +93,14 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.as_handle()])
+    }
+}
+
+impl<L: AsLineSegment> From<Slvs_Constraint> for LineVertical<L> {
+    fn from(value: Slvs_Constraint) -> Self {
+        Self {
+            workplane: Entity::new(value.wrkpl),
+            line: Entity::new(value.entityA),
+        }
     }
 }

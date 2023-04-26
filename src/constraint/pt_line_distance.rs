@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
+    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
     element::AsHandle,
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
@@ -60,5 +60,23 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.as_handle()])
+    }
+}
+
+impl<P, L> From<Slvs_Constraint> for PtLineDistance<P, L>
+where
+    P: AsPoint,
+    L: AsLineSegment,
+{
+    fn from(value: Slvs_Constraint) -> Self {
+        Self {
+            point: Entity::new(value.ptA),
+            line: Entity::new(value.entityA),
+            distance: value.valA,
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(Entity::new(h)),
+            },
+        }
     }
 }

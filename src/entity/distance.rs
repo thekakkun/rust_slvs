@@ -63,7 +63,7 @@ impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
 }
 
 impl FromSlvsEntity<In3d> for Distance<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+    fn from(_slvs_entity: Slvs_Entity) -> Self {
         Self {
             workplane: None,
             val: 0.0,

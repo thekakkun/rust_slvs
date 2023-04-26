@@ -74,7 +74,7 @@ impl FromSlvsEntity<OnWorkplane> for Normal<OnWorkplane> {
 }
 
 impl FromSlvsEntity<In3d> for Normal<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+    fn from(_slvs_entity: Slvs_Entity) -> Self {
         Self {
             data: NormalDef::In3d {
                 w: 0.0,
