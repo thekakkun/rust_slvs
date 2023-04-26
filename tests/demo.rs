@@ -1,6 +1,6 @@
 use slvs::{
     constraint::{Diameter, EqualRadius, LineVertical, PtLineDistance, PtPtDistance},
-    entity::{ArcOfCircle, Circle, Coords, Distance, LineSegment, Normal, Point, Workplane},
+    entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
     make_quaternion, FailReason, In3d, OnWorkplane, System,
 };
 
@@ -38,12 +38,11 @@ fn example_3d() {
     sys.clear_dragged();
 
     if let Ok(ok_result) = result {
-        if let Coords::In3d { x, y, z } = sys.entity_data(&p1).expect("p1 should exist").coords {
-            println!("okay; now at ({:.3} {:.3} {:.3})", x, y, z);
-        }
-        if let Coords::In3d { x, y, z } = sys.entity_data(&p2).expect("p2 should exist").coords {
-            println!("             ({:.3} {:.3} {:.3})", x, y, z);
-        }
+        let In3d(x1, y1, z1) = sys.entity_data(&p1).expect("p1 should exist").coords;
+        println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);
+
+        let In3d(x2, y2, z2) = sys.entity_data(&p2).expect("p2 should exist").coords;
+        println!("             ({:.3} {:.3} {:.3})", x2, y2, z2);
 
         println!("{} DOF", ok_result.dof);
     } else {
@@ -162,62 +161,39 @@ fn example_2d() {
 
     if let Ok(ok_result) = result {
         println!("solved okay");
-        if let (Coords::OnWorkplane { u: u1, v: v1 }, Coords::OnWorkplane { u: u2, v: v2 }) = (
-            sys.entity_data(&p1).expect("data for p1 found").coords,
-            sys.entity_data(&p2).expect("data for p1 found").coords,
-        ) {
-            println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
-        }
+        let OnWorkplane(u1, v1) = sys.entity_data(&p1).expect("data for p1 found").coords;
+        let OnWorkplane(u2, v2) = sys.entity_data(&p2).expect("data for p1 found").coords;
+        println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
 
-        if let (
-            Coords::OnWorkplane {
-                u: arc_center_u,
-                v: arc_center_v,
-            },
-            Coords::OnWorkplane {
-                u: arc_start_u,
-                v: arc_start_v,
-            },
-            Coords::OnWorkplane {
-                u: arc_finish_u,
-                v: arc_finish_v,
-            },
-        ) = (
-            sys.entity_data(&arc_center)
-                .expect("data for arc_center found")
-                .coords,
-            sys.entity_data(&arc_start)
-                .expect("data for arc_start found")
-                .coords,
-            sys.entity_data(&arc_finish)
-                .expect("data for arc_finish found")
-                .coords,
-        ) {
-            println!(
-                "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
-                arc_center_u, arc_center_v, arc_start_u, arc_start_v, arc_finish_u, arc_finish_v
-            );
-        }
+        let OnWorkplane(arc_center_u, arc_center_v) = sys
+            .entity_data(&arc_center)
+            .expect("data for arc_center found")
+            .coords;
+        let OnWorkplane(arc_start_u, arc_start_v) = sys
+            .entity_data(&arc_start)
+            .expect("data for arc_start found")
+            .coords;
+        let OnWorkplane(arc_finish_u, arc_finish_v) = sys
+            .entity_data(&arc_finish)
+            .expect("data for arc_finish found")
+            .coords;
+        println!(
+            "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
+            arc_center_u, arc_center_v, arc_start_u, arc_start_v, arc_finish_u, arc_finish_v
+        );
 
-        if let (
-            Coords::OnWorkplane {
-                u: center_u,
-                v: center_v,
-            },
-            radius,
-        ) = (
-            sys.entity_data(&circle_center)
-                .expect("data for circle_center found")
-                .coords,
-            sys.entity_data(&circle_radius)
-                .expect("data for circle_radius found")
-                .val,
-        ) {
-            println!(
-                "circle center ({:.3} {:.3}) radius {:.3}",
-                center_u, center_v, radius
-            );
-        }
+        let OnWorkplane(center_u, center_v) = sys
+            .entity_data(&circle_center)
+            .expect("data for circle_center found")
+            .coords;
+        let radius = sys
+            .entity_data(&circle_radius)
+            .expect("data for circle_radius found")
+            .val;
+        println!(
+            "circle center ({:.3} {:.3}) radius {:.3}",
+            center_u, center_v, radius
+        );
 
         println!("{} DOF", ok_result.dof);
     } else if let Err(fail_result) = result {

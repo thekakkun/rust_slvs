@@ -1,7 +1,4 @@
-use slvs::{
-    entity::{Coords, Point},
-    In3d, System,
-};
+use slvs::{entity::Point, In3d, System};
 
 #[test]
 fn add_entity() {
@@ -17,11 +14,10 @@ fn add_entity() {
         .expect("point in 3d created");
 
     let p_data = sys.entity_data(&p).expect("point found");
-    if let Coords::In3d { x, y, z } = p_data.coords {
-        assert_eq!(x, p_x);
-        assert_eq!(y, p_y);
-        assert_eq!(z, p_z);
-    }
+    let In3d(x, y, z) = p_data.coords;
+    assert_eq!(x, p_x);
+    assert_eq!(y, p_y);
+    assert_eq!(z, p_z);
 }
 
 #[test]
@@ -39,17 +35,12 @@ fn update_entity() {
 
     let updated_p_data = sys
         .update_entity(&p, |mut entity| {
-            entity.coords = Coords::In3d {
-                x: updated_p_x,
-                y: updated_p_y,
-                z: updated_p_z,
-            }
+            entity.coords = In3d(updated_p_x, updated_p_y, updated_p_z)
         })
         .expect("should get updated point data");
 
-    if let Coords::In3d { x, y, z } = updated_p_data.coords {
-        assert_eq!(x, updated_p_x);
-        assert_eq!(y, updated_p_y);
-        assert_eq!(z, updated_p_z);
-    }
+    let In3d(x, y, z) = updated_p_data.coords;
+    assert_eq!(x, updated_p_x);
+    assert_eq!(y, updated_p_y);
+    assert_eq!(z, updated_p_z);
 }

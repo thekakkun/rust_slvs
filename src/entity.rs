@@ -6,7 +6,7 @@ use crate::{
 };
 
 mod point;
-pub use point::{Coords, Point};
+pub use point::Point;
 mod normal;
 pub use normal::Normal;
 mod distance;
