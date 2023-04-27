@@ -158,9 +158,15 @@ impl System {
         let param_vals: Vec<_> = slvs_entity
             .param
             .iter()
-            .filter(|&param_h| *param_h != 0)
-            .filter_map(|&param_h| self.slvs_param(param_h).ok())
-            .map(|&slvs_param| slvs_param.val)
+            .filter_map(|&param_h| {
+                if param_h == 0 {
+                    None
+                } else if let Ok(slvs_param) = self.slvs_param(param_h) {
+                    Some(slvs_param.val)
+                } else {
+                    None
+                }
+            })
             .collect();
 
         if !param_vals.is_empty() {

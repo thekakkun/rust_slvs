@@ -48,7 +48,6 @@ pub trait FromSlvsEntity<T: AsTarget>: AsEntityData {
 
 pub trait AsArc: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
-// pub trait AsNormal: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
