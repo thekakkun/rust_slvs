@@ -1,4 +1,4 @@
-use slvs::{constraint::PtPtDistance, entity::Point, FailReason, In3d, System};
+use slvs::{constraint::PtPtDistance, entity::Point, solver::FailReason, In3d, System};
 
 #[test]
 fn inconsistent_constraints() {

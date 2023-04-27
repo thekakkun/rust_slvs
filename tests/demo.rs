@@ -1,7 +1,7 @@
 use slvs::{
     constraint::{Diameter, EqualRadius, LineVertical, PtLineDistance, PtPtDistance},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
-    make_quaternion, FailReason, In3d, OnWorkplane, System,
+    make_quaternion, In3d, OnWorkplane, System, solver::FailReason,
 };
 
 #[test]
