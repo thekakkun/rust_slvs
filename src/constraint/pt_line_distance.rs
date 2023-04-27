@@ -1,7 +1,7 @@
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
-    element::AsHandle,
+    element::AsElementIdentifier,
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
 
@@ -47,7 +47,7 @@ where
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
+        self.workplane.map(|workplane| workplane.handle())
     }
 
     fn val(&self) -> Option<f64> {
@@ -55,11 +55,11 @@ where
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.as_handle()])
+        Some(vec![self.point.handle()])
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.line.as_handle()])
+        Some(vec![self.line.handle()])
     }
 }
 

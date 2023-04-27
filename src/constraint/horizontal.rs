@@ -1,7 +1,7 @@
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_HORIZONTAL},
-    element::AsHandle,
+    element::AsElementIdentifier,
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
 
@@ -44,11 +44,11 @@ where
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.as_handle())
+        Some(self.workplane.handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
+        Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
 
@@ -88,11 +88,11 @@ impl<L: AsLineSegment> AsConstraintData for LineHorizontal<L> {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.as_handle())
+        Some(self.workplane.handle())
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.line.as_handle()])
+        Some(vec![self.line.handle()])
     }
 }
 

@@ -1,7 +1,7 @@
 use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_POINT_IN_2D},
-    element::{AsHandle, AsTarget, In3d, OnWorkplane},
+    element::{AsElementIdentifier, AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -36,7 +36,7 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|w| w.as_handle())
+        self.workplane.map(|w| w.handle())
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {

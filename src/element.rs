@@ -1,11 +1,21 @@
-use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
+use std::fmt::Debug;
 
-pub(super) struct Elements<T> {
+use crate::{
+    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    constraint::AsConstraint,
+    entity::AsEntity,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Storing Slvs_X in sys
+////////////////////////////////////////////////////////////////////////////////
+
+pub(super) struct SlvsElements<T> {
     pub(super) list: Vec<T>,
     pub(super) next_h: u32,
 }
 
-impl<T> Elements<T> {
+impl<T> SlvsElements<T> {
     pub(super) fn new() -> Self {
         Self {
             list: Vec::new(),
@@ -21,26 +31,86 @@ impl<T> Elements<T> {
     }
 }
 
-impl<T> Default for Elements<T> {
+impl<T> Default for SlvsElements<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-pub(super) trait AsHandle {
-    fn as_handle(&self) -> u32;
+////////////////////////////////////////////////////////////////////////////////
+// Storing element identifiers in sys
+////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Default)]
+pub struct Elements {
+    pub groups: Vec<Group>,
+    pub entities: Vec<Box<dyn AsEntity>>,
+    pub constraints: Vec<Box<dyn AsConstraint>>,
 }
+
+impl Elements {
+    pub fn new() -> Self {
+        Self {
+            groups: Vec::new(),
+            entities: Vec::new(),
+            constraints: Vec::new(),
+        }
+    }
+}
+
+impl Debug for dyn AsEntity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Entity: {{handle: {}, type: {}}}",
+            self.handle(),
+            self.type_name()
+        )
+    }
+}
+
+impl Debug for dyn AsConstraint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Constraint: {{handle: {}, type: {}}}",
+            self.handle(),
+            self.type_name()
+        )
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Wrapper for elements with handles
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsElementIdentifier {
+    fn handle(&self) -> u32;
+    fn type_name(&self) -> String;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Group
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Group(pub(super) u32);
 
-impl AsHandle for Group {
-    fn as_handle(&self) -> u32 {
+impl AsElementIdentifier for Group {
+    fn handle(&self) -> u32 {
         self.0
+    }
+
+    fn type_name(&self) -> String {
+        "Group".to_string()
     }
 }
 
-pub trait AsTarget {
+////////////////////////////////////////////////////////////////////////////////
+// Sketch targets (OnWorkplane & In3d)
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsTarget: Copy + Debug {
     fn type_() -> i32;
     fn as_vec(&self) -> Vec<f64>;
 }

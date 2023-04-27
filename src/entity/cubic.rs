@@ -1,7 +1,7 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CUBIC},
-    element::{AsHandle, AsTarget},
+    element::{AsElementIdentifier, AsTarget},
     In3d, OnWorkplane,
 };
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -54,15 +54,15 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
+        self.workplane.map(|workplane| workplane.handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
-            self.start_point.as_handle(),
-            self.start_control.as_handle(),
-            self.end_control.as_handle(),
-            self.end_point.as_handle(),
+            self.start_point.handle(),
+            self.start_control.handle(),
+            self.end_control.handle(),
+            self.end_point.handle(),
         ])
     }
 }

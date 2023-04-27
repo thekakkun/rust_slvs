@@ -1,7 +1,7 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, SLVS_E_WORKPLANE},
-    element::{AsHandle, AsTarget, In3d},
+    element::{AsElementIdentifier, AsTarget, In3d},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -26,11 +26,11 @@ impl AsEntityData for Workplane {
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.origin.as_handle()])
+        Some(vec![self.origin.handle()])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
-        Some(self.normal.as_handle())
+        Some(self.normal.handle())
     }
 }
 

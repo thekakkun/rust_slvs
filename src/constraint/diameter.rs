@@ -1,6 +1,6 @@
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_DIAMETER},
-    element::AsHandle,
+    element::AsElementIdentifier,
     entity::{AsArc, Entity},
 };
 
@@ -28,7 +28,7 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc.as_handle()])
+        Some(vec![self.arc.handle()])
     }
 
     fn val(&self) -> Option<f64> {

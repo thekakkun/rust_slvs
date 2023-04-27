@@ -1,7 +1,7 @@
 use super::{AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_LINE_SEGMENT},
-    element::{AsHandle, AsTarget},
+    element::{AsElementIdentifier, AsTarget},
     In3d, OnWorkplane,
 };
 
@@ -26,20 +26,6 @@ impl LineSegment<OnWorkplane> {
     }
 }
 
-impl<T: AsTarget> AsEntityData for LineSegment<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_LINE_SEGMENT as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.as_handle(), self.point_b.as_handle()])
-    }
-}
-
 impl LineSegment<In3d> {
     pub fn new(point_a: Entity<Point<In3d>>, point_b: Entity<Point<In3d>>) -> Self {
         Self {
@@ -47,6 +33,20 @@ impl LineSegment<In3d> {
             point_a,
             point_b,
         }
+    }
+}
+
+impl<T: AsTarget> AsEntityData for LineSegment<T> {
+    fn type_(&self) -> i32 {
+        SLVS_E_LINE_SEGMENT as _
+    }
+
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
 

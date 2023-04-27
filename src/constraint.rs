@@ -1,6 +1,6 @@
-use std::marker::PhantomData;
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
-use crate::{bindings::Slvs_hEntity, element::AsHandle};
+use crate::{bindings::Slvs_hEntity, element::AsElementIdentifier};
 
 // mod points_coincident     ;
 mod pt_pt_distance;
@@ -47,7 +47,8 @@ pub use equal_radius::EqualRadius;
 // mod arc_arc_difference    ;
 // mod arc_line_difference   ;
 
-pub trait AsConstraintData {
+pub trait AsConstraint: AsElementIdentifier {}
+pub trait AsConstraintData: Copy + Debug {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
@@ -80,8 +81,21 @@ impl<T: AsConstraintData> Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData> AsHandle for Constraint<T> {
-    fn as_handle(&self) -> u32 {
+impl<T: AsConstraintData> AsConstraint for Constraint<T> {}
+
+impl<T: AsConstraintData> AsElementIdentifier for Constraint<T> {
+    fn handle(&self) -> u32 {
         self.handle
+    }
+
+    fn type_name(&self) -> String {
+        type_name::<T>()
+            .split_inclusive(&['<', ','][..])
+            .map(|part| match part.rsplit_once("::") {
+                Some((_, type_name)) => type_name,
+                None => part,
+            })
+            .collect::<Vec<_>>()
+            .join("")
     }
 }

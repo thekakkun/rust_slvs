@@ -1,7 +1,7 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{AsHandle, OnWorkplane},
+    element::{AsElementIdentifier, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -31,7 +31,7 @@ impl AsEntityData for Normal {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
-            Self::OnWorkplane(workplane) => Some(workplane.as_handle()),
+            Self::OnWorkplane(workplane) => Some(workplane.handle()),
             Self::In3d { .. } => None,
         }
     }

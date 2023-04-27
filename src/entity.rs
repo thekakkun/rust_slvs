@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity},
-    element::{AsHandle, AsTarget},
+    element::{AsElementIdentifier, AsTarget},
 };
 
 mod point;
@@ -22,7 +22,9 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntityData {
+pub trait AsEntity: AsElementIdentifier {}
+
+pub trait AsEntityData: Copy + Debug {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
@@ -65,8 +67,21 @@ impl<T: AsEntityData> Entity<T> {
     }
 }
 
-impl<T: AsEntityData> AsHandle for Entity<T> {
-    fn as_handle(&self) -> u32 {
+impl<T: AsEntityData> AsElementIdentifier for Entity<T> {
+    fn handle(&self) -> u32 {
         self.handle
     }
+
+    fn type_name(&self) -> String {
+        type_name::<T>()
+            .split_inclusive(&['<', ','][..])
+            .map(|part| match part.rsplit_once("::") {
+                Some((_, type_name)) => type_name,
+                None => part,
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    }
 }
+
+impl<T: AsEntityData> AsEntity for Entity<T> {}

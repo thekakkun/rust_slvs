@@ -1,7 +1,7 @@
 use super::{AsArc, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
-    element::{AsHandle, OnWorkplane},
+    element::{AsElementIdentifier, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -39,18 +39,18 @@ impl AsEntityData for ArcOfCircle {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.as_handle())
+        Some(self.workplane.handle())
     }
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
-            self.center.as_handle(),
-            self.arc_begin.as_handle(),
-            self.arc_end.as_handle(),
+            self.center.handle(),
+            self.arc_begin.handle(),
+            self.arc_end.handle(),
         ])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
-        Some(self.normal.as_handle())
+        Some(self.normal.handle())
     }
 }
 

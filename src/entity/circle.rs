@@ -1,7 +1,9 @@
+use std::fmt::Debug;
+
 use super::{AsArc, AsEntityData, Distance, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CIRCLE},
-    element::{AsHandle, AsTarget},
+    element::{AsElementIdentifier, AsTarget},
     In3d, OnWorkplane,
 };
 
@@ -44,29 +46,29 @@ impl Circle<In3d> {
     }
 }
 
+impl<T: AsTarget> AsArc for Circle<T> {}
+
 impl<T: AsTarget> AsEntityData for Circle<T> {
     fn type_(&self) -> i32 {
         SLVS_E_CIRCLE as _
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
+        self.workplane.map(|workplane| workplane.handle())
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.center.as_handle()])
+        Some(vec![self.center.handle()])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
-        Some(self.normal.as_handle())
+        Some(self.normal.handle())
     }
 
     fn distance(&self) -> Option<Slvs_hEntity> {
-        Some(self.radius.as_handle())
+        Some(self.radius.handle())
     }
 }
-
-impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {

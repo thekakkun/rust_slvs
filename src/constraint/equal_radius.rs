@@ -1,6 +1,6 @@
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_EQUAL_RADIUS},
-    element::AsHandle,
+    element::AsElementIdentifier,
     entity::{AsArc, Entity},
 };
 
@@ -40,7 +40,7 @@ where
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc_a.as_handle(), self.arc_b.as_handle()])
+        Some(vec![self.arc_a.handle(), self.arc_b.handle()])
     }
 }
 

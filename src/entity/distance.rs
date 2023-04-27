@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_DISTANCE},
-    element::{AsHandle, AsTarget},
+    element::{AsElementIdentifier, AsTarget},
     In3d, OnWorkplane,
 };
 
@@ -40,7 +40,7 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.as_handle())
+        self.workplane.map(|workplane| workplane.handle())
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
