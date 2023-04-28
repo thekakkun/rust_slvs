@@ -43,7 +43,7 @@ impl System {
             entities: Vec::new(),
             constraints: Vec::new(),
             calculate_faileds: true,
-            slvs: SlvsElements::default(),
+            slvs: SlvsElements::new(),
             dragged: [0; 4],
         }
     }

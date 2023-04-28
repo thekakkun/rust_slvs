@@ -17,12 +17,23 @@ pub trait TypeInfo: Debug {
 // Storing Slvs_X in sys
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub(super) struct SlvsElements {
     pub(super) groups: SlvsElementList<Group>,
     pub(super) params: SlvsElementList<Slvs_Param>,
     pub(super) entities: SlvsElementList<Slvs_Entity>,
     pub(super) constraints: SlvsElementList<Slvs_Constraint>,
+}
+
+impl SlvsElements {
+    pub(super) fn new() -> Self {
+        Self {
+            groups: SlvsElementList::new(),
+            params: SlvsElementList::new(),
+            entities: SlvsElementList::new(),
+            constraints: SlvsElementList::new(),
+        }
+    }
 }
 
 #[derive(Debug)]
