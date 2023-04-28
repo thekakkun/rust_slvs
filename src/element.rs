@@ -1,10 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{
-    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    constraint::AsConstraint,
-    entity::AsEntity,
-};
+use crate::{constraint::AsConstraint, entity::AsEntity, group::Group};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Storing Slvs_X in sys
@@ -41,7 +37,7 @@ impl<T> Default for SlvsElements<T> {
 // Storing element identifiers in sys
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Default)]
+#[derive(Default, Debug)]
 pub struct Elements {
     pub groups: Vec<Group>,
     pub entities: Vec<Box<dyn AsEntity>>,
@@ -58,97 +54,38 @@ impl Elements {
     }
 }
 
-impl Debug for dyn AsEntity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Entity: {{handle: {}, type: {}}}",
-            self.handle(),
-            self.type_name()
-        )
+// impl Debug for dyn AsEntity {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(
+//             f,
+//             "Entity: {{handle: {}, type: {}}}",
+//             self.handle(),
+//             self
+//         )
+//     }
+// }
+
+// impl Debug for dyn AsConstraint {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(
+//             f,
+//             "Constraint: {{handle: {}, type: {}}}",
+//             self.handle(),
+//             self.type_name()
+//         )
+//     }
+// }
+
+impl Clone for Box<dyn AsConstraint> {
+    fn clone(&self) -> Self {
+        self.clone_dyn()
     }
 }
 
-impl Debug for dyn AsConstraint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Constraint: {{handle: {}, type: {}}}",
-            self.handle(),
-            self.type_name()
-        )
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Wrapper for elements with handles
-////////////////////////////////////////////////////////////////////////////////
-
-pub trait AsElementIdentifier {
+pub trait AsHandle: Debug {
     fn handle(&self) -> u32;
-    fn type_name(&self) -> String;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Group
-////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Group(pub(super) u32);
-
-impl AsElementIdentifier for Group {
-    fn handle(&self) -> u32 {
-        self.0
-    }
-
-    fn type_name(&self) -> String {
-        "Group".to_string()
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Sketch targets (OnWorkplane & In3d)
-////////////////////////////////////////////////////////////////////////////////
-
-pub trait AsTarget: Copy + Debug {
-    fn type_() -> i32;
-    fn as_vec(&self) -> Vec<f64>;
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct OnWorkplane(pub f64, pub f64);
-
-impl AsTarget for OnWorkplane {
-    fn type_() -> i32 {
-        SLVS_E_POINT_IN_2D as _
-    }
-
-    fn as_vec(&self) -> Vec<f64> {
-        vec![self.0, self.1]
-    }
-}
-
-impl From<Vec<f64>> for OnWorkplane {
-    fn from(value: Vec<f64>) -> Self {
-        Self(value[0], value[1])
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct In3d(pub f64, pub f64, pub f64);
-
-impl AsTarget for In3d {
-    fn type_() -> i32 {
-        SLVS_E_POINT_IN_3D as _
-    }
-
-    fn as_vec(&self) -> Vec<f64> {
-        vec![self.0, self.1, self.2]
-    }
-}
-
-impl From<Vec<f64>> for In3d {
-    fn from(value: Vec<f64>) -> Self {
-        Self(value[0], value[1], value[2])
-    }
+pub trait TypeInfo {
+    fn type_of() -> String;
 }

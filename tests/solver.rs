@@ -1,4 +1,4 @@
-use slvs::{constraint::PtPtDistance, entity::Point, solver::FailReason, In3d, System};
+use slvs::{constraint::PtPtDistance, entity::Point, solver::FailReason, target::In3d, System};
 
 #[test]
 fn inconsistent_constraints() {
@@ -25,6 +25,7 @@ fn inconsistent_constraints() {
 
     if let Err(fail_result) = solve_result {
         assert_eq!(fail_result.reason, FailReason::Inconsistent);
+        println!("{:?}", fail_result.failed_constraints);
         assert!(fail_result.constraint_did_fail(&c1));
         assert!(fail_result.constraint_did_fail(&c2));
     }

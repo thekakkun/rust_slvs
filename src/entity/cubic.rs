@@ -1,8 +1,8 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CUBIC},
-    element::{AsElementIdentifier, AsTarget},
-    In3d, OnWorkplane,
+    element::{AsHandle, TypeInfo},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Cubic<T: AsTarget> {
@@ -64,6 +64,12 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
             self.end_control.handle(),
             self.end_point.handle(),
         ])
+    }
+}
+
+impl<T: AsTarget> TypeInfo for Cubic<T> {
+    fn type_of() -> String {
+        format!("Cubic<{}>", T::type_of())
     }
 }
 

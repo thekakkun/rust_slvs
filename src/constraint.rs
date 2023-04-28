@@ -1,6 +1,9 @@
-use std::{any::type_name, fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
-use crate::{bindings::Slvs_hEntity, element::AsElementIdentifier};
+use crate::{
+    bindings::Slvs_hEntity,
+    element::{AsHandle, TypeInfo},
+};
 
 // mod points_coincident     ;
 mod pt_pt_distance;
@@ -47,8 +50,10 @@ pub use equal_radius::EqualRadius;
 // mod arc_arc_difference    ;
 // mod arc_line_difference   ;
 
-pub trait AsConstraint: AsElementIdentifier {}
-pub trait AsConstraintData: Copy + Debug {
+pub trait AsConstraint: AsHandle {
+    fn clone_dyn(&self) -> Box<dyn AsConstraint>;
+}
+pub trait AsConstraintData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
@@ -66,7 +71,7 @@ pub trait AsConstraintData: Copy + Debug {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Constraint<T: AsConstraintData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
@@ -81,21 +86,25 @@ impl<T: AsConstraintData> Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData> AsConstraint for Constraint<T> {}
+impl<T: AsConstraintData> Debug for Constraint<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Constraint: {{h: {}, type: {}}}",
+            self.handle,
+            T::type_of()
+        )
+    }
+}
 
-impl<T: AsConstraintData> AsElementIdentifier for Constraint<T> {
+impl<T: AsConstraintData + 'static> AsConstraint for Constraint<T> {
+    fn clone_dyn(&self) -> Box<dyn AsConstraint> {
+        Box::new(*self)
+    }
+}
+
+impl<T: AsConstraintData> AsHandle for Constraint<T> {
     fn handle(&self) -> u32 {
         self.handle
-    }
-
-    fn type_name(&self) -> String {
-        type_name::<T>()
-            .split_inclusive(&['<', ','][..])
-            .map(|part| match part.rsplit_once("::") {
-                Some((_, type_name)) => type_name,
-                None => part,
-            })
-            .collect::<Vec<_>>()
-            .join("")
     }
 }

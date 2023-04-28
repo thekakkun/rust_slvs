@@ -1,6 +1,6 @@
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_DIAMETER},
-    element::AsElementIdentifier,
+    element::{AsHandle, TypeInfo},
     entity::{AsArc, Entity},
 };
 
@@ -33,6 +33,12 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
 
     fn val(&self) -> Option<f64> {
         Some(self.diameter)
+    }
+}
+
+impl<A: AsArc> TypeInfo for Diameter<A> {
+    fn type_of() -> String {
+        format!("Diameter< {} >", A::type_of())
     }
 }
 

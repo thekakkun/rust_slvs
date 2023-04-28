@@ -1,8 +1,9 @@
-use std::{any::type_name, fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity},
-    element::{AsElementIdentifier, AsTarget},
+    element::{AsHandle, TypeInfo},
+    target::AsTarget,
 };
 
 mod point;
@@ -22,9 +23,9 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntity: AsElementIdentifier {}
+pub trait AsEntity: AsHandle {}
 
-pub trait AsEntityData: Copy + Debug {
+pub trait AsEntityData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
@@ -52,7 +53,7 @@ pub trait AsArc: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Entity<T: AsEntityData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
@@ -67,20 +68,15 @@ impl<T: AsEntityData> Entity<T> {
     }
 }
 
-impl<T: AsEntityData> AsElementIdentifier for Entity<T> {
+impl<T: AsEntityData> Debug for Entity<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Entity: {{h: {}, type: {}}}", self.handle, T::type_of())
+    }
+}
+
+impl<T: AsEntityData> AsHandle for Entity<T> {
     fn handle(&self) -> u32 {
         self.handle
-    }
-
-    fn type_name(&self) -> String {
-        type_name::<T>()
-            .split_inclusive(&['<', ','][..])
-            .map(|part| match part.rsplit_once("::") {
-                Some((_, type_name)) => type_name,
-                None => part,
-            })
-            .collect::<Vec<_>>()
-            .join("")
     }
 }
 

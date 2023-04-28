@@ -1,7 +1,8 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{AsElementIdentifier, OnWorkplane},
+    element::{AsHandle, TypeInfo},
+    target::OnWorkplane,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -41,6 +42,12 @@ impl AsEntityData for Normal {
             Self::OnWorkplane { .. } => None,
             Self::In3d { w, x, y, z } => Some(vec![*w, *x, *y, *z]),
         }
+    }
+}
+
+impl TypeInfo for Normal {
+    fn type_of() -> String {
+        "Normal".to_string()
     }
 }
 

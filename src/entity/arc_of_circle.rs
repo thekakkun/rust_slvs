@@ -1,7 +1,8 @@
 use super::{AsArc, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
-    element::{AsElementIdentifier, OnWorkplane},
+    element::{AsHandle, TypeInfo},
+    target::OnWorkplane,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -63,5 +64,11 @@ impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
             arc_end: Entity::new(slvs_entity.point[2]),
             normal: Entity::new(slvs_entity.normal),
         }
+    }
+}
+
+impl TypeInfo for ArcOfCircle {
+    fn type_of() -> String {
+        "ArcOfCircle".to_string()
     }
 }

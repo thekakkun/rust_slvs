@@ -2,19 +2,24 @@ use std::iter::zip;
 use std::marker::PhantomData;
 
 mod bindings;
-pub mod solver;
+pub mod target;
+use target::AsTarget;
+
 use bindings::Slvs_hGroup;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 use bindings::{Slvs_Constraint, Slvs_hConstraint};
 use bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_3D};
 use bindings::{Slvs_Param, Slvs_hParam};
 
-pub mod constraint;
-use constraint::{AsConstraintData, Constraint};
+pub mod solver;
 
 mod element;
-use element::{AsElementIdentifier, AsTarget, Elements, SlvsElements};
-pub use element::{Group, In3d, OnWorkplane};
+use element::{AsHandle, Elements, SlvsElements};
+
+pub mod group;
+use group::Group;
+pub mod constraint;
+use constraint::{AsConstraintData, Constraint};
 
 pub mod entity;
 use entity::{AsEntityData, Entity, FromSlvsEntity};

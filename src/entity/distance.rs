@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_DISTANCE},
-    element::{AsElementIdentifier, AsTarget},
-    In3d, OnWorkplane,
+    element::{AsHandle, TypeInfo},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -45,6 +45,12 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(vec![self.val])
+    }
+}
+
+impl<T: AsTarget> TypeInfo for Distance<T> {
+    fn type_of() -> String {
+        format!("Distance<{}>", T::type_of())
     }
 }
 

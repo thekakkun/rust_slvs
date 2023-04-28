@@ -1,8 +1,8 @@
 use super::{AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_LINE_SEGMENT},
-    element::{AsElementIdentifier, AsTarget},
-    In3d, OnWorkplane,
+    element::{AsHandle, TypeInfo},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -51,6 +51,12 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 }
 
 impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
+
+impl<T: AsTarget> TypeInfo for LineSegment<T> {
+    fn type_of() -> String {
+        format!("LineSegment<{}>", T::type_of())
+    }
+}
 
 impl FromSlvsEntity<OnWorkplane> for LineSegment<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {

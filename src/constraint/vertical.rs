@@ -1,7 +1,7 @@
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_VERTICAL},
-    element::AsElementIdentifier,
+    element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
 
@@ -52,6 +52,16 @@ where
     }
 }
 
+impl<PA, PB> TypeInfo for PointsVertical<PA, PB>
+where
+    PA: AsPoint,
+    PB: AsPoint,
+{
+    fn type_of() -> String {
+        format!("Vertical< {}, {} >", PA::type_of(), PB::type_of())
+    }
+}
+
 impl<PA, PB> From<Slvs_Constraint> for PointsVertical<PA, PB>
 where
     PA: AsPoint,
@@ -93,6 +103,12 @@ impl<L: AsLineSegment> AsConstraintData for LineVertical<L> {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.handle()])
+    }
+}
+
+impl<L: AsLineSegment> TypeInfo for LineVertical<L> {
+    fn type_of() -> String {
+        format!("Vertical< {} >", L::type_of())
     }
 }
 

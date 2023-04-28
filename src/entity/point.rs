@@ -1,7 +1,8 @@
 use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_POINT_IN_2D},
-    element::{AsElementIdentifier, AsTarget, In3d, OnWorkplane},
+    element::{AsHandle, TypeInfo},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -41,6 +42,12 @@ impl<T: AsTarget> AsEntityData for Point<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(self.coords.as_vec())
+    }
+}
+
+impl<T: AsTarget> TypeInfo for Point<T> {
+    fn type_of() -> String {
+        format!("Point<{}>", T::type_of())
     }
 }
 
