@@ -17,7 +17,7 @@ pub trait TypeInfo: Debug {
 // Storing Slvs_X in sys
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(super) struct SlvsElements {
     pub(super) groups: SlvsElementList<Group>,
     pub(super) params: SlvsElementList<Slvs_Param>,
@@ -25,6 +25,7 @@ pub(super) struct SlvsElements {
     pub(super) constraints: SlvsElementList<Slvs_Constraint>,
 }
 
+#[derive(Debug)]
 pub(super) struct SlvsElementList<T> {
     pub(super) list: Vec<T>,
     pub(super) next_h: u32,

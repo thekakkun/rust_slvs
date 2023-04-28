@@ -26,6 +26,7 @@ use entity::{AsEntity, AsEntityData, Entity, FromSlvsEntity};
 pub mod constraint;
 use constraint::{AsConstraint, AsConstraintData, Constraint};
 
+#[derive(Debug)]
 pub struct System {
     pub groups: Vec<Group>,
     pub entities: Vec<Box<dyn AsEntity>>,
