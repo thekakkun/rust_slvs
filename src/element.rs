@@ -54,28 +54,6 @@ impl Elements {
     }
 }
 
-// impl Debug for dyn AsEntity {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(
-//             f,
-//             "Entity: {{handle: {}, type: {}}}",
-//             self.handle(),
-//             self
-//         )
-//     }
-// }
-
-// impl Debug for dyn AsConstraint {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(
-//             f,
-//             "Constraint: {{handle: {}, type: {}}}",
-//             self.handle(),
-//             self.type_name()
-//         )
-//     }
-// }
-
 impl Clone for Box<dyn AsConstraint> {
     fn clone(&self) -> Self {
         self.clone_dyn()
@@ -86,6 +64,6 @@ pub trait AsHandle: Debug {
     fn handle(&self) -> u32;
 }
 
-pub trait TypeInfo {
+pub trait TypeInfo: Debug {
     fn type_of() -> String;
 }
