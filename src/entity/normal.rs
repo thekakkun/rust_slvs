@@ -5,7 +5,7 @@ use crate::{
     target::OnWorkplane,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub enum Normal {
     OnWorkplane(Entity<Workplane>),
     In3d { w: f64, x: f64, y: f64, z: f64 },

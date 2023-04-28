@@ -4,7 +4,7 @@ use crate::{
     element::{AsHandle, TypeInfo},
     target::{AsTarget, In3d, OnWorkplane},
 };
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Cubic<T: AsTarget> {
     pub workplane: Option<Entity<Workplane>>,
     pub start_point: Entity<Point<T>>,

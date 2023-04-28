@@ -30,7 +30,7 @@ impl SolveFail {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FailReason {
     Inconsistent,
     DidntConverge,

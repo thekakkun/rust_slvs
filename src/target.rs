@@ -9,7 +9,7 @@ pub trait AsTarget: Copy + TypeInfo {
     fn as_vec(&self) -> Vec<f64>;
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct OnWorkplane(pub f64, pub f64);
 
 impl AsTarget for OnWorkplane {
@@ -34,7 +34,7 @@ impl From<Vec<f64>> for OnWorkplane {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct In3d(pub f64, pub f64, pub f64);
 
 impl AsTarget for In3d {

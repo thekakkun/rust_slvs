@@ -53,7 +53,7 @@ pub trait AsArc: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 pub struct Entity<T: AsEntityData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,

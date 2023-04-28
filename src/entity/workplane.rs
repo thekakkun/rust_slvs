@@ -5,7 +5,7 @@ use crate::{
     target::{AsTarget, In3d},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Workplane {
     pub origin: Entity<Point<In3d>>,
     pub normal: Entity<Normal>,

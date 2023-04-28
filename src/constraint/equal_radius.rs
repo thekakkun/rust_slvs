@@ -1,12 +1,11 @@
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_EQUAL_RADIUS},
     element::{AsHandle, TypeInfo},
     entity::{AsArc, Entity},
 };
 
-use super::AsConstraintData;
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct EqualRadius<AA, AB>
 where
     AA: AsArc,

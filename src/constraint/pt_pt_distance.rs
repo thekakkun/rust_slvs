@@ -5,7 +5,7 @@ use crate::{
     entity::{AsPoint, Entity, Workplane},
 };
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 pub struct PtPtDistance<PA, PB>
 where
     PA: AsPoint,

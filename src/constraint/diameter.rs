@@ -1,12 +1,11 @@
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_DIAMETER},
     element::{AsHandle, TypeInfo},
     entity::{AsArc, Entity},
 };
 
-use super::AsConstraintData;
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Diameter<A: AsArc> {
     arc: Entity<A>,
     diameter: f64,

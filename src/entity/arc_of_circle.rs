@@ -5,7 +5,7 @@ use crate::{
     target::OnWorkplane,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct ArcOfCircle {
     pub workplane: Entity<Workplane>,
     pub center: Entity<Point<OnWorkplane>>,

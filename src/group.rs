@@ -1,6 +1,6 @@
 use crate::element::AsHandle;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug)]
 pub struct Group(pub(super) u32);
 
 impl AsHandle for Group {

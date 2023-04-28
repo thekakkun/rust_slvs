@@ -78,7 +78,7 @@ pub trait AsConstraintData: Copy + Debug + TypeInfo {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 pub struct Constraint<T: AsConstraintData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,

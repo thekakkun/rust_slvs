@@ -9,7 +9,7 @@ use crate::{
 // From two points
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 pub struct PointsHorizontal<PA, PB>
 where
     PA: AsPoint,
@@ -80,7 +80,7 @@ where
 // From line segment
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 pub struct LineHorizontal<L: AsLineSegment> {
     workplane: Entity<Workplane>,
     line: Entity<L>,

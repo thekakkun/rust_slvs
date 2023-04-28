@@ -5,7 +5,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Point<T: AsTarget> {
     pub workplane: Option<Entity<Workplane>>,
     pub coords: T,

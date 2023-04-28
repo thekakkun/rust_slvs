@@ -5,7 +5,7 @@ use crate::{
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct PtLineDistance<P, L>
 where
     P: AsPoint,
