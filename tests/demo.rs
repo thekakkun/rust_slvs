@@ -149,8 +149,8 @@ fn example_2d() {
         .expect("distance from p1 to origin is 15.0 units");
     // And same for the other endpoint; so if you add this constraint then
     // the sketch is overconstrained and will signal an error.
-    sys.constrain(&g2, PtPtDistance::new(p2, origin, 18.0, Some(workplane)))
-        .expect("distance from p2 to origin is 18.0 units");
+    // sys.constrain(&g2, PtPtDistance::new(p2, origin, 18.0, Some(workplane)))
+    //     .expect("distance from p2 to origin is 18.0 units");
 
     // The arc and the circle have equal radius.
     sys.constrain(&g2, EqualRadius::new(arc, circle))

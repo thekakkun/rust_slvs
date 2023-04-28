@@ -62,7 +62,7 @@ impl System {
     }
 
     pub fn solve(&mut self, group: &Group) -> Result<SolveOkay, SolveFail> {
-        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
+        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.slvs.constraints.list.len()];
         let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
 
         unsafe {
@@ -74,7 +74,6 @@ impl System {
                 dof: slvs_system.dof,
                 reason: fail_reason,
                 failed_constraints: self
-                    .elements
                     .constraints
                     .iter()
                     .filter(|constraint| failed_handles.contains(&constraint.handle()))

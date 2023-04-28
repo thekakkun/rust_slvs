@@ -2,48 +2,48 @@ use std::iter::zip;
 use std::marker::PhantomData;
 
 mod bindings;
-pub mod target;
-use target::AsTarget;
-
 use bindings::Slvs_hGroup;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
-use bindings::{Slvs_Constraint, Slvs_hConstraint};
-use bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_3D};
-use bindings::{Slvs_Param, Slvs_hParam};
+use bindings::{
+    Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_hConstraint, Slvs_hEntity, Slvs_hParam,
+    SLVS_E_NORMAL_IN_3D,
+};
 
 pub mod solver;
 
 mod element;
-use element::{AsHandle, Elements, SlvsElements};
+use element::{AsHandle, SlvsElements};
 
 pub mod group;
 use group::Group;
-pub mod constraint;
-use constraint::{AsConstraintData, Constraint};
+
+pub mod target;
+use target::AsTarget;
 
 pub mod entity;
-use entity::{AsEntityData, Entity, FromSlvsEntity};
+use entity::{AsEntity, AsEntityData, Entity, FromSlvsEntity};
+
+pub mod constraint;
+use constraint::{AsConstraint, AsConstraintData, Constraint};
 
 pub struct System {
-    pub elements: Elements,
-    groups: SlvsElements<Group>,
-    params: SlvsElements<Slvs_Param>,
-    entities: SlvsElements<Slvs_Entity>,
-    constraints: SlvsElements<Slvs_Constraint>,
-    dragged: [Slvs_hParam; 4],
+    pub groups: Vec<Group>,
+    pub entities: Vec<Box<dyn AsEntity>>,
+    pub constraints: Vec<Box<dyn AsConstraint>>,
     pub calculate_faileds: bool,
+    slvs: SlvsElements,
+    dragged: [Slvs_hParam; 4],
 }
 
 impl System {
     pub fn new() -> Self {
         Self {
-            elements: Elements::new(),
-            groups: SlvsElements::new(),
-            params: SlvsElements::new(),
-            entities: SlvsElements::new(),
-            constraints: SlvsElements::new(),
-            dragged: [0; 4],
+            groups: Vec::new(),
+            entities: Vec::new(),
+            constraints: Vec::new(),
             calculate_faileds: true,
+            slvs: SlvsElements::default(),
+            dragged: [0; 4],
         }
     }
 }
@@ -54,11 +54,11 @@ impl System {
 
 impl System {
     pub fn add_group(&mut self) -> Group {
-        let new_group = Group(self.groups.get_next_h());
-        self.elements.groups.push(new_group);
+        let new_group = Group(self.slvs.groups.get_next_h());
+        self.groups.push(new_group);
 
-        self.groups.list.push(new_group);
-        self.groups.list.last().cloned().unwrap()
+        self.slvs.groups.list.push(new_group);
+        self.slvs.groups.list.last().cloned().unwrap()
     }
 
     pub fn sketch<E: AsEntityData + 'static>(
@@ -69,7 +69,7 @@ impl System {
         self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
-            self.entities.get_next_h(),
+            self.slvs.entities.get_next_h(),
             group.handle(),
             entity_data.type_(),
         );
@@ -95,13 +95,13 @@ impl System {
             );
         }
 
-        self.entities.list.push(new_slvs_entity);
+        self.slvs.entities.list.push(new_slvs_entity);
 
         let entity: Entity<E> = Entity {
             handle: new_slvs_entity.h,
             phantom: PhantomData,
         };
-        self.elements.entities.push(Box::new(entity));
+        self.entities.push(Box::new(entity));
 
         Ok(entity)
     }
@@ -114,7 +114,7 @@ impl System {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
-            self.constraints.get_next_h(),
+            self.slvs.constraints.get_next_h(),
             group.handle(),
             constraint_data.type_(),
         );
@@ -133,10 +133,10 @@ impl System {
         }
         new_slvs_constraint.set_others(constraint_data.others());
 
-        self.constraints.list.push(new_slvs_constraint);
+        self.slvs.constraints.list.push(new_slvs_constraint);
 
         let constraint = Constraint::new(new_slvs_constraint.h);
-        self.elements.constraints.push(Box::new(constraint));
+        self.constraints.push(Box::new(constraint));
 
         Ok(constraint)
     }
@@ -144,13 +144,13 @@ impl System {
     // Private as user has no reason to create bare param without linking to an entity.
     fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
         let new_param = Slvs_Param {
-            h: self.params.get_next_h(),
+            h: self.slvs.params.get_next_h(),
             group: group.handle(),
             val,
         };
 
-        self.params.list.push(new_param);
-        self.params.list.last().unwrap().h
+        self.slvs.params.list.push(new_param);
+        self.slvs.params.list.last().unwrap().h
     }
 }
 
@@ -282,14 +282,14 @@ impl System {
 impl System {
     pub fn delete_group(&mut self, group: Group) -> Result<Group, &'static str> {
         let ix = self.group_ix(group.handle())?;
-        self.groups.list.remove(ix);
-        self.elements.groups.remove(ix);
+        self.slvs.groups.list.remove(ix);
+        self.groups.remove(ix);
         Ok(group)
     }
 
     fn delete_param(&mut self, h: Slvs_hParam) -> Result<(), &'static str> {
         let ix = self.param_ix(h)?;
-        self.params.list.remove(ix);
+        self.slvs.params.list.remove(ix);
 
         Ok(())
     }
@@ -301,8 +301,8 @@ impl System {
     {
         let entity_data = self.entity_data(&entity)?;
         let ix = self.entity_ix(entity.handle())?;
-        let deleted_entity = self.entities.list.remove(ix);
-        self.elements.entities.remove(ix);
+        let deleted_entity = self.slvs.entities.list.remove(ix);
+        self.entities.remove(ix);
 
         for param_h in deleted_entity.param {
             self.delete_param(param_h)?
@@ -318,8 +318,8 @@ impl System {
         let constraint_data = self.constraint_data(&constraint)?;
 
         let ix = self.constraint_ix(constraint.handle())?;
-        self.constraints.list.remove(ix);
-        self.elements.constraints.remove(ix);
+        self.slvs.constraints.list.remove(ix);
+        self.constraints.remove(ix);
 
         Ok(constraint_data)
     }
@@ -331,14 +331,16 @@ impl System {
 
 impl System {
     fn group_ix(&self, h: Slvs_hGroup) -> Result<usize, &'static str> {
-        self.groups
+        self.slvs
+            .groups
             .list
             .binary_search_by_key(&h, |g| g.handle())
             .map_err(|_| "Specified group not found.")
     }
 
     fn param_ix(&self, h: Slvs_hParam) -> Result<usize, &'static str> {
-        self.params
+        self.slvs
+            .params
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_err(|_| "Specified parameter not found.")
@@ -346,16 +348,17 @@ impl System {
 
     fn slvs_param(&self, h: Slvs_hParam) -> Result<&Slvs_Param, &'static str> {
         let ix = self.param_ix(h)?;
-        Ok(&self.params.list[ix])
+        Ok(&self.slvs.params.list[ix])
     }
 
     fn mut_slvs_param(&mut self, h: Slvs_hParam) -> Result<&mut Slvs_Param, &'static str> {
         let ix = self.param_ix(h)?;
-        Ok(&mut self.params.list[ix])
+        Ok(&mut self.slvs.params.list[ix])
     }
 
     fn entity_ix(&self, h: Slvs_hEntity) -> Result<usize, &'static str> {
-        self.entities
+        self.slvs
+            .entities
             .list
             .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_err(|_| "Specified entity not found.")
@@ -363,7 +366,7 @@ impl System {
 
     fn slvs_entity(&self, h: Slvs_hEntity) -> Result<&Slvs_Entity, &'static str> {
         let ix = self.entity_ix(h)?;
-        Ok(&self.entities.list[ix])
+        Ok(&self.slvs.entities.list[ix])
     }
 
     fn entity_on_workplane(
@@ -387,7 +390,7 @@ impl System {
 
     fn mut_slvs_entity(&mut self, h: Slvs_hEntity) -> Result<&mut Slvs_Entity, &'static str> {
         let ix = self.entity_ix(h)?;
-        Ok(&mut self.entities.list[ix])
+        Ok(&mut self.slvs.entities.list[ix])
     }
 
     // Checks that all elements referenced within entity_data exist and are on the expected workplane
@@ -431,7 +434,8 @@ impl System {
     }
 
     fn constraint_ix(&self, h: Slvs_hConstraint) -> Result<usize, &'static str> {
-        self.constraints
+        self.slvs
+            .constraints
             .list
             .binary_search_by_key(&h, |&Slvs_Constraint { h, .. }| h)
             .map_err(|_| "Specified constraint not found.")
@@ -439,7 +443,7 @@ impl System {
 
     fn slvs_constraint(&self, h: Slvs_hConstraint) -> Result<&Slvs_Constraint, &'static str> {
         let ix = self.constraint_ix(h)?;
-        Ok(&self.constraints.list[ix])
+        Ok(&self.slvs.constraints.list[ix])
     }
 
     fn mut_slvs_constraint(
@@ -447,7 +451,7 @@ impl System {
         h: Slvs_hConstraint,
     ) -> Result<&mut Slvs_Constraint, &'static str> {
         let ix = self.constraint_ix(h)?;
-        Ok(&mut self.constraints.list[ix])
+        Ok(&mut self.slvs.constraints.list[ix])
     }
 
     fn validate_constraint_data(

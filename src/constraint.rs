@@ -53,6 +53,13 @@ pub use equal_radius::EqualRadius;
 pub trait AsConstraint: AsHandle {
     fn clone_dyn(&self) -> Box<dyn AsConstraint>;
 }
+
+impl Clone for Box<dyn AsConstraint> {
+    fn clone(&self) -> Self {
+        self.clone_dyn()
+    }
+}
+
 pub trait AsConstraintData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;

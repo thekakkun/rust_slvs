@@ -124,12 +124,12 @@ impl Slvs_Constraint {
 impl Slvs_System {
     pub(super) fn from(system: &mut System, failed_handles: &mut Vec<Slvs_hConstraint>) -> Self {
         Slvs_System {
-            param: system.params.list.as_mut_ptr(),
-            params: system.params.list.len() as _,
-            entity: system.entities.list.as_mut_ptr(),
-            entities: system.entities.list.len() as _,
-            constraint: system.constraints.list.as_mut_ptr(),
-            constraints: system.constraints.list.len() as _,
+            param: system.slvs.params.list.as_mut_ptr(),
+            params: system.slvs.params.list.len() as _,
+            entity: system.slvs.entities.list.as_mut_ptr(),
+            entities: system.slvs.entities.list.len() as _,
+            constraint: system.slvs.constraints.list.as_mut_ptr(),
+            constraints: system.slvs.constraints.list.len() as _,
             dragged: system.dragged,
             calculateFaileds: system.calculate_faileds as _,
             failed: failed_handles.as_mut_ptr(),

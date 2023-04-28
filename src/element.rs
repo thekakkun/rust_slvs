@@ -1,17 +1,36 @@
 use std::fmt::Debug;
 
-use crate::{constraint::AsConstraint, entity::AsEntity, group::Group};
+use crate::{
+    bindings::{Slvs_Constraint, Slvs_Entity, Slvs_Param},
+    group::Group,
+};
+
+pub trait AsHandle: Debug {
+    fn handle(&self) -> u32;
+}
+
+pub trait TypeInfo: Debug {
+    fn type_of() -> String;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Storing Slvs_X in sys
 ////////////////////////////////////////////////////////////////////////////////
 
-pub(super) struct SlvsElements<T> {
+#[derive(Default)]
+pub(super) struct SlvsElements {
+    pub(super) groups: SlvsElementList<Group>,
+    pub(super) params: SlvsElementList<Slvs_Param>,
+    pub(super) entities: SlvsElementList<Slvs_Entity>,
+    pub(super) constraints: SlvsElementList<Slvs_Constraint>,
+}
+
+pub(super) struct SlvsElementList<T> {
     pub(super) list: Vec<T>,
     pub(super) next_h: u32,
 }
 
-impl<T> SlvsElements<T> {
+impl<T> SlvsElementList<T> {
     pub(super) fn new() -> Self {
         Self {
             list: Vec::new(),
@@ -27,43 +46,8 @@ impl<T> SlvsElements<T> {
     }
 }
 
-impl<T> Default for SlvsElements<T> {
+impl<T> Default for SlvsElementList<T> {
     fn default() -> Self {
         Self::new()
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Storing element identifiers in sys
-////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Default, Debug)]
-pub struct Elements {
-    pub groups: Vec<Group>,
-    pub entities: Vec<Box<dyn AsEntity>>,
-    pub constraints: Vec<Box<dyn AsConstraint>>,
-}
-
-impl Elements {
-    pub fn new() -> Self {
-        Self {
-            groups: Vec::new(),
-            entities: Vec::new(),
-            constraints: Vec::new(),
-        }
-    }
-}
-
-impl Clone for Box<dyn AsConstraint> {
-    fn clone(&self) -> Self {
-        self.clone_dyn()
-    }
-}
-
-pub trait AsHandle: Debug {
-    fn handle(&self) -> u32;
-}
-
-pub trait TypeInfo: Debug {
-    fn type_of() -> String;
 }
