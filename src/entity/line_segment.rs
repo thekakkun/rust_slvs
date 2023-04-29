@@ -1,4 +1,6 @@
-use super::{AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane};
+use super::{
+    As2dProjectionTarget, AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane,
+};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_LINE_SEGMENT},
     element::{AsHandle, TypeInfo},
@@ -50,6 +52,7 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
     }
 }
 
+impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
 impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
 
 impl<T: AsTarget> TypeInfo for LineSegment<T> {

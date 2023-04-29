@@ -1,4 +1,4 @@
-use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
+use super::{As2dProjectionTarget, AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{AsHandle, TypeInfo},
@@ -21,6 +21,8 @@ impl Normal {
         Self::In3d { w, x, y, z }
     }
 }
+
+impl As2dProjectionTarget for Normal {}
 
 impl AsEntityData for Normal {
     fn type_(&self) -> i32 {

@@ -49,7 +49,10 @@ pub trait FromSlvsEntity<T: AsTarget>: AsEntityData {
     fn set_vals(&mut self, _vals: Vec<f64>) {}
 }
 
+pub trait As2dProjectionTarget: AsEntityData {}
 pub trait AsArc: AsEntityData {}
+pub trait AsCubic: AsEntityData {}
+pub trait AsCurve: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 

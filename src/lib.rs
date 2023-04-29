@@ -2,11 +2,10 @@ use std::iter::zip;
 use std::marker::PhantomData;
 
 mod bindings;
-use bindings::Slvs_hGroup;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 use bindings::{
-    Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_hConstraint, Slvs_hEntity, Slvs_hParam,
-    SLVS_E_NORMAL_IN_3D,
+    Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_hConstraint, Slvs_hEntity, Slvs_hGroup,
+    Slvs_hParam, SLVS_E_NORMAL_IN_3D,
 };
 
 pub mod solver;

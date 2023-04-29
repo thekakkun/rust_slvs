@@ -1,4 +1,4 @@
-use super::{AsArc, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsArc, AsCurve, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, TypeInfo},
@@ -33,6 +33,7 @@ impl ArcOfCircle {
 }
 
 impl AsArc for ArcOfCircle {}
+impl AsCurve for ArcOfCircle {}
 
 impl AsEntityData for ArcOfCircle {
     fn type_(&self) -> i32 {

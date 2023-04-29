@@ -1,4 +1,4 @@
-use super::{AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
+use super::{AsCubic, AsCurve, AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CUBIC},
     element::{AsHandle, TypeInfo},
@@ -47,6 +47,9 @@ impl Cubic<In3d> {
         }
     }
 }
+
+impl<T: AsTarget> AsCubic for Cubic<T> {}
+impl<T: AsTarget> AsCurve for Cubic<T> {}
 
 impl<T: AsTarget> AsEntityData for Cubic<T> {
     fn type_(&self) -> i32 {
