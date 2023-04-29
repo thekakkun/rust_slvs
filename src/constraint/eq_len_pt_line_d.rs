@@ -70,7 +70,7 @@ where
 {
     fn type_of() -> String {
         format!(
-            "EqLenPtLineD< {}, {}, {}>",
+            "EqLenPtLineD < {}, {}, {} >",
             LA::type_of(),
             P::type_of(),
             LB::type_of()

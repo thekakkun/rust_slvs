@@ -58,7 +58,7 @@ where
     LB: AsLineSegment,
 {
     fn type_of() -> String {
-        format!("EqualLengthLines< {}, {}>", LA::type_of(), LB::type_of())
+        format!("EqualLengthLines < {}, {} >", LA::type_of(), LB::type_of())
     }
 }
 

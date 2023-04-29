@@ -65,7 +65,7 @@ where
     PB: AsPoint,
 {
     fn type_of() -> String {
-        format!("PtPtDistance< {}, {} >", PA::type_of(), PB::type_of())
+        format!("PtPtDistance < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 

@@ -37,7 +37,7 @@ impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
 
 impl<P: AsPoint> TypeInfo for PtOnFace<P> {
     fn type_of() -> String {
-        format!("PtOnFace< {} >", P::type_of())
+        format!("PtOnFace < {} >", P::type_of())
     }
 }
 

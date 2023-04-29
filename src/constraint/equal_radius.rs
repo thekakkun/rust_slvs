@@ -49,7 +49,7 @@ where
     AB: AsArc,
 {
     fn type_of() -> String {
-        format!("EqualRadius< {}, {} >", AA::type_of(), AB::type_of())
+        format!("EqualRadius < {}, {} >", AA::type_of(), AB::type_of())
     }
 }
 

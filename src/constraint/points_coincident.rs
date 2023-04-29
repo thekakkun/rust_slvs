@@ -58,7 +58,7 @@ where
     PB: AsPoint,
 {
     fn type_of() -> String {
-        format!("PointsCoincident< {}, {} >", PA::type_of(), PB::type_of())
+        format!("PointsCoincident < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 

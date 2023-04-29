@@ -58,7 +58,7 @@ where
     PB: AsPoint,
 {
     fn type_of() -> String {
-        format!("Vertical< {}, {} >", PA::type_of(), PB::type_of())
+        format!("Vertical < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 
@@ -108,7 +108,7 @@ impl<L: AsLineSegment> AsConstraintData for LineVertical<L> {
 
 impl<L: AsLineSegment> TypeInfo for LineVertical<L> {
     fn type_of() -> String {
-        format!("Vertical< {} >", L::type_of())
+        format!("Vertical < {} >", L::type_of())
     }
 }
 

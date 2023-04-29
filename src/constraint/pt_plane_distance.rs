@@ -46,7 +46,7 @@ impl<P: AsPoint> AsConstraintData for PtPlaneDistance<P> {
 
 impl<P: AsPoint> TypeInfo for PtPlaneDistance<P> {
     fn type_of() -> String {
-        format!("PtPlaneDistance< {} >", P::type_of())
+        format!("PtPlaneDistance < {} >", P::type_of())
     }
 }
 

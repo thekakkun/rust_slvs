@@ -65,7 +65,7 @@ where
     LB: AsLineSegment,
 {
     fn type_of() -> String {
-        format!("LengthRatio< {}, {}>", LA::type_of(), LB::type_of())
+        format!("LengthRatio < {}, {} >", LA::type_of(), LB::type_of())
     }
 }
 

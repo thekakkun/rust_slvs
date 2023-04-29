@@ -37,7 +37,7 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
 
 impl<A: AsArc> TypeInfo for Diameter<A> {
     fn type_of() -> String {
-        format!("Diameter< {} >", A::type_of())
+        format!("Diameter < {} >", A::type_of())
     }
 }
 

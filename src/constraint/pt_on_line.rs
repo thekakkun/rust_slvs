@@ -58,7 +58,7 @@ where
     L: AsLineSegment,
 {
     fn type_of() -> String {
-        format!("PtOnLine< {}, {}>", P::type_of(), L::type_of())
+        format!("PtOnLine < {}, {} >", P::type_of(), L::type_of())
     }
 }
 

@@ -42,7 +42,7 @@ impl<L: AsLineSegment> AsConstraintData for EqualLineArcLen<L> {
 
 impl<L: AsLineSegment> TypeInfo for EqualLineArcLen<L> {
     fn type_of() -> String {
-        format!("EqualLineArcLen< {}>", L::type_of())
+        format!("EqualLineArcLen < {} >", L::type_of())
     }
 }
 

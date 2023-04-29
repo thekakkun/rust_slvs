@@ -69,7 +69,7 @@ where
     L: AsLineSegment,
 {
     fn type_of() -> String {
-        format!("PtLineDistance< {}, {} >", P::type_of(), L::type_of())
+        format!("PtLineDistance < {}, {} >", P::type_of(), L::type_of())
     }
 }
 

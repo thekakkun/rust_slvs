@@ -58,7 +58,7 @@ where
     PB: AsPoint,
 {
     fn type_of() -> String {
-        format!("Horizontal< {}, {} >", PA::type_of(), PB::type_of())
+        format!("Horizontal < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 
@@ -108,7 +108,7 @@ impl<L: AsLineSegment> AsConstraintData for LineHorizontal<L> {
 
 impl<L: AsLineSegment> TypeInfo for LineHorizontal<L> {
     fn type_of() -> String {
-        format!("Horizontal< {} >", L::type_of())
+        format!("Horizontal < {} >", L::type_of())
     }
 }
 

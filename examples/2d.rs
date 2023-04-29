@@ -154,7 +154,7 @@ fn main() {
         println!("{} DOF", ok_result.dof);
     } else if let Err(fail_result) = result {
         println!(
-            "solve failed: problematic constraints are: {:?}",
+            "solve failed: problematic constraints are: {:#?}",
             fail_result.failed_constraints
         );
 

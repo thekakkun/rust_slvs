@@ -78,7 +78,7 @@ where
 {
     fn type_of() -> String {
         format!(
-            "EqualAngle< {}, {}, {}, {},>",
+            "EqualAngle < {}, {}, {}, {} >",
             LA::type_of(),
             LB::type_of(),
             LC::type_of(),
