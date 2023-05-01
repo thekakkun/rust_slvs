@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
-    bindings::Slvs_hEntity,
+    bindings::{Slvs_hEntity, Slvs_hGroup},
     element::{AsHandle, TypeInfo},
 };
 
@@ -95,7 +95,7 @@ impl Clone for Box<dyn AsConstraint> {
 pub trait AsConstraintData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn group(&self) -> u32;
+    fn group(&self) -> Slvs_hGroup;
 
     fn val(&self) -> Option<f64> {
         None

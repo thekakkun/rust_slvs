@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_ARC_LINE_TANGENT},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_TANGENT},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, AsLineSegment, Entity, Workplane},
     group::Group,
@@ -42,7 +42,7 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
         Some(self.workplane.handle())
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

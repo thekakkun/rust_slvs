@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_AT_MIDPOINT},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_AT_MIDPOINT},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
     group::Group,
@@ -51,7 +51,7 @@ where
         self.workplane.map(|workplane| workplane.handle())
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

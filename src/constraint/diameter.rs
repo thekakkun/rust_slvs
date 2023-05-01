@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_DIAMETER},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
     element::{AsHandle, TypeInfo},
     entity::{AsArc, Entity},
     group::Group,
@@ -32,7 +32,7 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

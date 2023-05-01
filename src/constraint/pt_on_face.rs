@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_ON_FACE},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
     element::{AsHandle, TypeInfo},
     entity::{AsPoint, Entity, Workplane},
     group::Group,
@@ -32,7 +32,7 @@ impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

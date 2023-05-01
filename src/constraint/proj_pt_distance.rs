@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PROJ_PT_DISTANCE},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PROJ_PT_DISTANCE},
     element::{AsHandle, TypeInfo},
     entity::{As2dProjectionTarget, AsPoint, Entity},
     group::Group,
@@ -57,7 +57,7 @@ where
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

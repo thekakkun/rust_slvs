@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_ARC_ARC_DIFFERENCE},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_DIFFERENCE},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, Entity},
     group::Group,
@@ -39,7 +39,7 @@ impl AsConstraintData for ArcArcDifference {
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

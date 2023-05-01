@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_ARC_ARC_LEN_RATIO},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_LEN_RATIO},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, Entity},
     group::Group,
@@ -39,7 +39,7 @@ impl AsConstraintData for ArcArcLenRatio {
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

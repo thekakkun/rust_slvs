@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_EQUAL_LINE_ARC_LEN},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LINE_ARC_LEN},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, AsLineSegment, Entity, Workplane},
     group::Group,
@@ -39,7 +39,7 @@ impl<L: AsLineSegment> AsConstraintData for EqualLineArcLen<L> {
         self.workplane.map(|workplane| workplane.handle())
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 

@@ -1,6 +1,6 @@
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_SAME_ORIENTATION},
+    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SAME_ORIENTATION},
     element::{AsHandle, TypeInfo},
     entity::{Entity, Normal},
     group::Group,
@@ -32,7 +32,7 @@ impl AsConstraintData for SameOrientation {
         None
     }
 
-    fn group(&self) -> u32 {
+    fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 
