@@ -6,6 +6,14 @@ Sketch geometries by creating [entities][`entity`] within the system,
 then add [constraints][`constraint`] to define relationships between multiple
 entities.
 
+While the original C++ library used the `Slvs_Entity` and `Slvs_Constraint` structs
+to store data about every kind of entity and constraint, these have been split
+into structs wrapping the handle ([`entity::Entity`] and
+[`constraint::Constraint`]) and different data structs for each kind of
+entity and constraint (each implementing [`entity::AsEntityData`] and
+[`constraint::AsConstraintData`], respectively). This allows for type
+restrictions that stop the user from creating impossible geometries.
+
 # To use
 
 The crate is available on crates.io, and can be added to your project using the
