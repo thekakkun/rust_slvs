@@ -2,29 +2,31 @@
 
 [Rust](https://www.rust-lang.org/) binding for [SolveSpace](https://github.com/solvespace/solvespace/)'s geometric constraint solver library.
 
-## Using rust_slvs
+[**Documentation**](https://docs.rs/slvs/)
+
+## Using slvs
 
 ### Prerequisites
 
-- [A C compiler](https://github.com/rust-lang/cc-rs#c-support)
+- C compiler
 
-  Needed to compile SolveSpace using the [cc library](https://docs.rs/cc/latest/cc/).
+  The SolveSpace library is compiled using [cc](https://docs.rs/cc/latest/cc/), which requires a C compiler.
 
-### To use as a library
+  [See here for more information](https://github.com/rust-lang/cc-rs#compile-time-requirements).
 
-1. Add the crate to your `Cargo.toml`.
+- Clang
 
-   ```toml
-   [dependencies]
-   slvs = { git = "https://github.com/thekakkun/rust_slvs.git" }
-   ```
+  Bindings from C to Rust are generated using [bindgen](https://github.com/rust-lang/rust-bindgen), which requires `libclang`. The environment variable `LIBCLANG_PATH` needs to be set, pointing to the location of the clang library.
 
-2. You may need to create a Cargo configuration file (`.cargo/config.toml`) so that all submodules can be downloaded.
+  [See here for more information](https://rust-lang.github.io/rust-bindgen/requirements.html).
 
-   ```toml
-   [net]
-   git-fetch-with-cli = true  # use the `git` executable for git operations
-   ```
+### To add to your project
+
+Run the following Cargo command in your project directory:
+
+```shell
+cargo add slvs
+```
 
 ### To Build
 
