@@ -3,18 +3,25 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_ARC_LINE_LEN_RATIO},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, AsLineSegment, Entity},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct ArcLineLenRatio<L: AsLineSegment> {
-    arc: Entity<ArcOfCircle>,
-    line: Entity<L>,
-    ratio: f64,
+    pub group: Group,
+    pub arc: Entity<ArcOfCircle>,
+    pub line: Entity<L>,
+    pub ratio: f64,
 }
 
 impl<L: AsLineSegment> ArcLineLenRatio<L> {
-    pub fn new(arc: Entity<ArcOfCircle>, line: Entity<L>, ratio: f64) -> Self {
-        Self { arc, line, ratio }
+    pub fn new(group: Group, arc: Entity<ArcOfCircle>, line: Entity<L>, ratio: f64) -> Self {
+        Self {
+            group,
+            arc,
+            line,
+            ratio,
+        }
     }
 }
 
@@ -25,6 +32,10 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineLenRatio<L> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -45,6 +56,7 @@ impl<L: AsLineSegment> TypeInfo for ArcLineLenRatio<L> {
 impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineLenRatio<L> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             arc: Entity::new(value.entityA),
             line: Entity::new(value.entityB),
             ratio: value.valA,

@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_ON_CIRCLE},
     element::{AsHandle, TypeInfo},
     entity::{AsArc, AsPoint, Entity},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,8 +12,9 @@ where
     P: AsPoint,
     A: AsArc,
 {
-    point: Entity<P>,
-    arc: Entity<A>,
+    pub group: Group,
+    pub point: Entity<P>,
+    pub arc: Entity<A>,
 }
 
 impl<P, A> PtOnCircle<P, A>
@@ -20,8 +22,8 @@ where
     P: AsPoint,
     A: AsArc,
 {
-    pub fn new(point: Entity<P>, arc: Entity<A>) -> Self {
-        Self { point, arc }
+    pub fn new(group: Group, point: Entity<P>, arc: Entity<A>) -> Self {
+        Self { group, point, arc }
     }
 }
 
@@ -36,6 +38,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -64,6 +70,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point: Entity::new(value.ptA),
             arc: Entity::new(value.entityA),
         }

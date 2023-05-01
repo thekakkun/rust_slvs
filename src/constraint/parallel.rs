@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PARALLEL},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,9 +12,10 @@ where
     LA: AsLineSegment,
     LB: AsLineSegment,
 {
-    line_a: Entity<LA>,
-    line_b: Entity<LB>,
-    workplane: Option<Entity<Workplane>>,
+    pub group: Group,
+    pub line_a: Entity<LA>,
+    pub line_b: Entity<LB>,
+    pub workplane: Option<Entity<Workplane>>,
 }
 
 impl<LA, LB> Parallel<LA, LB>
@@ -22,11 +24,13 @@ where
     LB: AsLineSegment,
 {
     pub fn new(
+        group: Group,
         line_a: Entity<LA>,
         line_b: Entity<LB>,
         workplane: Option<Entity<Workplane>>,
     ) -> Self {
         Self {
+            group,
             line_a,
             line_b,
             workplane,
@@ -45,6 +49,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -69,6 +77,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             line_a: Entity::new(value.entityA),
             line_b: Entity::new(value.entityB),
             workplane: match value.wrkpl {

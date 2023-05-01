@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_VERTICAL},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,9 +16,10 @@ where
     PA: AsPoint,
     PB: AsPoint,
 {
-    workplane: Entity<Workplane>,
-    point_a: Entity<PA>,
-    point_b: Entity<PB>,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub point_a: Entity<PA>,
+    pub point_b: Entity<PB>,
 }
 
 impl<PA, PB> PointsVertical<PA, PB>
@@ -25,8 +27,14 @@ where
     PA: AsPoint,
     PB: AsPoint,
 {
-    pub fn new(workplane: Entity<Workplane>, point_a: Entity<PA>, point_b: Entity<PB>) -> Self {
+    pub fn new(
+        group: Group,
+        workplane: Entity<Workplane>,
+        point_a: Entity<PA>,
+        point_b: Entity<PB>,
+    ) -> Self {
         Self {
+            group,
             workplane,
             point_a,
             point_b,
@@ -45,6 +53,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -69,6 +81,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             point_a: Entity::new(value.ptA),
             point_b: Entity::new(value.ptB),
@@ -82,13 +95,18 @@ where
 
 #[derive(Copy, Clone, Debug)]
 pub struct LineVertical<L: AsLineSegment> {
-    workplane: Entity<Workplane>,
-    line: Entity<L>,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub line: Entity<L>,
 }
 
 impl<L: AsLineSegment> LineVertical<L> {
-    pub fn new(workplane: Entity<Workplane>, line: Entity<L>) -> Self {
-        Self { workplane, line }
+    pub fn new(group: Group, workplane: Entity<Workplane>, line: Entity<L>) -> Self {
+        Self {
+            group,
+            workplane,
+            line,
+        }
     }
 }
 
@@ -99,6 +117,10 @@ impl<L: AsLineSegment> AsConstraintData for LineVertical<L> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -115,6 +137,7 @@ impl<L: AsLineSegment> TypeInfo for LineVertical<L> {
 impl<L: AsLineSegment> From<Slvs_Constraint> for LineVertical<L> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             line: Entity::new(value.entityA),
         }

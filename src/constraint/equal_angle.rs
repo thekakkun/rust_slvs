@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_EQUAL_ANGLE},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -13,11 +14,12 @@ where
     LC: AsLineSegment,
     LD: AsLineSegment,
 {
-    line_a: Entity<LA>,
-    line_b: Entity<LB>,
-    line_c: Entity<LC>,
-    line_d: Entity<LD>,
-    workplane: Option<Entity<Workplane>>,
+    pub group: Group,
+    pub line_a: Entity<LA>,
+    pub line_b: Entity<LB>,
+    pub line_c: Entity<LC>,
+    pub line_d: Entity<LD>,
+    pub workplane: Option<Entity<Workplane>>,
 }
 
 impl<LA, LB, LC, LD> EqualAngle<LA, LB, LC, LD>
@@ -28,6 +30,7 @@ where
     LD: AsLineSegment,
 {
     pub fn new(
+        group: Group,
         line_a: Entity<LA>,
         line_b: Entity<LB>,
         line_c: Entity<LC>,
@@ -35,6 +38,7 @@ where
         workplane: Option<Entity<Workplane>>,
     ) -> Self {
         Self {
+            group,
             line_a,
             line_b,
             line_c,
@@ -57,6 +61,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -96,6 +104,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             line_a: Entity::new(value.entityA),
             line_b: Entity::new(value.entityB),
             line_c: Entity::new(value.entityC),

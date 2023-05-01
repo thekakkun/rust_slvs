@@ -86,30 +86,27 @@ fn main() {
         .expect("circle created");
 
     // The length of our line segment is 30.0 units.
-    sys.constrain(&g2, PtPtDistance::new(p1, p2, 30.0, Some(workplane)))
+    sys.constrain(PtPtDistance::new(g2, p1, p2, 30.0, Some(workplane)))
         .expect("constrain line segment to 30.0 units");
     // And the distance from our line segment to the origin is 10.0 units.
-    sys.constrain(
-        &g2,
-        PtLineDistance::new(origin, line, 10.0, Some(workplane)),
-    )
-    .expect("distance from line to origin is 10.0");
+    sys.constrain(PtLineDistance::new(g2, origin, line, 10.0, Some(workplane)))
+        .expect("distance from line to origin is 10.0");
     // And the line segment is vertical.
-    sys.constrain(&g2, LineVertical::new(workplane, line))
+    sys.constrain(LineVertical::new(g2, workplane, line))
         .expect("line segment is vertical");
     // And the distance from one endpoint to the origin is 15.0 units.
-    sys.constrain(&g2, PtPtDistance::new(p1, origin, 15.0, Some(workplane)))
+    sys.constrain(PtPtDistance::new(g2, p1, origin, 15.0, Some(workplane)))
         .expect("distance from p1 to origin is 15.0 units");
     // And same for the other endpoint; so if you add this constraint then
     // the sketch is overconstrained and will signal an error.
-    sys.constrain(&g2, PtPtDistance::new(p2, origin, 18.0, Some(workplane)))
+    sys.constrain(PtPtDistance::new(g2, p2, origin, 18.0, Some(workplane)))
         .expect("distance from p2 to origin is 18.0 units");
 
     // The arc and the circle have equal radius.
-    sys.constrain(&g2, EqualRadius::new(arc, circle))
+    sys.constrain(EqualRadius::new(g2, arc, circle))
         .expect("arc and circle have equal radius");
     // The arc has radius 17.0 units.
-    sys.constrain(&g2, Diameter::new(arc, 17.0 * 2.0))
+    sys.constrain(Diameter::new(g2, arc, 17.0 * 2.0))
         .expect("arc has diameter of 17.0 units");
 
     // And solve.

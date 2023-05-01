@@ -26,7 +26,7 @@ fn main() {
         .expect("line segment created");
 
     // The distance between the points should be 30.0 units.
-    sys.constrain(&g, PtPtDistance::new(p1, p2, 30.0, None))
+    sys.constrain(PtPtDistance::new(g, p1, p2, 30.0, None))
         .expect("distance constraint added");
 
     // Let's tell the solver to keep the second point as close to constant

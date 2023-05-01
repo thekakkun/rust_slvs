@@ -139,14 +139,13 @@ impl System {
 
     pub fn constrain<C: AsConstraintData + 'static>(
         &mut self,
-        group: &Group,
         constraint_data: C,
     ) -> Result<Constraint<C>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
             self.slvs.constraints.get_next_h(),
-            group.handle(),
+            constraint_data.group(),
             constraint_data.type_(),
         );
 
@@ -282,6 +281,7 @@ impl System {
         self.validate_constraint_data(&constraint_data)?;
 
         let slvs_constraint = self.mut_slvs_constraint(constraint.handle()).unwrap();
+        slvs_constraint.set_group(constraint_data.group());
 
         if let Some(val) = constraint_data.val() {
             slvs_constraint.set_val(val);

@@ -3,18 +3,21 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_FACE_DISTANCE},
     element::{AsHandle, TypeInfo},
     entity::{AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct PtFaceDistance<P: AsPoint> {
-    point: Entity<P>,
-    plane: Entity<Workplane>,
-    distance: f64,
+    pub group: Group,
+    pub point: Entity<P>,
+    pub plane: Entity<Workplane>,
+    pub distance: f64,
 }
 
 impl<P: AsPoint> PtFaceDistance<P> {
-    pub fn new(point: Entity<P>, plane: Entity<Workplane>, distance: f64) -> Self {
+    pub fn new(group: Group, point: Entity<P>, plane: Entity<Workplane>, distance: f64) -> Self {
         Self {
+            group,
             point,
             plane,
             distance,
@@ -29,6 +32,10 @@ impl<P: AsPoint> AsConstraintData for PtFaceDistance<P> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -53,6 +60,7 @@ impl<P: AsPoint> TypeInfo for PtFaceDistance<P> {
 impl<P: AsPoint> From<Slvs_Constraint> for PtFaceDistance<P> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point: Entity::new(value.ptA),
             plane: Entity::new(value.entityA),
             distance: value.valA,

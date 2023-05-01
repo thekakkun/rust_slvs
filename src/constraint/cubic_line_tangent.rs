@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_CUBIC_LINE_TANGENT},
     element::{AsHandle, TypeInfo},
     entity::{AsCubic, AsLineSegment, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,10 +12,11 @@ where
     C: AsCubic,
     L: AsLineSegment,
 {
-    workplane: Entity<Workplane>,
-    cubic: Entity<C>,
-    line: Entity<L>,
-    to_beginning: bool,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub cubic: Entity<C>,
+    pub line: Entity<L>,
+    pub to_beginning: bool,
 }
 
 impl<C, L> CubicLineTangent<C, L>
@@ -23,12 +25,14 @@ where
     L: AsLineSegment,
 {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         arc: Entity<C>,
         line: Entity<L>,
         to_beginning: bool,
     ) -> Self {
         Self {
+            group,
             workplane,
             cubic: arc,
             line,
@@ -48,6 +52,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -76,6 +84,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             cubic: Entity::new(value.entityA),
             line: Entity::new(value.entityB),

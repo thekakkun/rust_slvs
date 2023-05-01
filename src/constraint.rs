@@ -95,6 +95,7 @@ impl Clone for Box<dyn AsConstraint> {
 pub trait AsConstraintData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
+    fn group(&self) -> u32;
 
     fn val(&self) -> Option<f64> {
         None

@@ -3,17 +3,23 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_DIAMETER},
     element::{AsHandle, TypeInfo},
     entity::{AsArc, Entity},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Diameter<A: AsArc> {
-    arc: Entity<A>,
-    diameter: f64,
+    pub group: Group,
+    pub arc: Entity<A>,
+    pub diameter: f64,
 }
 
 impl<A: AsArc> Diameter<A> {
-    pub fn new(arc: Entity<A>, diameter: f64) -> Self {
-        Self { arc, diameter }
+    pub fn new(group: Group, arc: Entity<A>, diameter: f64) -> Self {
+        Self {
+            group,
+            arc,
+            diameter,
+        }
     }
 }
 
@@ -24,6 +30,10 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -44,6 +54,7 @@ impl<A: AsArc> TypeInfo for Diameter<A> {
 impl<A: AsArc> From<Slvs_Constraint> for Diameter<A> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             arc: Entity::new(value.entityA),
             diameter: value.valA,
         }

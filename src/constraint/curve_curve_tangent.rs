@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_CURVE_CURVE_TANGENT},
     element::{AsHandle, TypeInfo},
     entity::{AsCurve, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,11 +12,12 @@ where
     CA: AsCurve,
     CB: AsCurve,
 {
-    workplane: Entity<Workplane>,
-    curve_a: Entity<CA>,
-    curve_b: Entity<CB>,
-    to_curve_a_beginning: bool,
-    to_curve_b_beginning: bool,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub curve_a: Entity<CA>,
+    pub curve_b: Entity<CB>,
+    pub to_curve_a_beginning: bool,
+    pub to_curve_b_beginning: bool,
 }
 
 impl<CA, CB> CurveCurveTangent<CA, CB>
@@ -24,6 +26,7 @@ where
     CB: AsCurve,
 {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         curve_a: Entity<CA>,
         curve_b: Entity<CB>,
@@ -31,6 +34,7 @@ where
         to_curve_b_beginning: bool,
     ) -> Self {
         Self {
+            group,
             workplane,
             curve_a,
             curve_b,
@@ -51,6 +55,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -79,6 +87,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             curve_a: Entity::new(value.entityA),
             curve_b: Entity::new(value.entityB),

@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PT_LINE_DISTANCE},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,10 +12,11 @@ where
     P: AsPoint,
     L: AsLineSegment,
 {
-    point: Entity<P>,
-    line: Entity<L>,
-    distance: f64,
-    workplane: Option<Entity<Workplane>>,
+    pub group: Group,
+    pub point: Entity<P>,
+    pub line: Entity<L>,
+    pub distance: f64,
+    pub workplane: Option<Entity<Workplane>>,
 }
 
 impl<P, L> PtLineDistance<P, L>
@@ -23,12 +25,14 @@ where
     L: AsLineSegment,
 {
     pub fn new(
+        group: Group,
         point: Entity<P>,
         line: Entity<L>,
         distance: f64,
         workplane: Option<Entity<Workplane>>,
     ) -> Self {
         Self {
+            group,
             point,
             line,
             distance,
@@ -48,6 +52,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn val(&self) -> Option<f64> {
@@ -80,6 +88,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point: Entity::new(value.ptA),
             line: Entity::new(value.entityA),
             distance: value.valA,

@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_AT_MIDPOINT},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,9 +12,10 @@ where
     P: AsPoint,
     L: AsLineSegment,
 {
-    point: Entity<P>,
-    line: Entity<L>,
-    workplane: Option<Entity<Workplane>>,
+    pub group: Group,
+    pub point: Entity<P>,
+    pub line: Entity<L>,
+    pub workplane: Option<Entity<Workplane>>,
 }
 
 impl<P, L> AtMidpoint<P, L>
@@ -21,8 +23,14 @@ where
     P: AsPoint,
     L: AsLineSegment,
 {
-    pub fn new(point: Entity<P>, line: Entity<L>, workplane: Option<Entity<Workplane>>) -> Self {
+    pub fn new(
+        group: Group,
+        point: Entity<P>,
+        line: Entity<L>,
+        workplane: Option<Entity<Workplane>>,
+    ) -> Self {
         Self {
+            group,
             point,
             line,
             workplane,
@@ -41,6 +49,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -68,6 +80,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point: Entity::new(value.ptA),
             line: Entity::new(value.entityA),
             workplane: match value.wrkpl {

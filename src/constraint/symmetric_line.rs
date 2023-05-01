@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_SYMMETRIC_LINE},
     element::{AsHandle, TypeInfo},
     entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -12,10 +13,11 @@ where
     PB: AsPoint,
     L: AsLineSegment,
 {
-    workplane: Entity<Workplane>,
-    point_a: Entity<PA>,
-    point_b: Entity<PB>,
-    line: Entity<L>,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub point_a: Entity<PA>,
+    pub point_b: Entity<PB>,
+    pub line: Entity<L>,
 }
 
 impl<PA, PB, L> SymmetricLine<PA, PB, L>
@@ -25,12 +27,14 @@ where
     L: AsLineSegment,
 {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         point_a: Entity<PA>,
         point_b: Entity<PB>,
         line: Entity<L>,
     ) -> Self {
         Self {
+            group,
             workplane,
             point_a,
             point_b,
@@ -51,6 +55,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -86,6 +94,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             point_a: Entity::new(value.ptA),
             point_b: Entity::new(value.ptB),

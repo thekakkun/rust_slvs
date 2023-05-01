@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_PROJ_PT_DISTANCE},
     element::{AsHandle, TypeInfo},
     entity::{As2dProjectionTarget, AsPoint, Entity},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -12,10 +13,11 @@ where
     PB: AsPoint,
     PT: As2dProjectionTarget,
 {
-    point_a: Entity<PA>,
-    point_b: Entity<PB>,
-    on_line: Entity<PT>,
-    distance: f64,
+    pub group: Group,
+    pub point_a: Entity<PA>,
+    pub point_b: Entity<PB>,
+    pub on_line: Entity<PT>,
+    pub distance: f64,
 }
 
 impl<PA, PB, PT> ProjPtDistance<PA, PB, PT>
@@ -25,12 +27,14 @@ where
     PT: As2dProjectionTarget,
 {
     pub fn new(
+        group: Group,
         point_a: Entity<PA>,
         point_b: Entity<PB>,
         on_line: Entity<PT>,
         distance: f64,
     ) -> Self {
         Self {
+            group,
             point_a,
             point_b,
             on_line,
@@ -51,6 +55,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -90,6 +98,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point_a: Entity::new(value.ptA),
             point_b: Entity::new(value.ptB),
             on_line: Entity::new(value.entityA),

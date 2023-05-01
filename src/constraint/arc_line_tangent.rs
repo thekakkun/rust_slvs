@@ -3,24 +3,28 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_ARC_LINE_TANGENT},
     element::{AsHandle, TypeInfo},
     entity::{ArcOfCircle, AsLineSegment, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct ArcLineTangent<L: AsLineSegment> {
-    workplane: Entity<Workplane>,
-    arc: Entity<ArcOfCircle>,
-    line: Entity<L>,
-    to_beginning: bool,
+    pub group: Group,
+    pub workplane: Entity<Workplane>,
+    pub arc: Entity<ArcOfCircle>,
+    pub line: Entity<L>,
+    pub to_beginning: bool,
 }
 
 impl<L: AsLineSegment> ArcLineTangent<L> {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         arc: Entity<ArcOfCircle>,
         line: Entity<L>,
         to_beginning: bool,
     ) -> Self {
         Self {
+            group,
             workplane,
             arc,
             line,
@@ -36,6 +40,10 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -56,6 +64,7 @@ impl<L: AsLineSegment> TypeInfo for ArcLineTangent<L> {
 impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineTangent<L> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             workplane: Entity::new(value.wrkpl),
             arc: Entity::new(value.entityA),
             line: Entity::new(value.entityB),

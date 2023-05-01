@@ -3,6 +3,7 @@ use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, SLVS_C_POINTS_COINCIDENT},
     element::{AsHandle, TypeInfo},
     entity::{AsPoint, Entity, Workplane},
+    group::Group,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -11,9 +12,10 @@ where
     PA: AsPoint,
     PB: AsPoint,
 {
-    point_a: Entity<PA>,
-    point_b: Entity<PB>,
-    workplane: Option<Entity<Workplane>>,
+    pub group: Group,
+    pub point_a: Entity<PA>,
+    pub point_b: Entity<PB>,
+    pub workplane: Option<Entity<Workplane>>,
 }
 
 impl<PA, PB> PointsCoincident<PA, PB>
@@ -22,11 +24,13 @@ where
     PB: AsPoint,
 {
     pub fn new(
+        group: Group,
         point_a: Entity<PA>,
         point_b: Entity<PB>,
         workplane: Option<Entity<Workplane>>,
     ) -> Self {
         Self {
+            group,
             point_a,
             point_b,
             workplane,
@@ -45,6 +49,10 @@ where
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> u32 {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -69,6 +77,7 @@ where
 {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
+            group: Group(value.group),
             point_a: Entity::new(value.ptA),
             point_b: Entity::new(value.ptB),
             workplane: match value.wrkpl {

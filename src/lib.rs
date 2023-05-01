@@ -47,7 +47,7 @@ Constrain the [distance][`constraint::PtPtDistance`] between the two points to
 be 30 units.
 
 ```rust
-sys.constrain(&g, PtPtDistance::new(p1, p2, 30.0, None))
+sys.constrain(PtPtDistance::new(g, p1, p2, 30.0, None))
     .expect("distance constraint added");
 ```
 
