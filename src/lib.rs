@@ -27,7 +27,7 @@ cargo add slvs
 
 Initialize the system, and create a single [`group`].
 
-```rust
+```ignore
 let mut sys = System::new();
 let g = sys.add_group();
 ```
@@ -35,7 +35,7 @@ let g = sys.add_group();
 Create two [points][`entity::Point`]. The first at coordinates (10, 10, 10) and
 the second at (20, 20, 20).
 
-```rust
+```ignore
 let p1 = sys
     .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
     .expect("p1 created");
@@ -46,7 +46,7 @@ let p2 = sys
 
 Draw a [line segment][`entity::LineSegment`] connecting the two points.
 
-```rust
+```ignore
 sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
     .expect("line segment created");
 ```
@@ -54,7 +54,7 @@ sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
 Constrain the [distance][`constraint::PtPtDistance`] between the two points to
 be 30 units.
 
-```rust
+```ignore
 sys.constrain(PtPtDistance::new(g, p1, p2, 30.0, None))
     .expect("distance constraint added");
 ```
@@ -63,12 +63,12 @@ Specifying [`set_dragged()`][`system::System::set_dragged()`] on an entity tells
 the solver that the entity should be kept as close as possible to its initial
 location.
 
-```rust
+```ignore
 sys.set_dragged(&p2);
 ```
 
 And now we solve the system.
-```rust
+```ignore
 let result = sys.solve(&g);
 sys.clear_dragged();
 ```
@@ -78,7 +78,7 @@ If done correctly, the following should apply:
 - The distance between `p1` and `p2` should be 30.0 units
 - `p2` should still be placed near its initial location of (20, 20, 20)
 
-```rust
+```ignore
 if let Ok(ok_result) = result {
     let In3d(x1, y1, z1) = sys.entity_data(&p1).expect("p1 should exist").coords;
     println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);

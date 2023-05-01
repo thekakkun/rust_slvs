@@ -1,6 +1,6 @@
 [package]
 name = "slvs"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 description = "Rust wrapper for the SolveSpace constraint solver library."
 license  = "GPL-3.0"
@@ -18,11 +18,7 @@ include = [
     ".gitmodules",
     "README.md",
     "build.rs",
-    "src/**",
-    "src/entity.rs",
-    "src/lib.rs",
-    "src/main.rs",
-    "src/parameter.rs",
+    "src/**"
 ]
 
 [build-dependencies]
