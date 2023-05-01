@@ -10,7 +10,7 @@
 
   Needed to compile SolveSpace using the [cc library](https://docs.rs/cc/latest/cc/).
 
-### Use as a library
+### To use as a library
 
 1. Add the crate to your `Cargo.toml`.
 
