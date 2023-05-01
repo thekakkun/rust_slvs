@@ -15,14 +15,14 @@ fn main() {
 
     // A point, initially at (x y z) = (10 10 10)
     let p1 = sys
-        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .sketch(Point::<In3d>::new(g, 10.0, 10.0, 10.0))
         .expect("p1 created");
     // and a second point at (20 20 20)
     let p2 = sys
-        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .sketch(Point::<In3d>::new(g, 20.0, 20.0, 20.0))
         .expect("p2 created");
     // and a line segment connecting them.
-    sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
+    sys.sketch(LineSegment::<In3d>::new(g, p1, p2))
         .expect("line segment created");
 
     // The distance between the points should be 30.0 units.

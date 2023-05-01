@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup},
     element::{AsHandle, TypeInfo},
     target::AsTarget,
 };
@@ -28,6 +28,7 @@ pub trait AsEntity: AsHandle {}
 pub trait AsEntityData: Copy + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
+    fn group(&self) -> Slvs_hGroup;
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         None

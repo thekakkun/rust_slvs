@@ -6,10 +6,10 @@ fn inconsistent_constraints() {
     let g = sys.add_group();
 
     let p1 = sys
-        .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
+        .sketch(Point::<In3d>::new(g, 10.0, 10.0, 10.0))
         .expect("p1 created");
     let p2 = sys
-        .sketch(&g, Point::<In3d>::new(20.0, 20.0, 20.0))
+        .sketch(Point::<In3d>::new(g, 20.0, 20.0, 20.0))
         .expect("p2 created");
 
     // distance between p1 and p2 is 10

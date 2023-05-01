@@ -1,19 +1,25 @@
 use super::{AsEntityData, Entity, FromSlvsEntity, Normal, Point};
 use crate::{
-    bindings::{Slvs_hEntity, SLVS_E_WORKPLANE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     element::{AsHandle, TypeInfo},
+    group::Group,
     target::{AsTarget, In3d},
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Workplane {
+    pub group: Group,
     pub origin: Entity<Point<In3d>>,
     pub normal: Entity<Normal>,
 }
 
 impl Workplane {
-    pub fn new(origin: Entity<Point<In3d>>, normal: Entity<Normal>) -> Self {
-        Self { origin, normal }
+    pub fn new(group: Group, origin: Entity<Point<In3d>>, normal: Entity<Normal>) -> Self {
+        Self {
+            group,
+            origin,
+            normal,
+        }
     }
 }
 
@@ -24,6 +30,10 @@ impl AsEntityData for Workplane {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
+    }
+
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -44,6 +54,7 @@ impl TypeInfo for Workplane {
 impl<T: AsTarget> FromSlvsEntity<T> for Workplane {
     fn from(slvs_entity: crate::bindings::Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             origin: Entity::new(slvs_entity.point[0]),
             normal: Entity::new(slvs_entity.normal),
         }

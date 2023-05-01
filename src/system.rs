@@ -94,14 +94,13 @@ impl System {
 
     pub fn sketch<E: AsEntityData + 'static>(
         &mut self,
-        group: &Group,
         entity_data: E,
     ) -> Result<Entity<E>, &'static str> {
         self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
             self.slvs.entities.get_next_h(),
-            group.handle(),
+            entity_data.group(),
             entity_data.type_(),
         );
 
@@ -121,7 +120,7 @@ impl System {
             new_slvs_entity.set_param(
                 param_vals
                     .into_iter()
-                    .map(|val| self.add_param(group, val))
+                    .map(|val| self.add_param(entity_data.group(), val))
                     .collect(),
             );
         }
@@ -172,10 +171,10 @@ impl System {
     }
 
     // Private as user has no reason to create bare param without linking to an entity.
-    pub(crate) fn add_param(&mut self, group: &Group, val: f64) -> Slvs_hParam {
+    pub(crate) fn add_param(&mut self, group: Slvs_hGroup, val: f64) -> Slvs_hParam {
         let new_param = Slvs_Param {
             h: self.slvs.params.get_next_h(),
-            group: group.handle(),
+            group,
             val,
         };
 
@@ -224,8 +223,14 @@ impl System {
 }
 
 impl System {
-    pub(crate) fn update_param(&mut self, h: Slvs_hParam, val: f64) -> Result<(), &'static str> {
+    pub(crate) fn update_param(
+        &mut self,
+        h: Slvs_hParam,
+        group: Slvs_hGroup,
+        val: f64,
+    ) -> Result<(), &'static str> {
         let mut param = self.mut_slvs_param(h)?;
+        param.group = group;
         param.val = val;
 
         Ok(())
@@ -245,6 +250,8 @@ impl System {
         let param_h = {
             let slvs_entity = self.mut_slvs_entity(entity.handle()).unwrap();
 
+            slvs_entity.set_group(entity_data.group());
+
             if let Some(points) = entity_data.points() {
                 slvs_entity.set_point(points);
             }
@@ -260,7 +267,7 @@ impl System {
 
         if let Some(param_vals) = entity_data.param_vals() {
             for (h, val) in zip(param_h, param_vals) {
-                self.update_param(h, val)?;
+                self.update_param(h, entity_data.group(), val)?;
             }
         }
         Ok(entity_data)

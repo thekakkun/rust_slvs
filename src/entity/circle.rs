@@ -2,13 +2,15 @@ use std::fmt::Debug;
 
 use super::{AsArc, AsEntityData, Distance, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_CIRCLE},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::{AsHandle, TypeInfo},
+    group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Circle<T: AsTarget> {
+    pub group: Group,
     pub workplane: Option<Entity<Workplane>>,
     pub center: Entity<Point<T>>,
     pub radius: Entity<Distance<T>>,
@@ -17,12 +19,14 @@ pub struct Circle<T: AsTarget> {
 
 impl Circle<OnWorkplane> {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         center: Entity<Point<OnWorkplane>>,
         radius: Entity<Distance<OnWorkplane>>,
         normal: Entity<Normal>,
     ) -> Self {
         Self {
+            group,
             workplane: Some(workplane),
             center,
             radius,
@@ -33,11 +37,13 @@ impl Circle<OnWorkplane> {
 
 impl Circle<In3d> {
     pub fn new(
+        group: Group,
         center: Entity<Point<In3d>>,
         radius: Entity<Distance<In3d>>,
         normal: Entity<Normal>,
     ) -> Self {
         Self {
+            group,
             workplane: None,
             center,
             radius,
@@ -55,6 +61,10 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
+    }
+
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
     }
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
@@ -79,6 +89,7 @@ impl<T: AsTarget> TypeInfo for Circle<T> {
 impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             workplane: Some(Entity::new(slvs_entity.wrkpl)),
             center: Entity::new(slvs_entity.point[0]),
             radius: Entity::new(slvs_entity.distance),
@@ -90,6 +101,7 @@ impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
 impl FromSlvsEntity<In3d> for Circle<In3d> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             workplane: None,
             center: Entity::new(slvs_entity.point[0]),
             radius: Entity::new(slvs_entity.distance),

@@ -17,19 +17,19 @@ fn main() {
     // First, we create our workplane. Its origin corresponds to the origin
     // of our base frame (x y z) = (0 0 0)
     let origin = sys
-        .sketch(&g1, Point::<In3d>::new(0.0, 0.0, 0.0))
+        .sketch(Point::<In3d>::new(g1, 0.0, 0.0, 0.0))
         .expect("origin point created");
 
     // and it is parallel to the xy plane, so it has basis vectors (1 0 0)
     // and (0 1 0).
     let normal = sys
-        .sketch(
-            &g1,
-            Normal::new_in_3d(make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0])),
-        )
+        .sketch(Normal::new_in_3d(
+            g1,
+            make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+        ))
         .expect("normal created");
     let workplane = sys
-        .sketch(&g1, Workplane::new(origin, normal))
+        .sketch(Workplane::new(g1, origin, normal))
         .expect("workplane created");
 
     // Now create a second group. We'll solve group 2, while leaving group 1
@@ -40,49 +40,51 @@ fn main() {
     // These points are represented by their coordinates (u v) within the
     // workplane, so they need only two parameters each.
     let p1 = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 10.0, 20.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 10.0, 20.0))
         .expect("point in 2d created");
     let p2 = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 20.0, 10.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 20.0, 10.0))
         .expect("point in 2d created");
     // And we create a line segment with those endpoints.
     let line = sys
-        .sketch(&g2, LineSegment::<OnWorkplane>::new(workplane, p1, p2))
+        .sketch(LineSegment::<OnWorkplane>::new(g2, workplane, p1, p2))
         .expect("line segment created");
 
     // Now three more points.
     let arc_center = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 100.0, 120.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 100.0, 120.0))
         .expect("point in 2d created");
     let arc_start = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 120.0, 110.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 120.0, 110.0))
         .expect("point in 2d created");
     let arc_finish = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 115.0, 115.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 115.0, 115.0))
         .expect("point in 2d created");
     // And arc, centered at point arc_center, starting at point arc_start, ending at
     // point arc_finish.
     let arc = sys
-        .sketch(
-            &g2,
-            ArcOfCircle::new(workplane, arc_center, arc_start, arc_finish, normal),
-        )
+        .sketch(ArcOfCircle::new(
+            g2, workplane, arc_center, arc_start, arc_finish, normal,
+        ))
         .expect("arc created");
 
     // Now one more point, and a distance
     let circle_center = sys
-        .sketch(&g2, Point::<OnWorkplane>::new(workplane, 200.0, 200.0))
+        .sketch(Point::<OnWorkplane>::new(g2, workplane, 200.0, 200.0))
         .expect("point in 2d created");
     let circle_radius = sys
-        .sketch(&g2, Distance::<OnWorkplane>::new(workplane, 30.0))
+        .sketch(Distance::<OnWorkplane>::new(g2, workplane, 30.0))
         .expect("distance created");
     // And a complete circle, centered at point circle_center with radius equal to
     // distance circle_radius. The normal is the same as our workplane.
     let circle = sys
-        .sketch(
-            &g2,
-            Circle::<OnWorkplane>::new(workplane, circle_center, circle_radius, normal),
-        )
+        .sketch(Circle::<OnWorkplane>::new(
+            g2,
+            workplane,
+            circle_center,
+            circle_radius,
+            normal,
+        ))
         .expect("circle created");
 
     // The length of our line segment is 30.0 units.

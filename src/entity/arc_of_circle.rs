@@ -1,12 +1,14 @@
 use super::{AsArc, AsCurve, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, TypeInfo},
+    group::Group,
     target::OnWorkplane,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct ArcOfCircle {
+    pub group: Group,
     pub workplane: Entity<Workplane>,
     pub center: Entity<Point<OnWorkplane>>,
     pub arc_begin: Entity<Point<OnWorkplane>>,
@@ -16,6 +18,7 @@ pub struct ArcOfCircle {
 
 impl ArcOfCircle {
     pub fn new(
+        group: Group,
         workplane: Entity<Workplane>,
         center: Entity<Point<OnWorkplane>>,
         arc_begin: Entity<Point<OnWorkplane>>,
@@ -23,6 +26,7 @@ impl ArcOfCircle {
         normal: Entity<Normal>,
     ) -> Self {
         Self {
+            group,
             workplane,
             center,
             arc_begin,
@@ -43,6 +47,11 @@ impl AsEntityData for ArcOfCircle {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
     }
+
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
+    }
+
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
             self.center.handle(),
@@ -59,6 +68,7 @@ impl AsEntityData for ArcOfCircle {
 impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             workplane: Entity::new(slvs_entity.wrkpl),
             center: Entity::new(slvs_entity.point[0]),
             arc_begin: Entity::new(slvs_entity.point[1]),

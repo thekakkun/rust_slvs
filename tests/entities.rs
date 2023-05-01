@@ -10,7 +10,7 @@ fn add_entity() {
     let p_z = 30.0;
 
     let p = sys
-        .sketch(&g, Point::<In3d>::new(p_x, p_y, p_z))
+        .sketch(Point::<In3d>::new(g, p_x, p_y, p_z))
         .expect("point in 3d created");
 
     let p_data = sys.entity_data(&p).expect("point found");
@@ -26,7 +26,7 @@ fn update_entity() {
     let g = sys.add_group();
 
     let p = sys
-        .sketch(&g, Point::<In3d>::new(0.0, 0.0, 0.0))
+        .sketch(Point::<In3d>::new(g, 0.0, 0.0, 0.0))
         .expect("point in 3d created");
 
     let updated_p_x = 10.0;

@@ -1,19 +1,22 @@
 use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_POINT_IN_2D},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
     element::{AsHandle, TypeInfo},
+    group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Point<T: AsTarget> {
+    pub group: Group,
     pub workplane: Option<Entity<Workplane>>,
     pub coords: T,
 }
 
 impl Point<OnWorkplane> {
-    pub fn new(workplane: Entity<Workplane>, u: f64, v: f64) -> Self {
+    pub fn new(group: Group, workplane: Entity<Workplane>, u: f64, v: f64) -> Self {
         Self {
+            group,
             workplane: Some(workplane),
             coords: OnWorkplane(u, v),
         }
@@ -21,8 +24,9 @@ impl Point<OnWorkplane> {
 }
 
 impl Point<In3d> {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(group: Group, x: f64, y: f64, z: f64) -> Self {
         Self {
+            group,
             workplane: None,
             coords: In3d(x, y, z),
         }
@@ -40,6 +44,10 @@ impl<T: AsTarget> AsEntityData for Point<T> {
         self.workplane.map(|w| w.handle())
     }
 
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
+    }
+
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(self.coords.as_vec())
     }
@@ -55,11 +63,13 @@ impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
             Self {
+                group: Group(slvs_entity.group),
                 workplane: Some(Entity::new(slvs_entity.wrkpl)),
                 coords: T::default(),
             }
         } else {
             Self {
+                group: Group(slvs_entity.group),
                 workplane: None,
                 coords: T::default(),
             }

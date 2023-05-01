@@ -2,21 +2,24 @@ use std::marker::PhantomData;
 
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, SLVS_E_DISTANCE},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
     element::{AsHandle, TypeInfo},
+    group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Distance<T: AsTarget> {
+    pub group: Group,
     pub workplane: Option<Entity<Workplane>>,
     pub val: f64,
     phantom: PhantomData<T>,
 }
 
 impl Distance<OnWorkplane> {
-    pub fn new(workplane: Entity<Workplane>, val: f64) -> Self {
+    pub fn new(group: Group, workplane: Entity<Workplane>, val: f64) -> Self {
         Self {
+            group,
             workplane: Some(workplane),
             val,
             phantom: PhantomData,
@@ -25,8 +28,9 @@ impl Distance<OnWorkplane> {
 }
 
 impl Distance<In3d> {
-    pub fn new(val: f64) -> Self {
+    pub fn new(group: Group, val: f64) -> Self {
         Self {
+            group,
             workplane: None,
             val,
             phantom: PhantomData,
@@ -37,6 +41,10 @@ impl Distance<In3d> {
 impl<T: AsTarget> AsEntityData for Distance<T> {
     fn type_(&self) -> i32 {
         SLVS_E_DISTANCE as _
+    }
+
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
@@ -57,6 +65,7 @@ impl<T: AsTarget> TypeInfo for Distance<T> {
 impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             workplane: Some(Entity::new(slvs_entity.wrkpl)),
             val: 0.0,
             phantom: PhantomData,
@@ -69,8 +78,9 @@ impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
 }
 
 impl FromSlvsEntity<In3d> for Distance<In3d> {
-    fn from(_slvs_entity: Slvs_Entity) -> Self {
+    fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
+            group: Group(slvs_entity.group),
             workplane: None,
             val: 0.0,
             phantom: PhantomData,
