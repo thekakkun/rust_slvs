@@ -4,7 +4,7 @@
 
 use std::{iter::zip, mem::MaybeUninit};
 
-use crate::System;
+use crate::system::System;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 

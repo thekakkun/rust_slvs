@@ -22,7 +22,7 @@ fn add_entity() {
 
 #[test]
 fn update_entity() {
-    let mut sys = slvs::System::new();
+    let mut sys = System::new();
     let g = sys.add_group();
 
     let p = sys
