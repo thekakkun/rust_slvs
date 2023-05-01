@@ -144,6 +144,10 @@ impl Slvs_System {
 // Quaternion
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Get the basis vector `U` from a quaternion.
+/// 
+/// See the documentation on [Normals][`crate::entity::Normal`] for more
+/// information.
 pub fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
@@ -166,6 +170,10 @@ pub fn quaternion_u(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
+/// Get the basis vector `V` from a quaternion.
+/// 
+/// See the documentation on [Normals][`crate::entity::Normal`] for more
+/// information.
 pub fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
@@ -188,6 +196,10 @@ pub fn quaternion_v(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
+/// Get the normal vector `N` from a quaternion.
+/// 
+/// See the documentation on [Normals][`crate::entity::Normal`] for more
+/// information.
 pub fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
     let [qw, qx, qy, qz] = quaternion;
 
@@ -210,6 +222,10 @@ pub fn quaternion_n(quaternion: [f64; 4]) -> [f64; 3] {
     }
 }
 
+/// Compute a unit quaternion from two basis vectors.
+/// 
+/// See the documentation on [Normals][`crate::entity::Normal`] for more
+/// information.
 pub fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4] {
     let [ux, uy, uz] = basis_vec_1;
     let [vx, vy, vz] = basic_vec_2;

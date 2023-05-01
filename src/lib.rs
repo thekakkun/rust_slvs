@@ -15,7 +15,7 @@ following command.
 cargo add slvs
 ```
 
-# Example: Working in 3d space.
+# Example: In 3d space.
 
 Initialize the system, and create a single [`group`].
 
