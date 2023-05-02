@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
@@ -6,7 +8,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Point<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<Entity<Workplane>>,

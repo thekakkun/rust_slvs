@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LINE_ARC_LEN},
@@ -6,7 +8,7 @@ use crate::{
     group::Group,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct EqualLineArcLen<L: AsLineSegment> {
     pub group: Group,
     pub line: Entity<L>,

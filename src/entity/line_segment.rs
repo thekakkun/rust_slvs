@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{
     As2dProjectionTarget, AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane,
 };
@@ -8,7 +10,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct LineSegment<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<Entity<Workplane>>,

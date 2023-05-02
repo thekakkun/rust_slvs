@@ -29,3 +29,6 @@ include = [
 bindgen = "0.64.0"
 cc = "1.0.79"
 dunce = "1.0.3"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }

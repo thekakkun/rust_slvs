@@ -1,3 +1,4 @@
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
@@ -13,6 +14,7 @@ pub use normal::Normal;
 mod distance;
 pub use distance::Distance;
 mod workplane;
+
 pub use workplane::Workplane;
 mod line_segment;
 pub use line_segment::LineSegment;
@@ -23,7 +25,21 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntity: AsHandle {}
+pub trait AsEntity: AsHandle {
+    fn phantom_type(&self) -> String;
+}
+
+impl Serialize for Box<dyn AsEntity> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Entity", 2)?;
+        state.serialize_field("handle", &self.handle())?;
+        state.serialize_field("type", &self.phantom_type())?;
+        state.end()
+    }
+}
 
 pub trait AsEntityData: Copy + TypeInfo {
     fn type_(&self) -> i32;
@@ -57,7 +73,7 @@ pub trait AsCurve: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Entity<T: AsEntityData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
@@ -84,4 +100,8 @@ impl<T: AsEntityData> AsHandle for Entity<T> {
     }
 }
 
-impl<T: AsEntityData> AsEntity for Entity<T> {}
+impl<T: AsEntityData> AsEntity for Entity<T> {
+    fn phantom_type(&self) -> String {
+        T::type_of()
+    }
+}

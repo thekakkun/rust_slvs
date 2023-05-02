@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     bindings::{
         SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT, SLVS_RESULT_TOO_MANY_UNKNOWNS,
@@ -5,12 +7,12 @@ use crate::{
     constraint::AsConstraint,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SolveOkay {
     pub dof: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
@@ -26,7 +28,7 @@ impl SolveFail {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum FailReason {
     Inconsistent,
     DidntConverge,

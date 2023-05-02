@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
@@ -10,7 +12,7 @@ use crate::{
 // From two points
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct PointsHorizontal<PA, PB>
 where
     PA: AsPoint,
@@ -93,7 +95,7 @@ where
 // From line segment
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct LineHorizontal<L: AsLineSegment> {
     pub group: Group,
     pub workplane: Entity<Workplane>,

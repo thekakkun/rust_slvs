@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::{iter::zip, marker::PhantomData};
 
 use crate::{
@@ -13,7 +14,7 @@ use crate::{
     target::AsTarget,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SlvsElements {
     pub groups: SlvsElementList<Group>,
     pub params: SlvsElementList<Slvs_Param>,
@@ -32,7 +33,7 @@ impl SlvsElements {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SlvsElementList<T> {
     pub list: Vec<T>,
     next_h: u32,
@@ -60,7 +61,7 @@ impl<T> Default for SlvsElementList<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct System {
     pub groups: Vec<Group>,
     pub entities: Vec<Box<dyn AsEntity>>,

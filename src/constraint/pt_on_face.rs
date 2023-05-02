@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
@@ -6,7 +8,7 @@ use crate::{
     group::Group,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct PtOnFace<P: AsPoint> {
     pub group: Group,
     pub point: Entity<P>,

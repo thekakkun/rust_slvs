@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use serde::{Deserialize, Serialize};
+
 use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
@@ -8,7 +10,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Distance<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<Entity<Workplane>>,

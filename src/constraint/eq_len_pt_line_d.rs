@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_LEN_PT_LINE_D},
@@ -6,7 +8,7 @@ use crate::{
     group::Group,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct EqLenPtLineD<LA, P, LB>
 where
     LA: AsLineSegment,

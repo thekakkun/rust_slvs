@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{AsCubic, AsCurve, AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
@@ -5,7 +7,7 @@ use crate::{
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Cubic<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<Entity<Workplane>>,

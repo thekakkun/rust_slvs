@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::element::AsHandle;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Group(pub(super) u32);
 
 impl AsHandle for Group {

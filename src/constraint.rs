@@ -8,6 +8,7 @@ The handle struct [`Constraint`] is returned which can then be used retrieve
 or modify constraint data.
  */
 
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
@@ -94,11 +95,24 @@ pub use arc_line_difference::ArcLineDifference;
 
 pub trait AsConstraint: AsHandle {
     fn clone_dyn(&self) -> Box<dyn AsConstraint>;
+    fn phantom_type(&self) -> String;
 }
 
 impl Clone for Box<dyn AsConstraint> {
     fn clone(&self) -> Self {
         self.clone_dyn()
+    }
+}
+
+impl Serialize for Box<dyn AsConstraint> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Constraint", 2)?;
+        state.serialize_field("handle", &self.handle())?;
+        state.serialize_field("type", &self.phantom_type())?;
+        state.end()
     }
 }
 
@@ -121,7 +135,7 @@ pub trait AsConstraintData: Copy + Debug + TypeInfo {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Constraint<T: AsConstraintData> {
     pub(super) handle: u32,
     pub(super) phantom: PhantomData<T>,
@@ -147,14 +161,27 @@ impl<T: AsConstraintData> Debug for Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData + 'static> AsConstraint for Constraint<T> {
-    fn clone_dyn(&self) -> Box<dyn AsConstraint> {
-        Box::new(*self)
+impl<T: AsConstraintData> TypeInfo for Constraint<T> {
+    fn type_of() -> String
+    where
+        Self: Sized,
+    {
+        T::type_of()
     }
 }
 
 impl<T: AsConstraintData> AsHandle for Constraint<T> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+impl<T: AsConstraintData + 'static> AsConstraint for Constraint<T> {
+    fn clone_dyn(&self) -> Box<dyn AsConstraint> {
+        Box::new(*self)
+    }
+
+    fn phantom_type(&self) -> String {
+        T::type_of()
     }
 }

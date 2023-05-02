@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{AsArc, AsCurve, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
@@ -6,7 +8,7 @@ use crate::{
     target::OnWorkplane,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct ArcOfCircle {
     pub group: Group,
     pub workplane: Entity<Workplane>,

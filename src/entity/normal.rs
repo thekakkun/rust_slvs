@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{As2dProjectionTarget, AsEntityData, Entity, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
@@ -6,7 +8,7 @@ use crate::{
     target::OnWorkplane,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Normal {
     OnWorkplane {
         group: Group,
