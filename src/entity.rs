@@ -25,7 +25,7 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntity: AsHandle {
+pub trait AsEntity: AsHandle + Send + Sync {
     fn phantom_type(&self) -> String;
 }
 
@@ -41,7 +41,7 @@ impl Serialize for Box<dyn AsEntity> {
     }
 }
 
-pub trait AsEntityData: Copy + TypeInfo {
+pub trait AsEntityData: Copy + TypeInfo + Send + Sync {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;

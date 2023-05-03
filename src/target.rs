@@ -6,7 +6,7 @@ use crate::{
 };
 use std::fmt::Debug;
 
-pub trait AsTarget: Copy + TypeInfo {
+pub trait AsTarget: Copy + TypeInfo + Send + Sync {
     fn type_() -> i32;
     fn as_vec(&self) -> Vec<f64>;
 }
