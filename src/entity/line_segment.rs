@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{
-    As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, FromSlvsEntity, Point, Workplane,
-};
+use super::{As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
     element::{AsHandle, TypeInfo},
@@ -35,7 +33,11 @@ impl LineSegment<OnWorkplane> {
 }
 
 impl LineSegment<In3d> {
-    pub fn new(group: Group, point_a: EntityHandle<Point<In3d>>, point_b: EntityHandle<Point<In3d>>) -> Self {
+    pub fn new(
+        group: Group,
+        point_a: EntityHandle<Point<In3d>>,
+        point_b: EntityHandle<Point<In3d>>,
+    ) -> Self {
         Self {
             group,
             workplane: None,
@@ -72,24 +74,16 @@ impl<T: AsTarget> TypeInfo for LineSegment<T> {
     }
 }
 
-impl FromSlvsEntity<OnWorkplane> for LineSegment<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+impl<T: AsTarget> From<Slvs_Entity> for LineSegment<T> {
+    fn from(value: Slvs_Entity) -> Self {
         Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
-            point_a: EntityHandle::new(slvs_entity.point[0]),
-            point_b: EntityHandle::new(slvs_entity.point[1]),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for LineSegment<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            point_a: EntityHandle::new(slvs_entity.point[0]),
-            point_b: EntityHandle::new(slvs_entity.point[1]),
+            group: Group(value.group),
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            point_a: EntityHandle::new(value.point[0]),
+            point_b: EntityHandle::new(value.point[1]),
         }
     }
 }

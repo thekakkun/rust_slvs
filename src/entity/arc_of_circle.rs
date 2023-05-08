@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsCurve, AsEntityData, EntityHandle, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsArc, AsCurve, AsEntityData, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, TypeInfo},
@@ -67,21 +67,21 @@ impl AsEntityData for ArcOfCircle {
     }
 }
 
-impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: EntityHandle::new(slvs_entity.wrkpl),
-            center: EntityHandle::new(slvs_entity.point[0]),
-            arc_begin: EntityHandle::new(slvs_entity.point[1]),
-            arc_end: EntityHandle::new(slvs_entity.point[2]),
-            normal: EntityHandle::new(slvs_entity.normal),
-        }
-    }
-}
-
 impl TypeInfo for ArcOfCircle {
     fn type_of() -> String {
         "ArcOfCircle".to_string()
+    }
+}
+
+impl From<Slvs_Entity> for ArcOfCircle {
+    fn from(value: Slvs_Entity) -> Self {
+        Self {
+            group: Group(value.group),
+            workplane: EntityHandle::new(value.wrkpl),
+            center: EntityHandle::new(value.point[0]),
+            arc_begin: EntityHandle::new(value.point[1]),
+            arc_end: EntityHandle::new(value.point[2]),
+            normal: EntityHandle::new(value.normal),
+        }
     }
 }

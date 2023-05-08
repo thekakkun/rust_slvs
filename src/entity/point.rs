@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, AsPoint, EntityHandle, FromSlvsEntity, Workplane};
+use super::{AsEntityData, AsPoint, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
     element::{AsHandle, TypeInfo},
@@ -51,7 +51,11 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(self.coords.as_vec())
+        Some(self.coords.into())
+    }
+
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.coords = vals.into();
     }
 }
 
@@ -61,24 +65,42 @@ impl<T: AsTarget> TypeInfo for Point<T> {
     }
 }
 
-impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
+impl<T: AsTarget> From<Slvs_Entity> for Point<T> {
+    fn from(value: Slvs_Entity) -> Self {
+        if value.type_ == SLVS_E_POINT_IN_2D as _ {
             Self {
-                group: Group(slvs_entity.group),
-                workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+                group: Group(value.group),
+                workplane: Some(EntityHandle::new(value.wrkpl)),
                 coords: T::default(),
             }
         } else {
             Self {
-                group: Group(slvs_entity.group),
+                group: Group(value.group),
                 workplane: None,
                 coords: T::default(),
             }
         }
     }
-
-    fn set_vals(&mut self, params: Vec<f64>) {
-        self.coords = params.into();
-    }
 }
+
+// impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
+//     fn from(slvs_entity: Slvs_Entity) -> Self {
+//         if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
+//             Self {
+//                 group: Group(slvs_entity.group),
+//                 workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+//                 coords: T::default(),
+//             }
+//         } else {
+//             Self {
+//                 group: Group(slvs_entity.group),
+//                 workplane: None,
+//                 coords: T::default(),
+//             }
+//         }
+//     }
+
+//     fn set_vals(&mut self, params: Vec<f64>) {
+//         self.coords = params.into();
+//     }
+// }

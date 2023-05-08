@@ -2,9 +2,8 @@ use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup},
+    bindings::{Slvs_hEntity, Slvs_hGroup},
     element::{AsHandle, TypeInfo},
-    target::AsTarget,
 };
 
 mod point;
@@ -57,11 +56,6 @@ pub trait AsEntityData: Copy + TypeInfo + Send + Sync {
     fn param_vals(&self) -> Option<Vec<f64>> {
         None
     }
-}
-
-pub trait FromSlvsEntity<T: AsTarget>: AsEntityData {
-    fn from(slvs_entity: Slvs_Entity) -> Self;
-
     fn set_vals(&mut self, _vals: Vec<f64>) {}
 }
 

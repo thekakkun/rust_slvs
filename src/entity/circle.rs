@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsEntityData, Distance, EntityHandle, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::{AsHandle, TypeInfo},
@@ -88,26 +88,17 @@ impl<T: AsTarget> TypeInfo for Circle<T> {
     }
 }
 
-impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+impl<T: AsTarget> From<Slvs_Entity> for Circle<T> {
+    fn from(value: Slvs_Entity) -> Self {
         Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
-            center: EntityHandle::new(slvs_entity.point[0]),
-            radius: EntityHandle::new(slvs_entity.distance),
-            normal: EntityHandle::new(slvs_entity.normal),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for Circle<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            center: EntityHandle::new(slvs_entity.point[0]),
-            radius: EntityHandle::new(slvs_entity.distance),
-            normal: EntityHandle::new(slvs_entity.normal),
+            group: Group(value.group),
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            center: EntityHandle::new(value.point[0]),
+            radius: EntityHandle::new(value.distance),
+            normal: EntityHandle::new(value.normal),
         }
     }
 }

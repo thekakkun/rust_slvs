@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, FromSlvsEntity, Workplane};
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
     element::{AsHandle, TypeInfo},
@@ -56,6 +56,10 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(vec![self.val])
     }
+
+    fn set_vals(&mut self, vals: Vec<f64>) {
+        self.val = vals[0]
+    }
 }
 
 impl<T: AsTarget> TypeInfo for Distance<T> {
@@ -64,32 +68,46 @@ impl<T: AsTarget> TypeInfo for Distance<T> {
     }
 }
 
-impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+impl<T: AsTarget> From<Slvs_Entity> for Distance<T> {
+    fn from(value: Slvs_Entity) -> Self {
         Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+            group: Group(value.group),
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
             val: 0.0,
             phantom: PhantomData,
         }
     }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
-    }
 }
 
-impl FromSlvsEntity<In3d> for Distance<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            val: 0.0,
-            phantom: PhantomData,
-        }
-    }
+// impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
+//     fn from(slvs_entity: Slvs_Entity) -> Self {
+//         Self {
+//             group: Group(slvs_entity.group),
+//             workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+//             val: 0.0,
+//             phantom: PhantomData,
+//         }
+//     }
 
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
-    }
-}
+//     fn set_vals(&mut self, vals: Vec<f64>) {
+//         self.val = vals[0]
+//     }
+// }
+
+// impl FromSlvsEntity<In3d> for Distance<In3d> {
+//     fn from(slvs_entity: Slvs_Entity) -> Self {
+//         Self {
+//             group: Group(slvs_entity.group),
+//             workplane: None,
+//             val: 0.0,
+//             phantom: PhantomData,
+//         }
+//     }
+
+//     fn set_vals(&mut self, vals: Vec<f64>) {
+//         self.val = vals[0]
+//     }
+// }

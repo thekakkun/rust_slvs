@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, FromSlvsEntity, Point, Workplane};
+use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     element::{AsHandle, TypeInfo},
@@ -88,28 +88,18 @@ impl<T: AsTarget> TypeInfo for Cubic<T> {
     }
 }
 
-impl FromSlvsEntity<OnWorkplane> for Cubic<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
+impl<T: AsTarget> From<Slvs_Entity> for Cubic<T> {
+    fn from(value: Slvs_Entity) -> Self {
         Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
-            start_point: EntityHandle::new(slvs_entity.point[0]),
-            start_control: EntityHandle::new(slvs_entity.point[1]),
-            end_control: EntityHandle::new(slvs_entity.point[2]),
-            end_point: EntityHandle::new(slvs_entity.point[3]),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for Cubic<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            start_point: EntityHandle::new(slvs_entity.point[0]),
-            start_control: EntityHandle::new(slvs_entity.point[1]),
-            end_control: EntityHandle::new(slvs_entity.point[2]),
-            end_point: EntityHandle::new(slvs_entity.point[3]),
+            group: Group(value.group),
+            workplane: match value.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            start_point: EntityHandle::new(value.point[0]),
+            start_control: EntityHandle::new(value.point[1]),
+            end_control: EntityHandle::new(value.point[2]),
+            end_point: EntityHandle::new(value.point[3]),
         }
     }
 }

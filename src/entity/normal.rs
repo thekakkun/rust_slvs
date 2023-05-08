@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use super::{As2dProjectionTarget, AsEntityData, EntityHandle, FromSlvsEntity, Workplane};
+use super::{As2dProjectionTarget, AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{AsHandle, TypeInfo},
     group::Group,
-    target::OnWorkplane,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -64,30 +63,6 @@ impl AsEntityData for Normal {
             Self::In3d { w, x, y, z, .. } => Some(vec![*w, *x, *y, *z]),
         }
     }
-}
-
-impl TypeInfo for Normal {
-    fn type_of() -> String {
-        "Normal".to_string()
-    }
-}
-
-impl FromSlvsEntity<OnWorkplane> for Normal {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        match slvs_entity.wrkpl {
-            0 => Self::In3d {
-                group: Group(slvs_entity.group),
-                w: 0.0,
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            h => Self::OnWorkplane {
-                group: Group(slvs_entity.group),
-                workplane: EntityHandle::new(h),
-            },
-        }
-    }
 
     fn set_vals(&mut self, vals: Vec<f64>) {
         if let Normal::In3d { w, x, y, z, .. } = self {
@@ -98,3 +73,54 @@ impl FromSlvsEntity<OnWorkplane> for Normal {
         }
     }
 }
+
+impl TypeInfo for Normal {
+    fn type_of() -> String {
+        "Normal".to_string()
+    }
+}
+
+impl From<Slvs_Entity> for Normal {
+    fn from(value: Slvs_Entity) -> Self {
+        match value.wrkpl {
+            0 => Self::In3d {
+                group: Group(value.group),
+                w: 0.0,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            h => Self::OnWorkplane {
+                group: Group(value.group),
+                workplane: EntityHandle::new(h),
+            },
+        }
+    }
+}
+
+// impl FromSlvsEntity<OnWorkplane> for Normal {
+//     fn from(slvs_entity: Slvs_Entity) -> Self {
+//         match slvs_entity.wrkpl {
+//             0 => Self::In3d {
+//                 group: Group(slvs_entity.group),
+//                 w: 0.0,
+//                 x: 0.0,
+//                 y: 0.0,
+//                 z: 0.0,
+//             },
+//             h => Self::OnWorkplane {
+//                 group: Group(slvs_entity.group),
+//                 workplane: EntityHandle::new(h),
+//             },
+//         }
+//     }
+
+//     fn set_vals(&mut self, vals: Vec<f64>) {
+//         if let Normal::In3d { w, x, y, z, .. } = self {
+//             *w = vals[0];
+//             *x = vals[1];
+//             *y = vals[2];
+//             *z = vals[3];
+//         }
+//     }
+// }

@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, FromSlvsEntity, Normal, Point};
+use super::{AsEntityData, EntityHandle, Normal, Point};
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
+    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     element::{AsHandle, TypeInfo},
     group::Group,
-    target::{AsTarget, In3d},
+    target::In3d,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -16,7 +16,11 @@ pub struct Workplane {
 }
 
 impl Workplane {
-    pub fn new(group: Group, origin: EntityHandle<Point<In3d>>, normal: EntityHandle<Normal>) -> Self {
+    pub fn new(
+        group: Group,
+        origin: EntityHandle<Point<In3d>>,
+        normal: EntityHandle<Normal>,
+    ) -> Self {
         Self {
             group,
             origin,
@@ -53,12 +57,22 @@ impl TypeInfo for Workplane {
     }
 }
 
-impl<T: AsTarget> FromSlvsEntity<T> for Workplane {
-    fn from(slvs_entity: crate::bindings::Slvs_Entity) -> Self {
+impl From<Slvs_Entity> for Workplane {
+    fn from(value: Slvs_Entity) -> Self {
         Self {
-            group: Group(slvs_entity.group),
-            origin: EntityHandle::new(slvs_entity.point[0]),
-            normal: EntityHandle::new(slvs_entity.normal),
+            group: Group(value.group),
+            origin: EntityHandle::new(value.point[0]),
+            normal: EntityHandle::new(value.normal),
         }
     }
 }
+
+// impl<T: AsTarget> FromSlvsEntity<T> for Workplane {
+//     fn from(slvs_entity: crate::bindings::Slvs_Entity) -> Self {
+//         Self {
+//             group: Group(slvs_entity.group),
+//             origin: EntityHandle::new(slvs_entity.point[0]),
+//             normal: EntityHandle::new(slvs_entity.normal),
+//         }
+//     }
+// }

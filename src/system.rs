@@ -8,10 +8,9 @@ use crate::{
     },
     constraint::{AsConstraintData, ConstraintHandle},
     element::AsHandle,
-    entity::{AsEntityData, EntityHandle, FromSlvsEntity},
+    entity::{AsEntityData, EntityHandle},
     group::Group,
     solver::{FailReason, SolveFail, SolveOkay},
-    target::AsTarget,
 };
 
 #[derive(Debug, Serialize)]
@@ -48,11 +47,7 @@ pub struct System {
     pub params: Elements<Slvs_Param>,
     pub entities: Elements<Slvs_Entity>,
     pub constraints: Elements<Slvs_Constraint>,
-    // pub groups: Vec<Group>,
-    // pub entities: Vec<Box<dyn AsEntity>>,
-    // pub constraints: Vec<Box<dyn AsConstraint>>,
     pub calculate_faileds: bool,
-    // pub slvs: SlvsElements,
     pub dragged: [Slvs_hParam; 4],
 }
 
@@ -64,7 +59,6 @@ impl System {
             entities: Elements::new(),
             constraints: Elements::new(),
             calculate_faileds: true,
-            // slvs: SlvsElements::new(),
             dragged: [0; 4],
         }
     }
@@ -168,10 +162,9 @@ impl System {
 }
 
 impl System {
-    pub fn entity_data<E, T>(&self, entity: &EntityHandle<E>) -> Result<E, &'static str>
+    pub fn entity_data<E>(&self, entity: &EntityHandle<E>) -> Result<E, &'static str>
     where
-        E: FromSlvsEntity<T>,
-        T: AsTarget,
+        E: AsEntityData + From<Slvs_Entity>,
     {
         let slvs_entity = self.slvs_entity(entity.handle())?;
         let mut entity_data = E::from(*slvs_entity);
@@ -220,14 +213,9 @@ impl System {
         Ok(())
     }
 
-    pub fn update_entity<E, T, F>(
-        &mut self,
-        entity: &EntityHandle<E>,
-        f: F,
-    ) -> Result<E, &'static str>
+    pub fn update_entity<E, F>(&mut self, entity: &EntityHandle<E>, f: F) -> Result<E, &'static str>
     where
-        E: FromSlvsEntity<T>,
-        T: AsTarget,
+        E: AsEntityData + From<Slvs_Entity>,
         F: FnOnce(&mut E),
     {
         let mut entity_data = self.entity_data(entity)?;
@@ -308,10 +296,9 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<E, T>(&mut self, entity: EntityHandle<E>) -> Result<E, &'static str>
+    pub fn delete_entity<E>(&mut self, entity: EntityHandle<E>) -> Result<E, &'static str>
     where
-        E: FromSlvsEntity<T>,
-        T: AsTarget,
+        E: AsEntityData + From<Slvs_Entity>,
     {
         let entity_data = self.entity_data(&entity)?;
         let ix = self.entity_ix(entity.handle())?;
@@ -324,10 +311,13 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<C: AsConstraintData + From<Slvs_Constraint>>(
+    pub fn delete_constraint<C>(
         &mut self,
         constraint: ConstraintHandle<C>,
-    ) -> Result<C, &'static str> {
+    ) -> Result<C, &'static str>
+    where
+        C: AsConstraintData + From<Slvs_Constraint>,
+    {
         let constraint_data = self.constraint_data(&constraint)?;
 
         let ix = self.constraint_ix(constraint.handle())?;
