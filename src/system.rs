@@ -6,40 +6,21 @@ use crate::{
         Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_Solve, Slvs_System, Slvs_hConstraint,
         Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_E_NORMAL_IN_3D,
     },
-    constraint::{AsConstraint, AsConstraintData, Constraint},
+    constraint::{AsConstraintData, ConstraintHandle},
     element::AsHandle,
-    entity::{AsEntity, AsEntityData, Entity, FromSlvsEntity},
+    entity::{AsEntityData, EntityHandle, FromSlvsEntity},
     group::Group,
     solver::{FailReason, SolveFail, SolveOkay},
     target::AsTarget,
 };
 
 #[derive(Debug, Serialize)]
-pub struct SlvsElements {
-    pub groups: SlvsElementList<Group>,
-    pub params: SlvsElementList<Slvs_Param>,
-    pub entities: SlvsElementList<Slvs_Entity>,
-    pub constraints: SlvsElementList<Slvs_Constraint>,
-}
-
-impl SlvsElements {
-    fn new() -> Self {
-        Self {
-            groups: SlvsElementList::new(),
-            params: SlvsElementList::new(),
-            entities: SlvsElementList::new(),
-            constraints: SlvsElementList::new(),
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct SlvsElementList<T> {
+pub struct Elements<T> {
     pub list: Vec<T>,
     next_h: u32,
 }
 
-impl<T> SlvsElementList<T> {
+impl<T> Elements<T> {
     fn new() -> Self {
         Self {
             list: Vec::new(),
@@ -55,7 +36,7 @@ impl<T> SlvsElementList<T> {
     }
 }
 
-impl<T> Default for SlvsElementList<T> {
+impl<T> Default for Elements<T> {
     fn default() -> Self {
         Self::new()
     }
@@ -63,22 +44,27 @@ impl<T> Default for SlvsElementList<T> {
 
 #[derive(Debug, Serialize)]
 pub struct System {
-    pub groups: Vec<Group>,
-    pub entities: Vec<Box<dyn AsEntity>>,
-    pub constraints: Vec<Box<dyn AsConstraint>>,
+    pub groups: Elements<Group>,
+    pub params: Elements<Slvs_Param>,
+    pub entities: Elements<Slvs_Entity>,
+    pub constraints: Elements<Slvs_Constraint>,
+    // pub groups: Vec<Group>,
+    // pub entities: Vec<Box<dyn AsEntity>>,
+    // pub constraints: Vec<Box<dyn AsConstraint>>,
     pub calculate_faileds: bool,
-    pub slvs: SlvsElements,
+    // pub slvs: SlvsElements,
     pub dragged: [Slvs_hParam; 4],
 }
 
 impl System {
     pub fn new() -> Self {
         Self {
-            groups: Vec::new(),
-            entities: Vec::new(),
-            constraints: Vec::new(),
+            groups: Elements::new(),
+            params: Elements::new(),
+            entities: Elements::new(),
+            constraints: Elements::new(),
             calculate_faileds: true,
-            slvs: SlvsElements::new(),
+            // slvs: SlvsElements::new(),
             dragged: [0; 4],
         }
     }
@@ -86,21 +72,20 @@ impl System {
 
 impl System {
     pub fn add_group(&mut self) -> Group {
-        let new_group = Group(self.slvs.groups.get_next_h());
-        self.groups.push(new_group);
+        let new_group = Group(self.groups.get_next_h());
 
-        self.slvs.groups.list.push(new_group);
-        self.slvs.groups.list.last().cloned().unwrap()
+        self.groups.list.push(new_group);
+        self.groups.list.last().cloned().unwrap()
     }
 
     pub fn sketch<E: AsEntityData + 'static>(
         &mut self,
         entity_data: E,
-    ) -> Result<Entity<E>, &'static str> {
+    ) -> Result<EntityHandle<E>, &'static str> {
         self.validate_entity_data(&entity_data)?;
 
         let mut new_slvs_entity = Slvs_Entity::new(
-            self.slvs.entities.get_next_h(),
+            self.entities.get_next_h(),
             entity_data.group(),
             entity_data.type_(),
         );
@@ -126,13 +111,12 @@ impl System {
             );
         }
 
-        self.slvs.entities.list.push(new_slvs_entity);
+        self.entities.list.push(new_slvs_entity);
 
-        let entity: Entity<E> = Entity {
+        let entity: EntityHandle<E> = EntityHandle {
             handle: new_slvs_entity.h,
             phantom: PhantomData,
         };
-        self.entities.push(Box::new(entity));
 
         Ok(entity)
     }
@@ -140,11 +124,11 @@ impl System {
     pub fn constrain<C: AsConstraintData + 'static>(
         &mut self,
         constraint_data: C,
-    ) -> Result<Constraint<C>, &'static str> {
+    ) -> Result<ConstraintHandle<C>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
         let mut new_slvs_constraint = Slvs_Constraint::new(
-            self.slvs.constraints.get_next_h(),
+            self.constraints.get_next_h(),
             constraint_data.group(),
             constraint_data.type_(),
         );
@@ -163,10 +147,9 @@ impl System {
         }
         new_slvs_constraint.set_others(constraint_data.others());
 
-        self.slvs.constraints.list.push(new_slvs_constraint);
+        self.constraints.list.push(new_slvs_constraint);
 
-        let constraint = Constraint::new(new_slvs_constraint.h);
-        self.constraints.push(Box::new(constraint));
+        let constraint = ConstraintHandle::new(new_slvs_constraint.h);
 
         Ok(constraint)
     }
@@ -174,18 +157,18 @@ impl System {
     // Private as user has no reason to create bare param without linking to an entity.
     pub(crate) fn add_param(&mut self, group: Slvs_hGroup, val: f64) -> Slvs_hParam {
         let new_param = Slvs_Param {
-            h: self.slvs.params.get_next_h(),
+            h: self.params.get_next_h(),
             group,
             val,
         };
 
-        self.slvs.params.list.push(new_param);
-        self.slvs.params.list.last().unwrap().h
+        self.params.list.push(new_param);
+        self.params.list.last().unwrap().h
     }
 }
 
 impl System {
-    pub fn entity_data<E, T>(&self, entity: &Entity<E>) -> Result<E, &'static str>
+    pub fn entity_data<E, T>(&self, entity: &EntityHandle<E>) -> Result<E, &'static str>
     where
         E: FromSlvsEntity<T>,
         T: AsTarget,
@@ -216,7 +199,7 @@ impl System {
 
     pub fn constraint_data<C: AsConstraintData + From<Slvs_Constraint>>(
         &self,
-        constraint: &Constraint<C>,
+        constraint: &ConstraintHandle<C>,
     ) -> Result<C, &'static str> {
         let slvs_constraint = self.slvs_constraint(constraint.handle())?;
         Ok((*slvs_constraint).into())
@@ -237,7 +220,11 @@ impl System {
         Ok(())
     }
 
-    pub fn update_entity<E, T, F>(&mut self, entity: &Entity<E>, f: F) -> Result<E, &'static str>
+    pub fn update_entity<E, T, F>(
+        &mut self,
+        entity: &EntityHandle<E>,
+        f: F,
+    ) -> Result<E, &'static str>
     where
         E: FromSlvsEntity<T>,
         T: AsTarget,
@@ -276,7 +263,7 @@ impl System {
 
     pub fn update_constraint<C, F>(
         &mut self,
-        constraint: &Constraint<C>,
+        constraint: &ConstraintHandle<C>,
         f: F,
     ) -> Result<C, &'static str>
     where
@@ -309,27 +296,26 @@ impl System {
 impl System {
     pub fn delete_group(&mut self, group: Group) -> Result<Group, &'static str> {
         let ix = self.group_ix(group.handle())?;
-        self.slvs.groups.list.remove(ix);
-        self.groups.remove(ix);
+        self.groups.list.remove(ix);
+
         Ok(group)
     }
 
     pub(crate) fn delete_param(&mut self, h: Slvs_hParam) -> Result<(), &'static str> {
         let ix = self.param_ix(h)?;
-        self.slvs.params.list.remove(ix);
+        self.params.list.remove(ix);
 
         Ok(())
     }
 
-    pub fn delete_entity<E, T>(&mut self, entity: Entity<E>) -> Result<E, &'static str>
+    pub fn delete_entity<E, T>(&mut self, entity: EntityHandle<E>) -> Result<E, &'static str>
     where
         E: FromSlvsEntity<T>,
         T: AsTarget,
     {
         let entity_data = self.entity_data(&entity)?;
         let ix = self.entity_ix(entity.handle())?;
-        let deleted_entity = self.slvs.entities.list.remove(ix);
-        self.entities.remove(ix);
+        let deleted_entity = self.entities.list.remove(ix);
 
         for param_h in deleted_entity.param {
             self.delete_param(param_h)?
@@ -340,20 +326,19 @@ impl System {
 
     pub fn delete_constraint<C: AsConstraintData + From<Slvs_Constraint>>(
         &mut self,
-        constraint: Constraint<C>,
+        constraint: ConstraintHandle<C>,
     ) -> Result<C, &'static str> {
         let constraint_data = self.constraint_data(&constraint)?;
 
         let ix = self.constraint_ix(constraint.handle())?;
-        self.slvs.constraints.list.remove(ix);
-        self.constraints.remove(ix);
+        self.constraints.list.remove(ix);
 
         Ok(constraint_data)
     }
 }
 
 impl System {
-    pub fn set_dragged(&mut self, entity: &Entity<impl AsEntityData>) {
+    pub fn set_dragged(&mut self, entity: &EntityHandle<impl AsEntityData>) {
         if let Ok(slvs_entity) = self.slvs_entity(entity.handle()) {
             self.dragged = slvs_entity.param;
         }
@@ -364,7 +349,7 @@ impl System {
     }
 
     pub fn solve(&mut self, group: &Group) -> Result<SolveOkay, SolveFail> {
-        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.slvs.constraints.list.len()];
+        let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
         let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
 
         unsafe {
@@ -375,12 +360,7 @@ impl System {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
-                failed_constraints: self
-                    .constraints
-                    .iter()
-                    .filter(|constraint| failed_handles.contains(&constraint.handle()))
-                    .cloned()
-                    .collect(),
+                failed_constraints: failed_handles.into_iter().filter(|&h| h != 0).collect(),
             }),
             Err(_) => Ok(SolveOkay {
                 dof: slvs_system.dof,
@@ -391,16 +371,14 @@ impl System {
 
 impl System {
     pub(crate) fn group_ix(&self, h: Slvs_hGroup) -> Result<usize, &'static str> {
-        self.slvs
-            .groups
+        self.groups
             .list
             .binary_search_by_key(&h, |g| g.handle())
             .map_err(|_| "Specified group not found.")
     }
 
     pub(crate) fn param_ix(&self, h: Slvs_hParam) -> Result<usize, &'static str> {
-        self.slvs
-            .params
+        self.params
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_err(|_| "Specified parameter not found.")
@@ -408,7 +386,7 @@ impl System {
 
     pub(crate) fn slvs_param(&self, h: Slvs_hParam) -> Result<&Slvs_Param, &'static str> {
         let ix = self.param_ix(h)?;
-        Ok(&self.slvs.params.list[ix])
+        Ok(&self.params.list[ix])
     }
 
     pub(crate) fn mut_slvs_param(
@@ -416,12 +394,11 @@ impl System {
         h: Slvs_hParam,
     ) -> Result<&mut Slvs_Param, &'static str> {
         let ix = self.param_ix(h)?;
-        Ok(&mut self.slvs.params.list[ix])
+        Ok(&mut self.params.list[ix])
     }
 
     pub(crate) fn entity_ix(&self, h: Slvs_hEntity) -> Result<usize, &'static str> {
-        self.slvs
-            .entities
+        self.entities
             .list
             .binary_search_by_key(&h, |&Slvs_Entity { h, .. }| h)
             .map_err(|_| "Specified entity not found.")
@@ -429,7 +406,7 @@ impl System {
 
     pub(crate) fn slvs_entity(&self, h: Slvs_hEntity) -> Result<&Slvs_Entity, &'static str> {
         let ix = self.entity_ix(h)?;
-        Ok(&self.slvs.entities.list[ix])
+        Ok(&self.entities.list[ix])
     }
 
     pub(crate) fn entity_on_workplane(
@@ -456,7 +433,7 @@ impl System {
         h: Slvs_hEntity,
     ) -> Result<&mut Slvs_Entity, &'static str> {
         let ix = self.entity_ix(h)?;
-        Ok(&mut self.slvs.entities.list[ix])
+        Ok(&mut self.entities.list[ix])
     }
 
     // Checks that all elements referenced within entity_data exist and are on the expected workplane
@@ -503,8 +480,7 @@ impl System {
     }
 
     pub(crate) fn constraint_ix(&self, h: Slvs_hConstraint) -> Result<usize, &'static str> {
-        self.slvs
-            .constraints
+        self.constraints
             .list
             .binary_search_by_key(&h, |&Slvs_Constraint { h, .. }| h)
             .map_err(|_| "Specified constraint not found.")
@@ -515,7 +491,7 @@ impl System {
         h: Slvs_hConstraint,
     ) -> Result<&Slvs_Constraint, &'static str> {
         let ix = self.constraint_ix(h)?;
-        Ok(&self.slvs.constraints.list[ix])
+        Ok(&self.constraints.list[ix])
     }
 
     pub(crate) fn mut_slvs_constraint(
@@ -523,7 +499,7 @@ impl System {
         h: Slvs_hConstraint,
     ) -> Result<&mut Slvs_Constraint, &'static str> {
         let ix = self.constraint_ix(h)?;
-        Ok(&mut self.slvs.constraints.list[ix])
+        Ok(&mut self.constraints.list[ix])
     }
 
     pub(crate) fn validate_constraint_data(

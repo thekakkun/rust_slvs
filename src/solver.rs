@@ -2,9 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     bindings::{
-        SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT, SLVS_RESULT_TOO_MANY_UNKNOWNS,
+        Slvs_hConstraint, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
+        SLVS_RESULT_TOO_MANY_UNKNOWNS,
     },
-    constraint::AsConstraint,
+    constraint::AsConstraintHandle,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,15 +17,14 @@ pub struct SolveOkay {
 pub struct SolveFail {
     pub dof: i32,
     pub reason: FailReason,
-    pub failed_constraints: Vec<Box<dyn AsConstraint>>,
+    pub failed_constraints: Vec<Slvs_hConstraint>,
 }
 
 impl SolveFail {
-    pub fn constraint_did_fail<T: AsConstraint>(&self, constraint: &T) -> bool {
+    pub fn constraint_did_fail<T: AsConstraintHandle>(&self, constraint: &T) -> bool {
         self.failed_constraints
             .iter()
-            .map(|constraint| constraint.handle())
-            .any(|constraint_h| constraint_h == constraint.handle())
+            .any(|&constraint_h| constraint_h == constraint.handle())
     }
 }
 
