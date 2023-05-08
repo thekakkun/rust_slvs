@@ -82,25 +82,3 @@ impl<T: AsTarget> From<Slvs_Entity> for Point<T> {
         }
     }
 }
-
-// impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
-//     fn from(slvs_entity: Slvs_Entity) -> Self {
-//         if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
-//             Self {
-//                 group: Group(slvs_entity.group),
-//                 workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
-//                 coords: T::default(),
-//             }
-//         } else {
-//             Self {
-//                 group: Group(slvs_entity.group),
-//                 workplane: None,
-//                 coords: T::default(),
-//             }
-//         }
-//     }
-
-//     fn set_vals(&mut self, params: Vec<f64>) {
-//         self.coords = params.into();
-//     }
-// }

@@ -17,7 +17,12 @@ pub struct ArcLineLenRatio<L: AsLineSegment> {
 }
 
 impl<L: AsLineSegment> ArcLineLenRatio<L> {
-    pub fn new(group: Group, arc: EntityHandle<ArcOfCircle>, line: EntityHandle<L>, ratio: f64) -> Self {
+    pub fn new(
+        group: Group,
+        arc: EntityHandle<ArcOfCircle>,
+        line: EntityHandle<L>,
+        ratio: f64,
+    ) -> Self {
         Self {
             group,
             arc,

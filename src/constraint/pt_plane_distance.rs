@@ -17,7 +17,12 @@ pub struct PtPlaneDistance<P: AsPoint> {
 }
 
 impl<P: AsPoint> PtPlaneDistance<P> {
-    pub fn new(group: Group, point: EntityHandle<P>, plane: EntityHandle<Workplane>, distance: f64) -> Self {
+    pub fn new(
+        group: Group,
+        point: EntityHandle<P>,
+        plane: EntityHandle<Workplane>,
+        distance: f64,
+    ) -> Self {
         Self {
             group,
             point,

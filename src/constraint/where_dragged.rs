@@ -16,7 +16,11 @@ pub struct WhereDragged<P: AsPoint> {
 }
 
 impl<P: AsPoint> WhereDragged<P> {
-    pub fn new(group: Group, point: EntityHandle<P>, workplane: Option<EntityHandle<Workplane>>) -> Self {
+    pub fn new(
+        group: Group,
+        point: EntityHandle<P>,
+        workplane: Option<EntityHandle<Workplane>>,
+    ) -> Self {
         Self {
             group,
             point,

@@ -16,7 +16,11 @@ pub struct SameOrientation {
 }
 
 impl SameOrientation {
-    pub fn new(group: Group, normal_a: EntityHandle<Normal>, normal_b: EntityHandle<Normal>) -> Self {
+    pub fn new(
+        group: Group,
+        normal_a: EntityHandle<Normal>,
+        normal_b: EntityHandle<Normal>,
+    ) -> Self {
         Self {
             group,
             normal_a,

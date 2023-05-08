@@ -5,7 +5,8 @@ use crate::{
         Slvs_hConstraint, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT,
         SLVS_RESULT_TOO_MANY_UNKNOWNS,
     },
-    constraint::AsConstraintHandle,
+    constraint::{AsConstraintData, ConstraintHandle},
+    element::AsHandle,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,7 +22,10 @@ pub struct SolveFail {
 }
 
 impl SolveFail {
-    pub fn constraint_did_fail<T: AsConstraintHandle>(&self, constraint: &T) -> bool {
+    pub fn constraint_did_fail<C: AsConstraintData>(
+        &self,
+        constraint: &ConstraintHandle<C>,
+    ) -> bool {
         self.failed_constraints
             .iter()
             .any(|&constraint_h| constraint_h == constraint.handle())

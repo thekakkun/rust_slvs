@@ -1,4 +1,4 @@
-use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
@@ -23,23 +23,7 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntityHandle: AsHandle {
-    fn phantom_type(&self) -> String;
-}
-
-impl Serialize for Box<dyn AsEntityHandle> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Entity", 2)?;
-        state.serialize_field("handle", &self.handle())?;
-        state.serialize_field("type", &self.phantom_type())?;
-        state.end()
-    }
-}
-
-pub trait AsEntityData: Copy + TypeInfo  {
+pub trait AsEntityData: Copy + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;
@@ -90,11 +74,5 @@ impl<T: AsEntityData> Debug for EntityHandle<T> {
 impl<T: AsEntityData> AsHandle for EntityHandle<T> {
     fn handle(&self) -> u32 {
         self.handle
-    }
-}
-
-impl<T: AsEntityData> AsEntityHandle for EntityHandle<T> {
-    fn phantom_type(&self) -> String {
-        T::type_of()
     }
 }

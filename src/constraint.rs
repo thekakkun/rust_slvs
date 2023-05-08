@@ -4,11 +4,11 @@ multiple entities.
 
 Add constraints to the [`crate::System`] by passing structs that implement
 [`AsConstraintData`] to [`crate::System::constrain()`].
-The handle struct [`Constraint`] is returned which can then be used retrieve
+The handle struct [`ConstraintHandle`] is returned which can then be used retrieve
 or modify constraint data.
  */
 
-use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
@@ -93,30 +93,7 @@ pub use arc_arc_difference::ArcArcDifference;
 mod arc_line_difference;
 pub use arc_line_difference::ArcLineDifference;
 
-pub trait AsConstraintHandle: AsHandle {
-    fn clone_dyn(&self) -> Box<dyn AsConstraintHandle>;
-    fn phantom_type(&self) -> String;
-}
-
-impl Clone for Box<dyn AsConstraintHandle> {
-    fn clone(&self) -> Self {
-        self.clone_dyn()
-    }
-}
-
-impl Serialize for Box<dyn AsConstraintHandle> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Constraint", 2)?;
-        state.serialize_field("handle", &self.handle())?;
-        state.serialize_field("type", &self.phantom_type())?;
-        state.end()
-    }
-}
-
-pub trait AsConstraintData: Copy + Debug + TypeInfo  {
+pub trait AsConstraintData: Copy + Debug + TypeInfo {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;
@@ -173,15 +150,5 @@ impl<T: AsConstraintData> TypeInfo for ConstraintHandle<T> {
 impl<T: AsConstraintData> AsHandle for ConstraintHandle<T> {
     fn handle(&self) -> u32 {
         self.handle
-    }
-}
-
-impl<T: AsConstraintData + 'static> AsConstraintHandle for ConstraintHandle<T> {
-    fn clone_dyn(&self) -> Box<dyn AsConstraintHandle> {
-        Box::new(*self)
-    }
-
-    fn phantom_type(&self) -> String {
-        T::type_of()
     }
 }

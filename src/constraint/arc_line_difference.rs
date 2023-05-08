@@ -17,7 +17,12 @@ pub struct ArcLineDifference<L: AsLineSegment> {
 }
 
 impl<L: AsLineSegment> ArcLineDifference<L> {
-    pub fn new(group: Group, arc: EntityHandle<ArcOfCircle>, line: EntityHandle<L>, difference: f64) -> Self {
+    pub fn new(
+        group: Group,
+        arc: EntityHandle<ArcOfCircle>,
+        line: EntityHandle<L>,
+        difference: f64,
+    ) -> Self {
         Self {
             group,
             arc,

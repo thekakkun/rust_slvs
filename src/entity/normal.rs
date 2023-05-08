@@ -97,30 +97,3 @@ impl From<Slvs_Entity> for Normal {
         }
     }
 }
-
-// impl FromSlvsEntity<OnWorkplane> for Normal {
-//     fn from(slvs_entity: Slvs_Entity) -> Self {
-//         match slvs_entity.wrkpl {
-//             0 => Self::In3d {
-//                 group: Group(slvs_entity.group),
-//                 w: 0.0,
-//                 x: 0.0,
-//                 y: 0.0,
-//                 z: 0.0,
-//             },
-//             h => Self::OnWorkplane {
-//                 group: Group(slvs_entity.group),
-//                 workplane: EntityHandle::new(h),
-//             },
-//         }
-//     }
-
-//     fn set_vals(&mut self, vals: Vec<f64>) {
-//         if let Normal::In3d { w, x, y, z, .. } = self {
-//             *w = vals[0];
-//             *x = vals[1];
-//             *y = vals[2];
-//             *z = vals[3];
-//         }
-//     }
-// }

@@ -66,13 +66,3 @@ impl From<Slvs_Entity> for Workplane {
         }
     }
 }
-
-// impl<T: AsTarget> FromSlvsEntity<T> for Workplane {
-//     fn from(slvs_entity: crate::bindings::Slvs_Entity) -> Self {
-//         Self {
-//             group: Group(slvs_entity.group),
-//             origin: EntityHandle::new(slvs_entity.point[0]),
-//             normal: EntityHandle::new(slvs_entity.normal),
-//         }
-//     }
-// }

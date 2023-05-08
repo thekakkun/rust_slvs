@@ -81,33 +81,3 @@ impl<T: AsTarget> From<Slvs_Entity> for Distance<T> {
         }
     }
 }
-
-// impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
-//     fn from(slvs_entity: Slvs_Entity) -> Self {
-//         Self {
-//             group: Group(slvs_entity.group),
-//             workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
-//             val: 0.0,
-//             phantom: PhantomData,
-//         }
-//     }
-
-//     fn set_vals(&mut self, vals: Vec<f64>) {
-//         self.val = vals[0]
-//     }
-// }
-
-// impl FromSlvsEntity<In3d> for Distance<In3d> {
-//     fn from(slvs_entity: Slvs_Entity) -> Self {
-//         Self {
-//             group: Group(slvs_entity.group),
-//             workplane: None,
-//             val: 0.0,
-//             phantom: PhantomData,
-//         }
-//     }
-
-//     fn set_vals(&mut self, vals: Vec<f64>) {
-//         self.val = vals[0]
-//     }
-// }
