@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsCubic, AsCurve, AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
+use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, FromSlvsEntity, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     element::{AsHandle, TypeInfo},
@@ -10,21 +10,21 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Cubic<T: AsTarget> {
     pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub start_point: Entity<Point<T>>,
-    pub start_control: Entity<Point<T>>,
-    pub end_control: Entity<Point<T>>,
-    pub end_point: Entity<Point<T>>,
+    pub workplane: Option<EntityHandle<Workplane>>,
+    pub start_point: EntityHandle<Point<T>>,
+    pub start_control: EntityHandle<Point<T>>,
+    pub end_control: EntityHandle<Point<T>>,
+    pub end_point: EntityHandle<Point<T>>,
 }
 
 impl Cubic<OnWorkplane> {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        start_point: Entity<Point<OnWorkplane>>,
-        start_control: Entity<Point<OnWorkplane>>,
-        end_control: Entity<Point<OnWorkplane>>,
-        end_point: Entity<Point<OnWorkplane>>,
+        workplane: EntityHandle<Workplane>,
+        start_point: EntityHandle<Point<OnWorkplane>>,
+        start_control: EntityHandle<Point<OnWorkplane>>,
+        end_control: EntityHandle<Point<OnWorkplane>>,
+        end_point: EntityHandle<Point<OnWorkplane>>,
     ) -> Self {
         Self {
             group,
@@ -40,10 +40,10 @@ impl Cubic<OnWorkplane> {
 impl Cubic<In3d> {
     pub fn new(
         group: Group,
-        start_point: Entity<Point<In3d>>,
-        start_control: Entity<Point<In3d>>,
-        end_control: Entity<Point<In3d>>,
-        end_point: Entity<Point<In3d>>,
+        start_point: EntityHandle<Point<In3d>>,
+        start_control: EntityHandle<Point<In3d>>,
+        end_control: EntityHandle<Point<In3d>>,
+        end_point: EntityHandle<Point<In3d>>,
     ) -> Self {
         Self {
             group,
@@ -92,11 +92,11 @@ impl FromSlvsEntity<OnWorkplane> for Cubic<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            start_point: Entity::new(slvs_entity.point[0]),
-            start_control: Entity::new(slvs_entity.point[1]),
-            end_control: Entity::new(slvs_entity.point[2]),
-            end_point: Entity::new(slvs_entity.point[3]),
+            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+            start_point: EntityHandle::new(slvs_entity.point[0]),
+            start_control: EntityHandle::new(slvs_entity.point[1]),
+            end_control: EntityHandle::new(slvs_entity.point[2]),
+            end_point: EntityHandle::new(slvs_entity.point[3]),
         }
     }
 }
@@ -106,10 +106,10 @@ impl FromSlvsEntity<In3d> for Cubic<In3d> {
         Self {
             group: Group(slvs_entity.group),
             workplane: None,
-            start_point: Entity::new(slvs_entity.point[0]),
-            start_control: Entity::new(slvs_entity.point[1]),
-            end_control: Entity::new(slvs_entity.point[2]),
-            end_point: Entity::new(slvs_entity.point[3]),
+            start_point: EntityHandle::new(slvs_entity.point[0]),
+            start_control: EntityHandle::new(slvs_entity.point[1]),
+            end_control: EntityHandle::new(slvs_entity.point[2]),
+            end_point: EntityHandle::new(slvs_entity.point[3]),
         }
     }
 }

@@ -14,7 +14,6 @@ pub use normal::Normal;
 mod distance;
 pub use distance::Distance;
 mod workplane;
-
 pub use workplane::Workplane;
 mod line_segment;
 pub use line_segment::LineSegment;
@@ -25,11 +24,11 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntity: AsHandle + Send + Sync {
+pub trait AsEntityHandle: AsHandle + Send + Sync {
     fn phantom_type(&self) -> String;
 }
 
-impl Serialize for Box<dyn AsEntity> {
+impl Serialize for Box<dyn AsEntityHandle> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -74,12 +73,12 @@ pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub struct Entity<T: AsEntityData> {
-    pub(super) handle: u32,
+pub struct EntityHandle<T: AsEntityData> {
+    pub handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
 
-impl<T: AsEntityData> Entity<T> {
+impl<T: AsEntityData> EntityHandle<T> {
     pub(super) fn new(handle: u32) -> Self {
         Self {
             handle,
@@ -88,19 +87,19 @@ impl<T: AsEntityData> Entity<T> {
     }
 }
 
-impl<T: AsEntityData> Debug for Entity<T> {
+impl<T: AsEntityData> Debug for EntityHandle<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Entity: {{h: {}, type: {}}}", self.handle, T::type_of())
     }
 }
 
-impl<T: AsEntityData> AsHandle for Entity<T> {
+impl<T: AsEntityData> AsHandle for EntityHandle<T> {
     fn handle(&self) -> u32 {
         self.handle
     }
 }
 
-impl<T: AsEntityData> AsEntity for Entity<T> {
+impl<T: AsEntityData> AsEntityHandle for EntityHandle<T> {
     fn phantom_type(&self) -> String {
         T::type_of()
     }

@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_VERT},
     element::{AsHandle, TypeInfo},
-    entity::{AsPoint, Entity, Workplane},
+    entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,9 +15,9 @@ where
     PB: AsPoint,
 {
     pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub point_a: Entity<PA>,
-    pub point_b: Entity<PB>,
+    pub workplane: EntityHandle<Workplane>,
+    pub point_a: EntityHandle<PA>,
+    pub point_b: EntityHandle<PB>,
 }
 
 impl<PA, PB> SymmetricVert<PA, PB>
@@ -27,9 +27,9 @@ where
 {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        point_a: Entity<PA>,
-        point_b: Entity<PB>,
+        workplane: EntityHandle<Workplane>,
+        point_a: EntityHandle<PA>,
+        point_b: EntityHandle<PB>,
     ) -> Self {
         Self {
             group,
@@ -80,9 +80,9 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            workplane: Entity::new(value.wrkpl),
-            point_a: Entity::new(value.ptA),
-            point_b: Entity::new(value.ptB),
+            workplane: EntityHandle::new(value.wrkpl),
+            point_a: EntityHandle::new(value.ptA),
+            point_b: EntityHandle::new(value.ptB),
         }
     }
 }

@@ -4,19 +4,19 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SAME_ORIENTATION},
     element::{AsHandle, TypeInfo},
-    entity::{Entity, Normal},
+    entity::{EntityHandle, Normal},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct SameOrientation {
     pub group: Group,
-    pub normal_a: Entity<Normal>,
-    pub normal_b: Entity<Normal>,
+    pub normal_a: EntityHandle<Normal>,
+    pub normal_b: EntityHandle<Normal>,
 }
 
 impl SameOrientation {
-    pub fn new(group: Group, normal_a: Entity<Normal>, normal_b: Entity<Normal>) -> Self {
+    pub fn new(group: Group, normal_a: EntityHandle<Normal>, normal_b: EntityHandle<Normal>) -> Self {
         Self {
             group,
             normal_a,
@@ -53,8 +53,8 @@ impl From<Slvs_Constraint> for SameOrientation {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            normal_a: Entity::new(value.entityA),
-            normal_b: Entity::new(value.entityB),
+            normal_a: EntityHandle::new(value.entityA),
+            normal_b: EntityHandle::new(value.entityB),
         }
     }
 }

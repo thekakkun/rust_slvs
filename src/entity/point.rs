@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
+use super::{AsEntityData, AsPoint, EntityHandle, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
     element::{AsHandle, TypeInfo},
@@ -11,12 +11,12 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Point<T: AsTarget> {
     pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
+    pub workplane: Option<EntityHandle<Workplane>>,
     pub coords: T,
 }
 
 impl Point<OnWorkplane> {
-    pub fn new(group: Group, workplane: Entity<Workplane>, u: f64, v: f64) -> Self {
+    pub fn new(group: Group, workplane: EntityHandle<Workplane>, u: f64, v: f64) -> Self {
         Self {
             group,
             workplane: Some(workplane),
@@ -66,7 +66,7 @@ impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
         if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
             Self {
                 group: Group(slvs_entity.group),
-                workplane: Some(Entity::new(slvs_entity.wrkpl)),
+                workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
                 coords: T::default(),
             }
         } else {

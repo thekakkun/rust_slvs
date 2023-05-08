@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_LEN_PT_LINE_D},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -16,10 +16,10 @@ where
     LB: AsLineSegment,
 {
     pub group: Group,
-    pub line_a: Entity<LA>,
-    pub point: Entity<P>,
-    pub line_b: Entity<LB>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub line_a: EntityHandle<LA>,
+    pub point: EntityHandle<P>,
+    pub line_b: EntityHandle<LB>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<LA, P, LB> EqLenPtLineD<LA, P, LB>
@@ -30,10 +30,10 @@ where
 {
     pub fn new(
         group: Group,
-        line_a: Entity<LA>,
-        point: Entity<P>,
-        line_b: Entity<LB>,
-        workplane: Option<Entity<Workplane>>,
+        line_a: EntityHandle<LA>,
+        point: EntityHandle<P>,
+        line_b: EntityHandle<LB>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -97,12 +97,12 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            line_a: Entity::new(value.entityA),
-            point: Entity::new(value.ptA),
-            line_b: Entity::new(value.entityB),
+            line_a: EntityHandle::new(value.entityA),
+            point: EntityHandle::new(value.ptA),
+            line_b: EntityHandle::new(value.entityB),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

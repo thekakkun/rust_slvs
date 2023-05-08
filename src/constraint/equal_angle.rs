@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_ANGLE},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, Entity, Workplane},
+    entity::{AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -17,11 +17,11 @@ where
     LD: AsLineSegment,
 {
     pub group: Group,
-    pub line_a: Entity<LA>,
-    pub line_b: Entity<LB>,
-    pub line_c: Entity<LC>,
-    pub line_d: Entity<LD>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub line_a: EntityHandle<LA>,
+    pub line_b: EntityHandle<LB>,
+    pub line_c: EntityHandle<LC>,
+    pub line_d: EntityHandle<LD>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<LA, LB, LC, LD> EqualAngle<LA, LB, LC, LD>
@@ -33,11 +33,11 @@ where
 {
     pub fn new(
         group: Group,
-        line_a: Entity<LA>,
-        line_b: Entity<LB>,
-        line_c: Entity<LC>,
-        line_d: Entity<LD>,
-        workplane: Option<Entity<Workplane>>,
+        line_a: EntityHandle<LA>,
+        line_b: EntityHandle<LB>,
+        line_c: EntityHandle<LC>,
+        line_d: EntityHandle<LD>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -107,13 +107,13 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            line_a: Entity::new(value.entityA),
-            line_b: Entity::new(value.entityB),
-            line_c: Entity::new(value.entityC),
-            line_d: Entity::new(value.entityD),
+            line_a: EntityHandle::new(value.entityA),
+            line_b: EntityHandle::new(value.entityB),
+            line_c: EntityHandle::new(value.entityC),
+            line_d: EntityHandle::new(value.entityD),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

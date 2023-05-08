@@ -93,18 +93,18 @@ pub use arc_arc_difference::ArcArcDifference;
 mod arc_line_difference;
 pub use arc_line_difference::ArcLineDifference;
 
-pub trait AsConstraint: AsHandle + Send + Sync {
-    fn clone_dyn(&self) -> Box<dyn AsConstraint>;
+pub trait AsConstraintHandle: AsHandle + Send + Sync {
+    fn clone_dyn(&self) -> Box<dyn AsConstraintHandle>;
     fn phantom_type(&self) -> String;
 }
 
-impl Clone for Box<dyn AsConstraint> {
+impl Clone for Box<dyn AsConstraintHandle> {
     fn clone(&self) -> Self {
         self.clone_dyn()
     }
 }
 
-impl Serialize for Box<dyn AsConstraint> {
+impl Serialize for Box<dyn AsConstraintHandle> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -136,12 +136,12 @@ pub trait AsConstraintData: Copy + Debug + TypeInfo + Send + Sync {
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub struct Constraint<T: AsConstraintData> {
-    pub(super) handle: u32,
+pub struct ConstraintHandle<T: AsConstraintData> {
+    pub handle: u32,
     pub(super) phantom: PhantomData<T>,
 }
 
-impl<T: AsConstraintData> Constraint<T> {
+impl<T: AsConstraintData> ConstraintHandle<T> {
     pub fn new(handle: u32) -> Self {
         Self {
             handle,
@@ -150,7 +150,7 @@ impl<T: AsConstraintData> Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData> Debug for Constraint<T> {
+impl<T: AsConstraintData> Debug for ConstraintHandle<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -161,7 +161,7 @@ impl<T: AsConstraintData> Debug for Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData> TypeInfo for Constraint<T> {
+impl<T: AsConstraintData> TypeInfo for ConstraintHandle<T> {
     fn type_of() -> String
     where
         Self: Sized,
@@ -170,14 +170,14 @@ impl<T: AsConstraintData> TypeInfo for Constraint<T> {
     }
 }
 
-impl<T: AsConstraintData> AsHandle for Constraint<T> {
+impl<T: AsConstraintData> AsHandle for ConstraintHandle<T> {
     fn handle(&self) -> u32 {
         self.handle
     }
 }
 
-impl<T: AsConstraintData + 'static> AsConstraint for Constraint<T> {
-    fn clone_dyn(&self) -> Box<dyn AsConstraint> {
+impl<T: AsConstraintData + 'static> AsConstraintHandle for ConstraintHandle<T> {
+    fn clone_dyn(&self) -> Box<dyn AsConstraintHandle> {
         Box::new(*self)
     }
 

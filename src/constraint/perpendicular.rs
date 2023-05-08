@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PERPENDICULAR},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, Entity, Workplane},
+    entity::{AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,9 +15,9 @@ where
     LB: AsLineSegment,
 {
     pub group: Group,
-    pub line_a: Entity<LA>,
-    pub line_b: Entity<LB>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub line_a: EntityHandle<LA>,
+    pub line_b: EntityHandle<LB>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<LA, LB> Perpendicular<LA, LB>
@@ -27,9 +27,9 @@ where
 {
     pub fn new(
         group: Group,
-        line_a: Entity<LA>,
-        line_b: Entity<LB>,
-        workplane: Option<Entity<Workplane>>,
+        line_a: EntityHandle<LA>,
+        line_b: EntityHandle<LB>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -80,11 +80,11 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            line_a: Entity::new(value.entityA),
-            line_b: Entity::new(value.entityB),
+            line_a: EntityHandle::new(value.entityA),
+            line_b: EntityHandle::new(value.entityB),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

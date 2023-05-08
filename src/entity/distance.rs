@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
+use super::{AsEntityData, EntityHandle, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
     element::{AsHandle, TypeInfo},
@@ -13,13 +13,13 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Distance<T: AsTarget> {
     pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
+    pub workplane: Option<EntityHandle<Workplane>>,
     pub val: f64,
     phantom: PhantomData<T>,
 }
 
 impl Distance<OnWorkplane> {
-    pub fn new(group: Group, workplane: Entity<Workplane>, val: f64) -> Self {
+    pub fn new(group: Group, workplane: EntityHandle<Workplane>, val: f64) -> Self {
         Self {
             group,
             workplane: Some(workplane),
@@ -68,7 +68,7 @@ impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
+            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
             val: 0.0,
             phantom: PhantomData,
         }

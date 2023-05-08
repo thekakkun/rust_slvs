@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{As2dProjectionTarget, AsEntityData, Entity, FromSlvsEntity, Workplane};
+use super::{As2dProjectionTarget, AsEntityData, EntityHandle, FromSlvsEntity, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::{AsHandle, TypeInfo},
@@ -12,7 +12,7 @@ use crate::{
 pub enum Normal {
     OnWorkplane {
         group: Group,
-        workplane: Entity<Workplane>,
+        workplane: EntityHandle<Workplane>,
     },
     In3d {
         group: Group,
@@ -24,7 +24,7 @@ pub enum Normal {
 }
 
 impl Normal {
-    pub fn new_on_workplane(group: Group, workplane: Entity<Workplane>) -> Self {
+    pub fn new_on_workplane(group: Group, workplane: EntityHandle<Workplane>) -> Self {
         Self::OnWorkplane { group, workplane }
     }
 
@@ -84,7 +84,7 @@ impl FromSlvsEntity<OnWorkplane> for Normal {
             },
             h => Self::OnWorkplane {
                 group: Group(slvs_entity.group),
-                workplane: Entity::new(h),
+                workplane: EntityHandle::new(h),
             },
         }
     }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, Entity, FromSlvsEntity, Normal, Point};
+use super::{AsEntityData, EntityHandle, FromSlvsEntity, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     element::{AsHandle, TypeInfo},
@@ -11,12 +11,12 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Workplane {
     pub group: Group,
-    pub origin: Entity<Point<In3d>>,
-    pub normal: Entity<Normal>,
+    pub origin: EntityHandle<Point<In3d>>,
+    pub normal: EntityHandle<Normal>,
 }
 
 impl Workplane {
-    pub fn new(group: Group, origin: Entity<Point<In3d>>, normal: Entity<Normal>) -> Self {
+    pub fn new(group: Group, origin: EntityHandle<Point<In3d>>, normal: EntityHandle<Normal>) -> Self {
         Self {
             group,
             origin,
@@ -57,8 +57,8 @@ impl<T: AsTarget> FromSlvsEntity<T> for Workplane {
     fn from(slvs_entity: crate::bindings::Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            origin: Entity::new(slvs_entity.point[0]),
-            normal: Entity::new(slvs_entity.normal),
+            origin: EntityHandle::new(slvs_entity.point[0]),
+            normal: EntityHandle::new(slvs_entity.normal),
         }
     }
 }

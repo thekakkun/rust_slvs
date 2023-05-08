@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    As2dProjectionTarget, AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane,
+    As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, FromSlvsEntity, Point, Workplane,
 };
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
@@ -13,17 +13,17 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct LineSegment<T: AsTarget> {
     pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub point_a: Entity<Point<T>>,
-    pub point_b: Entity<Point<T>>,
+    pub workplane: Option<EntityHandle<Workplane>>,
+    pub point_a: EntityHandle<Point<T>>,
+    pub point_b: EntityHandle<Point<T>>,
 }
 
 impl LineSegment<OnWorkplane> {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        point_a: Entity<Point<OnWorkplane>>,
-        point_b: Entity<Point<OnWorkplane>>,
+        workplane: EntityHandle<Workplane>,
+        point_a: EntityHandle<Point<OnWorkplane>>,
+        point_b: EntityHandle<Point<OnWorkplane>>,
     ) -> Self {
         Self {
             group,
@@ -35,7 +35,7 @@ impl LineSegment<OnWorkplane> {
 }
 
 impl LineSegment<In3d> {
-    pub fn new(group: Group, point_a: Entity<Point<In3d>>, point_b: Entity<Point<In3d>>) -> Self {
+    pub fn new(group: Group, point_a: EntityHandle<Point<In3d>>, point_b: EntityHandle<Point<In3d>>) -> Self {
         Self {
             group,
             workplane: None,
@@ -76,9 +76,9 @@ impl FromSlvsEntity<OnWorkplane> for LineSegment<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            point_a: Entity::new(slvs_entity.point[0]),
-            point_b: Entity::new(slvs_entity.point[1]),
+            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+            point_a: EntityHandle::new(slvs_entity.point[0]),
+            point_b: EntityHandle::new(slvs_entity.point[1]),
         }
     }
 }
@@ -88,8 +88,8 @@ impl FromSlvsEntity<In3d> for LineSegment<In3d> {
         Self {
             group: Group(slvs_entity.group),
             workplane: None,
-            point_a: Entity::new(slvs_entity.point[0]),
-            point_b: Entity::new(slvs_entity.point[1]),
+            point_a: EntityHandle::new(slvs_entity.point[0]),
+            point_b: EntityHandle::new(slvs_entity.point[1]),
         }
     }
 }

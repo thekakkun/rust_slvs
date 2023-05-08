@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_LINE},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -16,10 +16,10 @@ where
     L: AsLineSegment,
 {
     pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub point_a: Entity<PA>,
-    pub point_b: Entity<PB>,
-    pub line: Entity<L>,
+    pub workplane: EntityHandle<Workplane>,
+    pub point_a: EntityHandle<PA>,
+    pub point_b: EntityHandle<PB>,
+    pub line: EntityHandle<L>,
 }
 
 impl<PA, PB, L> SymmetricLine<PA, PB, L>
@@ -30,10 +30,10 @@ where
 {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        point_a: Entity<PA>,
-        point_b: Entity<PB>,
-        line: Entity<L>,
+        workplane: EntityHandle<Workplane>,
+        point_a: EntityHandle<PA>,
+        point_b: EntityHandle<PB>,
+        line: EntityHandle<L>,
     ) -> Self {
         Self {
             group,
@@ -97,10 +97,10 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            workplane: Entity::new(value.wrkpl),
-            point_a: Entity::new(value.ptA),
-            point_b: Entity::new(value.ptB),
-            line: Entity::new(value.entityA),
+            workplane: EntityHandle::new(value.wrkpl),
+            point_a: EntityHandle::new(value.ptA),
+            point_b: EntityHandle::new(value.ptB),
+            line: EntityHandle::new(value.entityA),
         }
     }
 }

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsEntityData, Distance, Entity, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsArc, AsEntityData, Distance, EntityHandle, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::{AsHandle, TypeInfo},
@@ -13,19 +13,19 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Circle<T: AsTarget> {
     pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub center: Entity<Point<T>>,
-    pub radius: Entity<Distance<T>>,
-    pub normal: Entity<Normal>,
+    pub workplane: Option<EntityHandle<Workplane>>,
+    pub center: EntityHandle<Point<T>>,
+    pub radius: EntityHandle<Distance<T>>,
+    pub normal: EntityHandle<Normal>,
 }
 
 impl Circle<OnWorkplane> {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        center: Entity<Point<OnWorkplane>>,
-        radius: Entity<Distance<OnWorkplane>>,
-        normal: Entity<Normal>,
+        workplane: EntityHandle<Workplane>,
+        center: EntityHandle<Point<OnWorkplane>>,
+        radius: EntityHandle<Distance<OnWorkplane>>,
+        normal: EntityHandle<Normal>,
     ) -> Self {
         Self {
             group,
@@ -40,9 +40,9 @@ impl Circle<OnWorkplane> {
 impl Circle<In3d> {
     pub fn new(
         group: Group,
-        center: Entity<Point<In3d>>,
-        radius: Entity<Distance<In3d>>,
-        normal: Entity<Normal>,
+        center: EntityHandle<Point<In3d>>,
+        radius: EntityHandle<Distance<In3d>>,
+        normal: EntityHandle<Normal>,
     ) -> Self {
         Self {
             group,
@@ -92,10 +92,10 @@ impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            center: Entity::new(slvs_entity.point[0]),
-            radius: Entity::new(slvs_entity.distance),
-            normal: Entity::new(slvs_entity.normal),
+            workplane: Some(EntityHandle::new(slvs_entity.wrkpl)),
+            center: EntityHandle::new(slvs_entity.point[0]),
+            radius: EntityHandle::new(slvs_entity.distance),
+            normal: EntityHandle::new(slvs_entity.normal),
         }
     }
 }
@@ -105,9 +105,9 @@ impl FromSlvsEntity<In3d> for Circle<In3d> {
         Self {
             group: Group(slvs_entity.group),
             workplane: None,
-            center: Entity::new(slvs_entity.point[0]),
-            radius: Entity::new(slvs_entity.distance),
-            normal: Entity::new(slvs_entity.normal),
+            center: EntityHandle::new(slvs_entity.point[0]),
+            radius: EntityHandle::new(slvs_entity.distance),
+            normal: EntityHandle::new(slvs_entity.normal),
         }
     }
 }

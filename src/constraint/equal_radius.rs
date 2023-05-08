@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
     element::{AsHandle, TypeInfo},
-    entity::{AsArc, Entity},
+    entity::{AsArc, EntityHandle},
     group::Group,
 };
 
@@ -15,8 +15,8 @@ where
     AB: AsArc,
 {
     pub group: Group,
-    pub arc_a: Entity<AA>,
-    pub arc_b: Entity<AB>,
+    pub arc_a: EntityHandle<AA>,
+    pub arc_b: EntityHandle<AB>,
 }
 
 impl<AA, AB> EqualRadius<AA, AB>
@@ -24,7 +24,7 @@ where
     AA: AsArc,
     AB: AsArc,
 {
-    pub fn new(group: Group, arc_a: Entity<AA>, arc_b: Entity<AB>) -> Self {
+    pub fn new(group: Group, arc_a: EntityHandle<AA>, arc_b: EntityHandle<AB>) -> Self {
         Self {
             group,
             arc_a,
@@ -73,8 +73,8 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            arc_a: Entity::new(value.entityA),
-            arc_b: Entity::new(value.entityB),
+            arc_a: EntityHandle::new(value.entityA),
+            arc_b: EntityHandle::new(value.entityB),
         }
     }
 }

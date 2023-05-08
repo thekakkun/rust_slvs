@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
     element::{AsHandle, TypeInfo},
-    entity::{AsArc, AsPoint, Entity},
+    entity::{AsArc, AsPoint, EntityHandle},
     group::Group,
 };
 
@@ -15,8 +15,8 @@ where
     A: AsArc,
 {
     pub group: Group,
-    pub point: Entity<P>,
-    pub arc: Entity<A>,
+    pub point: EntityHandle<P>,
+    pub arc: EntityHandle<A>,
 }
 
 impl<P, A> PtOnCircle<P, A>
@@ -24,7 +24,7 @@ where
     P: AsPoint,
     A: AsArc,
 {
-    pub fn new(group: Group, point: Entity<P>, arc: Entity<A>) -> Self {
+    pub fn new(group: Group, point: EntityHandle<P>, arc: EntityHandle<A>) -> Self {
         Self { group, point, arc }
     }
 }
@@ -73,8 +73,8 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            point: Entity::new(value.ptA),
-            arc: Entity::new(value.entityA),
+            point: EntityHandle::new(value.ptA),
+            arc: EntityHandle::new(value.entityA),
         }
     }
 }

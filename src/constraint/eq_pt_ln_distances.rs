@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_PT_LN_DISTANCES},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -17,11 +17,11 @@ where
     PB: AsPoint,
 {
     pub group: Group,
-    pub line_a: Entity<LA>,
-    pub point_a: Entity<PA>,
-    pub line_b: Entity<LB>,
-    pub point_b: Entity<PB>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub line_a: EntityHandle<LA>,
+    pub point_a: EntityHandle<PA>,
+    pub line_b: EntityHandle<LB>,
+    pub point_b: EntityHandle<PB>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<LA, PA, LB, PB> EqPtLnDistances<LA, PA, LB, PB>
@@ -33,11 +33,11 @@ where
 {
     pub fn new(
         group: Group,
-        line_a: Entity<LA>,
-        point_a: Entity<PA>,
-        line_b: Entity<LB>,
-        point_b: Entity<PB>,
-        workplane: Option<Entity<Workplane>>,
+        line_a: EntityHandle<LA>,
+        point_a: EntityHandle<PA>,
+        line_b: EntityHandle<LB>,
+        point_b: EntityHandle<PB>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -106,13 +106,13 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            line_a: Entity::new(value.entityA),
-            point_a: Entity::new(value.ptA),
-            line_b: Entity::new(value.entityB),
-            point_b: Entity::new(value.ptB),
+            line_a: EntityHandle::new(value.entityA),
+            point_a: EntityHandle::new(value.ptA),
+            line_b: EntityHandle::new(value.entityB),
+            point_b: EntityHandle::new(value.ptB),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_POINTS_COINCIDENT},
     element::{AsHandle, TypeInfo},
-    entity::{AsPoint, Entity, Workplane},
+    entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,9 +15,9 @@ where
     PB: AsPoint,
 {
     pub group: Group,
-    pub point_a: Entity<PA>,
-    pub point_b: Entity<PB>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub point_a: EntityHandle<PA>,
+    pub point_b: EntityHandle<PB>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<PA, PB> PointsCoincident<PA, PB>
@@ -27,9 +27,9 @@ where
 {
     pub fn new(
         group: Group,
-        point_a: Entity<PA>,
-        point_b: Entity<PB>,
-        workplane: Option<Entity<Workplane>>,
+        point_a: EntityHandle<PA>,
+        point_b: EntityHandle<PB>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -80,11 +80,11 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            point_a: Entity::new(value.ptA),
-            point_b: Entity::new(value.ptB),
+            point_a: EntityHandle::new(value.ptA),
+            point_b: EntityHandle::new(value.ptB),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

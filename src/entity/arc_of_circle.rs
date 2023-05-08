@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsCurve, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsArc, AsCurve, AsEntityData, EntityHandle, FromSlvsEntity, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
     element::{AsHandle, TypeInfo},
@@ -11,21 +11,21 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct ArcOfCircle {
     pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub center: Entity<Point<OnWorkplane>>,
-    pub arc_begin: Entity<Point<OnWorkplane>>,
-    pub arc_end: Entity<Point<OnWorkplane>>,
-    pub normal: Entity<Normal>,
+    pub workplane: EntityHandle<Workplane>,
+    pub center: EntityHandle<Point<OnWorkplane>>,
+    pub arc_begin: EntityHandle<Point<OnWorkplane>>,
+    pub arc_end: EntityHandle<Point<OnWorkplane>>,
+    pub normal: EntityHandle<Normal>,
 }
 
 impl ArcOfCircle {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        center: Entity<Point<OnWorkplane>>,
-        arc_begin: Entity<Point<OnWorkplane>>,
-        arc_end: Entity<Point<OnWorkplane>>,
-        normal: Entity<Normal>,
+        workplane: EntityHandle<Workplane>,
+        center: EntityHandle<Point<OnWorkplane>>,
+        arc_begin: EntityHandle<Point<OnWorkplane>>,
+        arc_end: EntityHandle<Point<OnWorkplane>>,
+        normal: EntityHandle<Normal>,
     ) -> Self {
         Self {
             group,
@@ -71,11 +71,11 @@ impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
     fn from(slvs_entity: Slvs_Entity) -> Self {
         Self {
             group: Group(slvs_entity.group),
-            workplane: Entity::new(slvs_entity.wrkpl),
-            center: Entity::new(slvs_entity.point[0]),
-            arc_begin: Entity::new(slvs_entity.point[1]),
-            arc_end: Entity::new(slvs_entity.point[2]),
-            normal: Entity::new(slvs_entity.normal),
+            workplane: EntityHandle::new(slvs_entity.wrkpl),
+            center: EntityHandle::new(slvs_entity.point[0]),
+            arc_begin: EntityHandle::new(slvs_entity.point[1]),
+            arc_end: EntityHandle::new(slvs_entity.point[2]),
+            normal: EntityHandle::new(slvs_entity.normal),
         }
     }
 }

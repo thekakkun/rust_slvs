@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT},
     element::{AsHandle, TypeInfo},
-    entity::{AsCurve, Entity, Workplane},
+    entity::{AsCurve, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,9 +15,9 @@ where
     CB: AsCurve,
 {
     pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub curve_a: Entity<CA>,
-    pub curve_b: Entity<CB>,
+    pub workplane: EntityHandle<Workplane>,
+    pub curve_a: EntityHandle<CA>,
+    pub curve_b: EntityHandle<CB>,
     pub to_curve_a_beginning: bool,
     pub to_curve_b_beginning: bool,
 }
@@ -29,9 +29,9 @@ where
 {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        curve_a: Entity<CA>,
-        curve_b: Entity<CB>,
+        workplane: EntityHandle<Workplane>,
+        curve_a: EntityHandle<CA>,
+        curve_b: EntityHandle<CB>,
         to_curve_a_beginning: bool,
         to_curve_b_beginning: bool,
     ) -> Self {
@@ -90,9 +90,9 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            workplane: Entity::new(value.wrkpl),
-            curve_a: Entity::new(value.entityA),
-            curve_b: Entity::new(value.entityB),
+            workplane: EntityHandle::new(value.wrkpl),
+            curve_a: EntityHandle::new(value.entityA),
+            curve_b: EntityHandle::new(value.entityB),
             to_curve_a_beginning: value.other != 0,
             to_curve_b_beginning: value.other2 != 0,
         }

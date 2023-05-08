@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_LINE_DISTANCE},
     element::{AsHandle, TypeInfo},
-    entity::{AsLineSegment, AsPoint, Entity, Workplane},
+    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,10 +15,10 @@ where
     L: AsLineSegment,
 {
     pub group: Group,
-    pub point: Entity<P>,
-    pub line: Entity<L>,
+    pub point: EntityHandle<P>,
+    pub line: EntityHandle<L>,
     pub distance: f64,
-    pub workplane: Option<Entity<Workplane>>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<P, L> PtLineDistance<P, L>
@@ -28,10 +28,10 @@ where
 {
     pub fn new(
         group: Group,
-        point: Entity<P>,
-        line: Entity<L>,
+        point: EntityHandle<P>,
+        line: EntityHandle<L>,
         distance: f64,
-        workplane: Option<Entity<Workplane>>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -91,12 +91,12 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            point: Entity::new(value.ptA),
-            line: Entity::new(value.entityA),
+            point: EntityHandle::new(value.ptA),
+            line: EntityHandle::new(value.entityA),
             distance: value.valA,
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

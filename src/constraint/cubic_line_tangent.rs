@@ -4,7 +4,7 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_CUBIC_LINE_TANGENT},
     element::{AsHandle, TypeInfo},
-    entity::{AsCubic, AsLineSegment, Entity, Workplane},
+    entity::{AsCubic, AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
 
@@ -15,9 +15,9 @@ where
     L: AsLineSegment,
 {
     pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub cubic: Entity<C>,
-    pub line: Entity<L>,
+    pub workplane: EntityHandle<Workplane>,
+    pub cubic: EntityHandle<C>,
+    pub line: EntityHandle<L>,
     pub to_beginning: bool,
 }
 
@@ -28,9 +28,9 @@ where
 {
     pub fn new(
         group: Group,
-        workplane: Entity<Workplane>,
-        arc: Entity<C>,
-        line: Entity<L>,
+        workplane: EntityHandle<Workplane>,
+        arc: EntityHandle<C>,
+        line: EntityHandle<L>,
         to_beginning: bool,
     ) -> Self {
         Self {
@@ -87,9 +87,9 @@ where
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            workplane: Entity::new(value.wrkpl),
-            cubic: Entity::new(value.entityA),
-            line: Entity::new(value.entityB),
+            workplane: EntityHandle::new(value.wrkpl),
+            cubic: EntityHandle::new(value.entityA),
+            line: EntityHandle::new(value.entityB),
             to_beginning: value.other != 0,
         }
     }

@@ -4,24 +4,24 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LINE_ARC_LEN},
     element::{AsHandle, TypeInfo},
-    entity::{ArcOfCircle, AsLineSegment, Entity, Workplane},
+    entity::{ArcOfCircle, AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct EqualLineArcLen<L: AsLineSegment> {
     pub group: Group,
-    pub line: Entity<L>,
-    pub arc: Entity<ArcOfCircle>,
-    pub workplane: Option<Entity<Workplane>>,
+    pub line: EntityHandle<L>,
+    pub arc: EntityHandle<ArcOfCircle>,
+    pub workplane: Option<EntityHandle<Workplane>>,
 }
 
 impl<L: AsLineSegment> EqualLineArcLen<L> {
     pub fn new(
         group: Group,
-        line: Entity<L>,
-        arc: Entity<ArcOfCircle>,
-        workplane: Option<Entity<Workplane>>,
+        line: EntityHandle<L>,
+        arc: EntityHandle<ArcOfCircle>,
+        workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
             group,
@@ -60,11 +60,11 @@ impl<L: AsLineSegment> From<Slvs_Constraint> for EqualLineArcLen<L> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            line: Entity::new(value.entityA),
-            arc: Entity::new(value.entityB),
+            line: EntityHandle::new(value.entityA),
+            arc: EntityHandle::new(value.entityB),
             workplane: match value.wrkpl {
                 0 => None,
-                h => Some(Entity::new(h)),
+                h => Some(EntityHandle::new(h)),
             },
         }
     }

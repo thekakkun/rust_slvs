@@ -4,19 +4,19 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
     element::{AsHandle, TypeInfo},
-    entity::{AsArc, Entity},
+    entity::{AsArc, EntityHandle},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Diameter<A: AsArc> {
     pub group: Group,
-    pub arc: Entity<A>,
+    pub arc: EntityHandle<A>,
     pub diameter: f64,
 }
 
 impl<A: AsArc> Diameter<A> {
-    pub fn new(group: Group, arc: Entity<A>, diameter: f64) -> Self {
+    pub fn new(group: Group, arc: EntityHandle<A>, diameter: f64) -> Self {
         Self {
             group,
             arc,
@@ -57,7 +57,7 @@ impl<A: AsArc> From<Slvs_Constraint> for Diameter<A> {
     fn from(value: Slvs_Constraint) -> Self {
         Self {
             group: Group(value.group),
-            arc: Entity::new(value.entityA),
+            arc: EntityHandle::new(value.entityA),
             diameter: value.valA,
         }
     }
