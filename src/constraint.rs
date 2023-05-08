@@ -93,7 +93,7 @@ pub use arc_arc_difference::ArcArcDifference;
 mod arc_line_difference;
 pub use arc_line_difference::ArcLineDifference;
 
-pub trait AsConstraintHandle: AsHandle + Send + Sync {
+pub trait AsConstraintHandle: AsHandle {
     fn clone_dyn(&self) -> Box<dyn AsConstraintHandle>;
     fn phantom_type(&self) -> String;
 }
@@ -116,7 +116,7 @@ impl Serialize for Box<dyn AsConstraintHandle> {
     }
 }
 
-pub trait AsConstraintData: Copy + Debug + TypeInfo + Send + Sync {
+pub trait AsConstraintData: Copy + Debug + TypeInfo  {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;
