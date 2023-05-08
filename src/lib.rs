@@ -7,13 +7,11 @@ then add [constraints][`constraint`] to define relationships between multiple
 entities.
 
 While the original C++ library used the `Slvs_Entity` and `Slvs_Constraint` structs
-to store data about every kind of entity and constraint, these have been split
-into structs wrapping the handle ([`entity::Entity`] and
-[`constraint::Constraint`]) and different data structs for each kind of
-entity and constraint (each implementing [`entity::AsEntityData`] and
-[`constraint::AsConstraintData`], respectively). This allows for type
-restrictions that stop the user from creating impossible geometries.
-
+to store all data pertaining to entities and constraints, these have been split
+into handles ([`entity::EntityHandle`] and [`constraint::ConstraintHandle`]) and
+data (structs that implement [`entity::AsEntityData`] and [`constraint::AsConstraintData`])
+use the handles as "keys" to reference elements, and data structs as typed "values"
+to add and update elements within `System`.
 
 # Example: In 3d space.
 
