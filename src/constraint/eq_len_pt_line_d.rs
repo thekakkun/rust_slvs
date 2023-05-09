@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_LEN_PT_LINE_D},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -69,22 +69,6 @@ where
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point.handle()])
-    }
-}
-
-impl<LA, P, LB> TypeInfo for EqLenPtLineD<LA, P, LB>
-where
-    LA: AsLineSegment,
-    P: AsPoint,
-    LB: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!(
-            "EqLenPtLineD < {}, {}, {} >",
-            LA::type_of(),
-            P::type_of(),
-            LB::type_of()
-        )
     }
 }
 

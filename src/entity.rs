@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug, marker::PhantomData};
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
 };
 
 mod point;
@@ -23,7 +23,7 @@ pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
-pub trait AsEntityData: Copy + TypeInfo {
+pub trait AsEntityData: Debug + Copy {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;
@@ -67,7 +67,12 @@ impl<T: AsEntityData> EntityHandle<T> {
 
 impl<T: AsEntityData> Debug for EntityHandle<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Entity: {{h: {}, type: {}}}", self.handle, T::type_of())
+        write!(
+            f,
+            "Entity: {{h: {}, type: {}}}",
+            self.handle,
+            type_name::<T>()
+        )
     }
 }
 

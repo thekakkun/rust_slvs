@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_PLANE_DISTANCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -55,12 +55,6 @@ impl<P: AsPoint> AsConstraintData for PtPlaneDistance<P> {
 
     fn val(&self) -> Option<f64> {
         Some(self.distance)
-    }
-}
-
-impl<P: AsPoint> TypeInfo for PtPlaneDistance<P> {
-    fn type_of() -> String {
-        format!("PtPlaneDistance < {} >", P::type_of())
     }
 }
 

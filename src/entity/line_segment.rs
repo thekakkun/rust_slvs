@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
@@ -67,12 +67,6 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 
 impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
 impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
-
-impl<T: AsTarget> TypeInfo for LineSegment<T> {
-    fn type_of() -> String {
-        format!("LineSegment<{}>", T::type_of())
-    }
-}
 
 impl<T: AsTarget> From<Slvs_Entity> for LineSegment<T> {
     fn from(value: Slvs_Entity) -> Self {

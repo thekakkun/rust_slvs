@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsArc, AsPoint, EntityHandle},
     group::Group,
 };
@@ -52,16 +52,6 @@ where
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point.handle()])
-    }
-}
-
-impl<P, A> TypeInfo for PtOnCircle<P, A>
-where
-    P: AsPoint,
-    A: AsArc,
-{
-    fn type_of() -> String {
-        format!("PtOnCircle < {}, {} >", P::type_of(), A::type_of())
     }
 }
 

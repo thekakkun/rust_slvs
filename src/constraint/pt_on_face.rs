@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -44,12 +44,6 @@ impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.plane.handle()])
-    }
-}
-
-impl<P: AsPoint> TypeInfo for PtOnFace<P> {
-    fn type_of() -> String {
-        format!("PtOnFace < {} >", P::type_of())
     }
 }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
@@ -79,12 +79,6 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
             self.end_control.handle(),
             self.end_point.handle(),
         ])
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Cubic<T> {
-    fn type_of() -> String {
-        format!("Cubic<{}>", T::type_of())
     }
 }
 

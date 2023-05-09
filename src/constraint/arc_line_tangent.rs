@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_TANGENT},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{ArcOfCircle, AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -54,12 +54,6 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
 
     fn others(&self) -> [bool; 2] {
         [self.to_beginning, false]
-    }
-}
-
-impl<L: AsLineSegment> TypeInfo for ArcLineTangent<L> {
-    fn type_of() -> String {
-        format!("ArcLineTangent<{}>", L::type_of())
     }
 }
 

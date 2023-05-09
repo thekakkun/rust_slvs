@@ -9,11 +9,11 @@ or modify constraint data.
  */
 
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug, marker::PhantomData};
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
 };
 
 mod points_coincident;
@@ -93,7 +93,7 @@ pub use arc_arc_difference::ArcArcDifference;
 mod arc_line_difference;
 pub use arc_line_difference::ArcLineDifference;
 
-pub trait AsConstraintData: Copy + Debug + TypeInfo {
+pub trait AsConstraintData: Copy + Debug {
     fn type_(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;
@@ -133,17 +133,8 @@ impl<T: AsConstraintData> Debug for ConstraintHandle<T> {
             f,
             "Constraint: {{h: {}, type: {}}}",
             self.handle,
-            T::type_of()
+            type_name::<T>()
         )
-    }
-}
-
-impl<T: AsConstraintData> TypeInfo for ConstraintHandle<T> {
-    fn type_of() -> String
-    where
-        Self: Sized,
-    {
-        T::type_of()
     }
 }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{As2dProjectionTarget, AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
 };
 
@@ -71,12 +71,6 @@ impl AsEntityData for Normal {
             *y = vals[2];
             *z = vals[3];
         }
-    }
-}
-
-impl TypeInfo for Normal {
-    fn type_of() -> String {
-        "Normal".to_string()
     }
 }
 

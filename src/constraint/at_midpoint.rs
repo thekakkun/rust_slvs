@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_AT_MIDPOINT},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,15 +66,6 @@ where
     }
 }
 
-impl<P, L> TypeInfo for AtMidpoint<P, L>
-where
-    P: AsPoint,
-    L: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!("AtMidpoint < {}, {} >", P::type_of(), L::type_of())
-    }
-}
 impl<P, L> From<Slvs_Constraint> for AtMidpoint<P, L>
 where
     P: AsPoint,

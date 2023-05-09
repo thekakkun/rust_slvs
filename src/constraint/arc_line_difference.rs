@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_DIFFERENCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{ArcOfCircle, AsLineSegment, EntityHandle},
     group::Group,
 };
@@ -51,12 +51,6 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineDifference<L> {
 
     fn val(&self) -> Option<f64> {
         Some(self.difference)
-    }
-}
-
-impl<L: AsLineSegment> TypeInfo for ArcLineDifference<L> {
-    fn type_of() -> String {
-        format!("ArcLineDifference<{}>", L::type_of())
     }
 }
 

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
@@ -79,12 +79,6 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
 
     fn distance(&self) -> Option<Slvs_hEntity> {
         Some(self.radius.handle())
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Circle<T> {
-    fn type_of() -> String {
-        format!("Circle<{}>", T::type_of())
     }
 }
 

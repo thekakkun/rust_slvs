@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsEntityData, AsPoint, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
@@ -56,12 +56,6 @@ impl<T: AsTarget> AsEntityData for Point<T> {
 
     fn set_vals(&mut self, vals: Vec<f64>) {
         self.coords = vals.into();
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Point<T> {
-    fn type_of() -> String {
-        format!("Point<{}>", T::type_of())
     }
 }
 

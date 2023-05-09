@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_LEN_RATIO},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{ArcOfCircle, EntityHandle},
     group::Group,
 };
@@ -51,12 +51,6 @@ impl AsConstraintData for ArcArcLenRatio {
 
     fn val(&self) -> Option<f64> {
         Some(self.ratio)
-    }
-}
-
-impl TypeInfo for ArcArcLenRatio {
-    fn type_of() -> String {
-        "ArcArcLenRatio".to_string()
     }
 }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,16 +66,6 @@ where
     }
 }
 
-impl<PA, PB> TypeInfo for PointsHorizontal<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn type_of() -> String {
-        format!("Horizontal < {}, {} >", PA::type_of(), PB::type_of())
-    }
-}
-
 impl<PA, PB> From<Slvs_Constraint> for PointsHorizontal<PA, PB>
 where
     PA: AsPoint,
@@ -127,12 +117,6 @@ impl<L: AsLineSegment> AsConstraintData for LineHorizontal<L> {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.handle()])
-    }
-}
-
-impl<L: AsLineSegment> TypeInfo for LineHorizontal<L> {
-    fn type_of() -> String {
-        format!("Horizontal < {} >", L::type_of())
     }
 }
 

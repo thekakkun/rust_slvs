@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_WHERE_DRAGGED},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -44,12 +44,6 @@ impl<P: AsPoint> AsConstraintData for WhereDragged<P> {
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point.handle()])
-    }
-}
-
-impl<P: AsPoint> TypeInfo for WhereDragged<P> {
-    fn type_of() -> String {
-        format!("WhereDragged<{}>", P::type_of())
     }
 }
 

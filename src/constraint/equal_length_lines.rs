@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LENGTH_LINES},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -59,16 +59,6 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line_a.handle(), self.line_b.handle()])
-    }
-}
-
-impl<LA, LB> TypeInfo for EqualLengthLines<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!("EqualLengthLines < {}, {} >", LA::type_of(), LB::type_of())
     }
 }
 

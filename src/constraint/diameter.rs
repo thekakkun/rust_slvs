@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsArc, EntityHandle},
     group::Group,
 };
@@ -44,12 +44,6 @@ impl<A: AsArc> AsConstraintData for Diameter<A> {
 
     fn val(&self) -> Option<f64> {
         Some(self.diameter)
-    }
-}
-
-impl<A: AsArc> TypeInfo for Diameter<A> {
-    fn type_of() -> String {
-        format!("Diameter < {} >", A::type_of())
     }
 }
 

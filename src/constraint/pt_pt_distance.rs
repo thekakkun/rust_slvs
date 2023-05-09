@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_PT_DISTANCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,16 +66,6 @@ where
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.handle(), self.point_b.handle()])
-    }
-}
-
-impl<PA, PB> TypeInfo for PtPtDistance<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn type_of() -> String {
-        format!("PtPtDistance < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 

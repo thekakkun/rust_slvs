@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsArc, EntityHandle},
     group::Group,
 };
@@ -52,16 +52,6 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.arc_a.handle(), self.arc_b.handle()])
-    }
-}
-
-impl<AA, AB> TypeInfo for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    fn type_of() -> String {
-        format!("EqualRadius < {}, {} >", AA::type_of(), AB::type_of())
     }
 }
 

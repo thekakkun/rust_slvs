@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PROJ_PT_DISTANCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{As2dProjectionTarget, AsPoint, EntityHandle},
     group::Group,
 };
@@ -73,22 +73,6 @@ where
 
     fn val(&self) -> Option<f64> {
         Some(self.distance)
-    }
-}
-
-impl<PA, PB, PT> TypeInfo for ProjPtDistance<PA, PB, PT>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-    PT: As2dProjectionTarget,
-{
-    fn type_of() -> String {
-        format!(
-            "ProjPtDistance < {}, {}, {} >",
-            PA::type_of(),
-            PB::type_of(),
-            PT::type_of()
-        )
     }
 }
 

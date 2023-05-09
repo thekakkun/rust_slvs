@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_DIFFERENCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{ArcOfCircle, EntityHandle},
     group::Group,
 };
@@ -51,12 +51,6 @@ impl AsConstraintData for ArcArcDifference {
 
     fn val(&self) -> Option<f64> {
         Some(self.difference)
-    }
-}
-
-impl TypeInfo for ArcArcDifference {
-    fn type_of() -> String {
-        "ArcArcDifference".to_string()
     }
 }
 

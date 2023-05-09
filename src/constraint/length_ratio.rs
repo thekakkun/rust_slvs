@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_LENGTH_RATIO},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,16 +66,6 @@ where
 
     fn val(&self) -> Option<f64> {
         Some(self.ratio)
-    }
-}
-
-impl<LA, LB> TypeInfo for LengthRatio<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!("LengthRatio < {}, {} >", LA::type_of(), LB::type_of())
     }
 }
 

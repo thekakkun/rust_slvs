@@ -1,12 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    element::TypeInfo,
-};
+use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
-pub trait AsTarget: Copy + TypeInfo + Default + From<Vec<f64>> + Into<Vec<f64>> {
+pub trait AsTarget: Copy + Debug + Default + From<Vec<f64>> + Into<Vec<f64>> {
     fn type_() -> i32;
 }
 
@@ -16,12 +13,6 @@ pub struct OnWorkplane(pub f64, pub f64);
 impl AsTarget for OnWorkplane {
     fn type_() -> i32 {
         SLVS_E_POINT_IN_2D as _
-    }
-}
-
-impl TypeInfo for OnWorkplane {
-    fn type_of() -> String {
-        "OnWorkplane".to_string()
     }
 }
 
@@ -43,12 +34,6 @@ pub struct In3d(pub f64, pub f64, pub f64);
 impl AsTarget for In3d {
     fn type_() -> i32 {
         SLVS_E_POINT_IN_3D as _
-    }
-}
-
-impl TypeInfo for In3d {
-    fn type_of() -> String {
-        "In3d".to_string()
     }
 }
 

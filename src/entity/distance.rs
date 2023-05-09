@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
@@ -59,12 +59,6 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
 
     fn set_vals(&mut self, vals: Vec<f64>) {
         self.val = vals[0]
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Distance<T> {
-    fn type_of() -> String {
-        format!("Distance<{}>", T::type_of())
     }
 }
 

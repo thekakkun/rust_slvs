@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsEntityData, EntityHandle, Normal, Point};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     group::Group,
     target::In3d,
 };
@@ -48,12 +48,6 @@ impl AsEntityData for Workplane {
 
     fn normal(&self) -> Option<Slvs_hEntity> {
         Some(self.normal.handle())
-    }
-}
-
-impl TypeInfo for Workplane {
-    fn type_of() -> String {
-        "Workplane".to_string()
     }
 }
 

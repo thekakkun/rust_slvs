@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsCurve, EntityHandle, Workplane},
     group::Group,
 };
@@ -69,16 +69,6 @@ where
 
     fn others(&self) -> [bool; 2] {
         [self.to_curve_a_beginning, self.to_curve_b_beginning]
-    }
-}
-
-impl<CA, CB> TypeInfo for CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
-    fn type_of() -> String {
-        format!("CurveCurveTangent < {}, {} >", CA::type_of(), CB::type_of())
     }
 }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_ANGLE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -76,24 +76,6 @@ where
             self.line_c.handle(),
             self.line_d.handle(),
         ])
-    }
-}
-
-impl<LA, LB, LC, LD> TypeInfo for EqualAngle<LA, LB, LC, LD>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-    LC: AsLineSegment,
-    LD: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!(
-            "EqualAngle < {}, {}, {}, {} >",
-            LA::type_of(),
-            LB::type_of(),
-            LC::type_of(),
-            LD::type_of()
-        )
     }
 }
 

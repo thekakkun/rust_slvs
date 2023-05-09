@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LINE_ARC_LEN},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{ArcOfCircle, AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -47,12 +47,6 @@ impl<L: AsLineSegment> AsConstraintData for EqualLineArcLen<L> {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.handle(), self.arc.handle()])
-    }
-}
-
-impl<L: AsLineSegment> TypeInfo for EqualLineArcLen<L> {
-    fn type_of() -> String {
-        format!("EqualLineArcLen < {} >", L::type_of())
     }
 }
 

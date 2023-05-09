@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_CUBIC_LINE_TANGENT},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsCubic, AsLineSegment, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,16 +66,6 @@ where
 
     fn others(&self) -> [bool; 2] {
         [self.to_beginning, false]
-    }
-}
-
-impl<C, L> TypeInfo for CubicLineTangent<C, L>
-where
-    C: AsCubic,
-    L: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!("CubicLineTangent < {} , {} >", C::type_of(), L::type_of())
     }
 }
 

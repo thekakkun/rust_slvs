@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_LINE},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -69,22 +69,6 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.handle()])
-    }
-}
-
-impl<PA, PB, L> TypeInfo for SymmetricLine<PA, PB, L>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-    L: AsLineSegment,
-{
-    fn type_of() -> String {
-        format!(
-            "SymmetricLine < {}, {}, {} >",
-            PA::type_of(),
-            PB::type_of(),
-            L::type_of()
-        )
     }
 }
 

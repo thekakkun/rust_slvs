@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{AsPoint, EntityHandle, Workplane},
     group::Group,
 };
@@ -66,16 +66,6 @@ where
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.plane.handle()])
-    }
-}
-
-impl<PA, PB> TypeInfo for Symmetric<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn type_of() -> String {
-        format!("Symmetric < {}, {} >", PA::type_of(), PB::type_of())
     }
 }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SAME_ORIENTATION},
-    element::{AsHandle, TypeInfo},
+    element::AsHandle,
     entity::{EntityHandle, Normal},
     group::Group,
 };
@@ -44,12 +44,6 @@ impl AsConstraintData for SameOrientation {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.normal_a.handle(), self.normal_b.handle()])
-    }
-}
-
-impl TypeInfo for SameOrientation {
-    fn type_of() -> String {
-        "SameOrientation".to_string()
     }
 }
 
