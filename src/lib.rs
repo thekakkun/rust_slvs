@@ -64,7 +64,7 @@ if let Ok(ok_result) = result {
 ```
 */
 
-pub mod bindings;
+mod bindings;
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 
 pub mod solver;

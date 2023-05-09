@@ -57,7 +57,7 @@ pub struct EntityHandle<T: AsEntityData> {
 }
 
 impl<T: AsEntityData> EntityHandle<T> {
-    pub(super) fn new(handle: u32) -> Self {
+    pub fn new(handle: u32) -> Self {
         Self {
             handle,
             phantom: PhantomData,
