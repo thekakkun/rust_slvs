@@ -39,7 +39,7 @@ impl<T: AsTarget> AsPoint for Point<T> {}
 
 impl<T: AsTarget> AsEntityData for Point<T> {
     fn type_(&self) -> i32 {
-        <T as AsTarget>::type_()
+        self.coords.type_()
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
