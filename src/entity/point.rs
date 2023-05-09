@@ -59,7 +59,7 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     }
 }
 
-impl<T: AsTarget> From<Slvs_Entity> for Point<T> {
+impl<T: AsTarget + Default> From<Slvs_Entity> for Point<T> {
     fn from(value: Slvs_Entity) -> Self {
         if value.type_ == SLVS_E_POINT_IN_2D as _ {
             Self {

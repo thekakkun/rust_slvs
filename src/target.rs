@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
-pub trait AsTarget: Copy + Debug + Default + From<Vec<f64>> + Into<Vec<f64>> {
+pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
     fn type_(&self) -> i32;
 }
 

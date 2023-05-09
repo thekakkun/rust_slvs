@@ -2,9 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::{iter::zip, mem::MaybeUninit};
-
 use serde::{ser::SerializeStruct, Serialize, Serializer};
+use std::{iter::zip, mem::MaybeUninit};
 
 use crate::system::System;
 
