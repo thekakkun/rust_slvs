@@ -2,9 +2,14 @@ use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
+use super::{
+    AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,
+};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
+    bindings::{
+        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE, SLVS_E_POINT_IN_2D,
+        SLVS_E_POINT_IN_3D,
+    },
     element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
@@ -57,7 +62,19 @@ impl Circle<In3d> {
 impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
-    fn type_(&self) -> i32 {
+    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
+        match T::slvs_type() as _ {
+            SLVS_E_POINT_IN_2D => {
+                SomeEntityHandle::Circle(CircleHandle::OnWorkplane(EntityHandle::new(handle)))
+            }
+            SLVS_E_POINT_IN_3D => {
+                SomeEntityHandle::Circle(CircleHandle::In3d(EntityHandle::new(handle)))
+            }
+            _ => panic!("Unknown slvs_type {}", T::slvs_type()),
+        }
+    }
+
+    fn slvs_type(&self) -> i32 {
         SLVS_E_CIRCLE as _
     }
 
@@ -93,6 +110,36 @@ impl<T: AsTarget> From<Slvs_Entity> for Circle<T> {
             center: EntityHandle::new(value.point[0]),
             radius: EntityHandle::new(value.distance),
             normal: EntityHandle::new(value.normal),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum CircleHandle {
+    OnWorkplane(EntityHandle<Circle<OnWorkplane>>),
+    In3d(EntityHandle<Circle<In3d>>),
+}
+
+impl AsHandle for CircleHandle {
+    fn handle(&self) -> u32 {
+        match self {
+            Self::OnWorkplane(entity_handle) => entity_handle.handle(),
+            Self::In3d(entity_handle) => entity_handle.handle(),
+        }
+    }
+}
+
+impl TryFrom<Slvs_Entity> for CircleHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        if value.type_ == SLVS_E_CIRCLE as _ {
+            match value.wrkpl {
+                0 => Ok(CircleHandle::In3d(value.into())),
+                _ => Ok(CircleHandle::OnWorkplane(value.into())),
+            }
+        } else {
+            Err("Unexpected Slvs_Entity type")
         }
     }
 }

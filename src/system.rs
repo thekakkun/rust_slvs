@@ -8,7 +8,7 @@ use crate::{
     },
     constraint::{AsConstraintData, ConstraintHandle},
     element::AsHandle,
-    entity::{AsEntityData, EntityHandle},
+    entity::{AsEntityData, EntityHandle, SomeEntityHandle},
     group::Group,
     solver::{FailReason, SolveFail, SolveOkay},
 };
@@ -85,7 +85,7 @@ impl System {
         let mut new_slvs_entity = Slvs_Entity::new(
             self.entities.get_next_h(),
             entity_data.group(),
-            entity_data.type_(),
+            entity_data.slvs_type(),
         );
 
         if let Some(workplane) = entity_data.workplane() {
@@ -196,6 +196,14 @@ impl System {
         }
 
         Ok(entity_data)
+    }
+
+    pub fn entity_handles(&self) -> Vec<SomeEntityHandle> {
+        self.entities
+            .list
+            .iter()
+            .map(|&entity| entity.into())
+            .collect()
     }
 
     pub fn constraint_data<C: AsConstraintData + From<Slvs_Constraint>>(

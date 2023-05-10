@@ -87,6 +87,8 @@ fn main() {
         ))
         .expect("circle created");
 
+    println!("{:#?}", sys.entity_handles());
+
     // The length of our line segment is 30.0 units.
     sys.constrain(PtPtDistance::new(g2, p1, p2, 30.0, Some(workplane)))
         .expect("constrain line segment to 30.0 units");
