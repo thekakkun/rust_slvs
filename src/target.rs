@@ -11,7 +11,7 @@ pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
     fn slvs_type() -> i32;
 }
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct OnWorkplane(pub f64, pub f64);
 
 impl AsTarget for OnWorkplane {
@@ -36,7 +36,7 @@ impl From<OnWorkplane> for Vec<f64> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct In3d(pub f64, pub f64, pub f64);
 
 impl AsTarget for In3d {

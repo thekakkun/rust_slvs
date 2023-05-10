@@ -10,7 +10,7 @@ use crate::{
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cubic<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
@@ -113,7 +113,7 @@ impl<T: AsTarget> From<Slvs_Entity> for Cubic<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum CubicHandle {
     OnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
     In3d(EntityHandle<Cubic<In3d>>),

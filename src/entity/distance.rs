@@ -13,7 +13,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Distance<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
@@ -91,7 +91,7 @@ impl<T: AsTarget> From<Slvs_Entity> for Distance<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum DistanceHandle {
     OnWorkplane(EntityHandle<Distance<OnWorkplane>>),
     In3d(EntityHandle<Distance<In3d>>),

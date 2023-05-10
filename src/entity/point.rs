@@ -8,7 +8,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Point<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
@@ -81,7 +81,7 @@ impl<T: AsTarget + Default> From<Slvs_Entity> for Point<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum PointHandle {
     OnWorkplane(EntityHandle<Point<OnWorkplane>>),
     In3d(EntityHandle<Point<In3d>>),

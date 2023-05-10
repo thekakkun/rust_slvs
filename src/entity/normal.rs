@@ -7,7 +7,7 @@ use crate::{
     group::Group,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Normal {
     OnWorkplane {
         group: Group,

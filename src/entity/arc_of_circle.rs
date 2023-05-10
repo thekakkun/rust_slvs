@@ -10,7 +10,7 @@ use crate::{
     target::OnWorkplane,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ArcOfCircle {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,

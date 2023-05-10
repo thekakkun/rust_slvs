@@ -55,7 +55,7 @@ pub trait AsCurve: AsEntityData {}
 pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityHandle<T: AsEntityData> {
     pub handle: u32,
     pub(super) phantom: PhantomData<T>,
@@ -93,13 +93,21 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
-impl<E: AsEntityData> From<SomeEntityHandle> for EntityHandle<E> {
-    fn from(value: SomeEntityHandle) -> Self {
-        Self::new(value.handle())
+impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        let entity_handle = Self::new(value.handle());
+
+        if value == entity_handle.into() {
+            Ok(entity_handle)
+        } else {
+            Err("Not of expected type")
+        }
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SomeEntityHandle {
     ArcOfCircle(EntityHandle<ArcOfCircle>),
     Circle(CircleHandle),

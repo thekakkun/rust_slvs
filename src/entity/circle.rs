@@ -15,7 +15,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Circle<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
@@ -114,7 +114,7 @@ impl<T: AsTarget> From<Slvs_Entity> for Circle<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum CircleHandle {
     OnWorkplane(EntityHandle<Circle<OnWorkplane>>),
     In3d(EntityHandle<Circle<In3d>>),

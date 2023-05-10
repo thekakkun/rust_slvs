@@ -8,7 +8,7 @@ use crate::{
     target::In3d,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Workplane {
     pub group: Group,
     pub origin: EntityHandle<Point<In3d>>,

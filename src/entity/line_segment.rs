@@ -14,7 +14,7 @@ use crate::{
     target::{AsTarget, In3d, OnWorkplane},
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LineSegment<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
@@ -100,7 +100,7 @@ impl<T: AsTarget> From<Slvs_Entity> for LineSegment<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum LineSegmentHandle {
     OnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
     In3d(EntityHandle<LineSegment<In3d>>),
