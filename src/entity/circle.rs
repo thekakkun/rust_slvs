@@ -1,6 +1,5 @@
-use std::fmt::Debug;
-
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 use super::{
     AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,

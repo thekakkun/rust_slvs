@@ -10,6 +10,7 @@ use crate::{
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
 };
+
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cubic<T: AsTarget> {
     pub group: Group,

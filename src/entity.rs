@@ -1,3 +1,21 @@
+pub use arc_of_circle::ArcOfCircle;
+pub use circle::Circle;
+pub use cubic::Cubic;
+pub use distance::Distance;
+pub use line_segment::LineSegment;
+pub use normal::Normal;
+pub use point::Point;
+pub use workplane::Workplane;
+
+mod arc_of_circle;
+mod circle;
+mod cubic;
+mod distance;
+mod line_segment;
+mod normal;
+mod point;
+mod workplane;
+
 use serde::{Deserialize, Serialize};
 use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
@@ -10,23 +28,6 @@ use crate::{
     element::AsHandle,
     target::{In3d, OnWorkplane},
 };
-
-mod point;
-pub use point::Point;
-mod normal;
-pub use normal::Normal;
-mod distance;
-pub use distance::Distance;
-mod workplane;
-pub use workplane::Workplane;
-mod line_segment;
-pub use line_segment::LineSegment;
-mod cubic;
-pub use cubic::Cubic;
-mod circle;
-pub use circle::Circle;
-mod arc_of_circle;
-pub use arc_of_circle::ArcOfCircle;
 
 pub trait AsEntityData: Debug + Copy {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;

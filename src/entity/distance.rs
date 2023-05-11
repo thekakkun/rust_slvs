@@ -1,6 +1,5 @@
-use std::marker::PhantomData;
-
 use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 
 use super::{AsEntityData, EntityHandle, SomeEntityHandle, Workplane};
 use crate::{

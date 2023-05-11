@@ -64,19 +64,15 @@ if let Ok(ok_result) = result {
 ```
 */
 
-mod bindings;
-pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
-
-pub mod solver;
-
-mod element;
+pub mod constraint;
+pub mod entity;
 pub mod group;
-
+pub mod solver;
 pub mod target;
 
-pub mod entity;
-
-pub mod constraint;
-
-mod system;
+pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 pub use system::System;
+
+mod bindings;
+mod element;
+mod system;
