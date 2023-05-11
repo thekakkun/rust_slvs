@@ -46,12 +46,8 @@ impl Distance<In3d> {
 impl<T: AsTarget> AsEntityData for Distance<T> {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
         match T::slvs_type() as _ {
-            SLVS_E_POINT_IN_2D => {
-                SomeEntityHandle::Distance(DistanceHandle::OnWorkplane(EntityHandle::new(handle)))
-            }
-            SLVS_E_POINT_IN_3D => {
-                SomeEntityHandle::Distance(DistanceHandle::In3d(EntityHandle::new(handle)))
-            }
+            SLVS_E_POINT_IN_2D => SomeEntityHandle::DistanceOnWorkplane(EntityHandle::new(handle)),
+            SLVS_E_POINT_IN_3D => SomeEntityHandle::DistanceIn3d(EntityHandle::new(handle)),
             _ => panic!("Unknown slvs_type {}", T::slvs_type()),
         }
     }
@@ -87,36 +83,6 @@ impl<T: AsTarget> From<Slvs_Entity> for Distance<T> {
             },
             val: 0.0,
             phantom: PhantomData,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum DistanceHandle {
-    OnWorkplane(EntityHandle<Distance<OnWorkplane>>),
-    In3d(EntityHandle<Distance<In3d>>),
-}
-
-impl AsHandle for DistanceHandle {
-    fn handle(&self) -> u32 {
-        match self {
-            Self::OnWorkplane(entity_handle) => entity_handle.handle(),
-            Self::In3d(entity_handle) => entity_handle.handle(),
-        }
-    }
-}
-
-impl TryFrom<Slvs_Entity> for DistanceHandle {
-    type Error = &'static str;
-
-    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
-        if value.type_ == SLVS_E_DISTANCE as _ {
-            match value.wrkpl {
-                0 => Ok(DistanceHandle::In3d(value.into())),
-                _ => Ok(DistanceHandle::OnWorkplane(value.into())),
-            }
-        } else {
-            Err("Unexpected Slvs_Entity type")
         }
     }
 }

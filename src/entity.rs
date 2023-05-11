@@ -8,22 +8,23 @@ use crate::{
         SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
     },
     element::AsHandle,
+    target::{In3d, OnWorkplane},
 };
 
 mod point;
-pub use point::{Point, PointHandle};
+pub use point::Point;
 mod normal;
 pub use normal::Normal;
 mod distance;
-pub use distance::{Distance, DistanceHandle};
+pub use distance::Distance;
 mod workplane;
 pub use workplane::Workplane;
 mod line_segment;
-pub use line_segment::{LineSegment, LineSegmentHandle};
+pub use line_segment::LineSegment;
 mod cubic;
-pub use cubic::{Cubic, CubicHandle};
+pub use cubic::Cubic;
 mod circle;
-pub use circle::{Circle, CircleHandle};
+pub use circle::Circle;
 mod arc_of_circle;
 pub use arc_of_circle::ArcOfCircle;
 
@@ -110,12 +111,17 @@ impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SomeEntityHandle {
     ArcOfCircle(EntityHandle<ArcOfCircle>),
-    Circle(CircleHandle),
-    Cubic(CubicHandle),
-    Distance(DistanceHandle),
-    LineSegment(LineSegmentHandle),
+    CircleOnWorkplane(EntityHandle<Circle<OnWorkplane>>),
+    CircleIn3d(EntityHandle<Circle<In3d>>),
+    CubicOnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
+    CubicIn3d(EntityHandle<Cubic<In3d>>),
+    DistanceOnWorkplane(EntityHandle<Distance<OnWorkplane>>),
+    DistanceIn3d(EntityHandle<Distance<In3d>>),
+    LineSegmentOnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
+    LineSegmentIn3d(EntityHandle<LineSegment<In3d>>),
     Normal(EntityHandle<Normal>),
-    Point(PointHandle),
+    PointOnWorkplane(EntityHandle<Point<OnWorkplane>>),
+    PointIn3d(EntityHandle<Point<In3d>>),
     Workplane(EntityHandle<Workplane>),
 }
 
@@ -123,12 +129,17 @@ impl AsHandle for SomeEntityHandle {
     fn handle(&self) -> u32 {
         match self {
             SomeEntityHandle::ArcOfCircle(e) => e.handle(),
-            SomeEntityHandle::Circle(e) => e.handle(),
-            SomeEntityHandle::Cubic(e) => e.handle(),
-            SomeEntityHandle::Distance(e) => e.handle(),
-            SomeEntityHandle::LineSegment(e) => e.handle(),
+            SomeEntityHandle::CircleOnWorkplane(e) => e.handle(),
+            SomeEntityHandle::CircleIn3d(e) => e.handle(),
+            SomeEntityHandle::CubicOnWorkplane(e) => e.handle(),
+            SomeEntityHandle::CubicIn3d(e) => e.handle(),
+            SomeEntityHandle::DistanceOnWorkplane(e) => e.handle(),
+            SomeEntityHandle::DistanceIn3d(e) => e.handle(),
+            SomeEntityHandle::LineSegmentOnWorkplane(e) => e.handle(),
+            SomeEntityHandle::LineSegmentIn3d(e) => e.handle(),
             SomeEntityHandle::Normal(e) => e.handle(),
-            SomeEntityHandle::Point(e) => e.handle(),
+            SomeEntityHandle::PointOnWorkplane(e) => e.handle(),
+            SomeEntityHandle::PointIn3d(e) => e.handle(),
             SomeEntityHandle::Workplane(e) => e.handle(),
         }
     }
@@ -138,14 +149,25 @@ impl From<Slvs_Entity> for SomeEntityHandle {
     fn from(value: Slvs_Entity) -> Self {
         match value.type_ as _ {
             SLVS_E_ARC_OF_CIRCLE => SomeEntityHandle::ArcOfCircle(value.into()),
-            SLVS_E_CIRCLE => SomeEntityHandle::Circle(value.try_into().unwrap()),
-            SLVS_E_CUBIC => SomeEntityHandle::Cubic(value.try_into().unwrap()),
-            SLVS_E_DISTANCE => SomeEntityHandle::Distance(value.try_into().unwrap()),
-            SLVS_E_LINE_SEGMENT => SomeEntityHandle::LineSegment(value.try_into().unwrap()),
+            SLVS_E_CIRCLE => match value.wrkpl {
+                0 => SomeEntityHandle::CircleIn3d(value.try_into().unwrap()),
+                _ => SomeEntityHandle::CircleOnWorkplane(value.try_into().unwrap()),
+            },
+            SLVS_E_CUBIC => match value.wrkpl {
+                0 => SomeEntityHandle::CubicIn3d(value.try_into().unwrap()),
+                _ => SomeEntityHandle::CubicOnWorkplane(value.try_into().unwrap()),
+            },
+            SLVS_E_DISTANCE => match value.wrkpl {
+                0 => SomeEntityHandle::DistanceIn3d(value.try_into().unwrap()),
+                _ => SomeEntityHandle::DistanceOnWorkplane(value.try_into().unwrap()),
+            },
+            SLVS_E_LINE_SEGMENT => match value.wrkpl {
+                0 => SomeEntityHandle::LineSegmentIn3d(value.try_into().unwrap()),
+                _ => SomeEntityHandle::LineSegmentOnWorkplane(value.try_into().unwrap()),
+            },
             SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => SomeEntityHandle::Normal(value.into()),
-            SLVS_E_POINT_IN_2D | SLVS_E_POINT_IN_3D => {
-                SomeEntityHandle::Point(value.try_into().unwrap())
-            }
+            SLVS_E_POINT_IN_2D => SomeEntityHandle::PointOnWorkplane(value.try_into().unwrap()),
+            SLVS_E_POINT_IN_3D => SomeEntityHandle::PointIn3d(value.try_into().unwrap()),
             SLVS_E_WORKPLANE => SomeEntityHandle::Workplane(value.into()),
             _ => panic!("Unknown Slvs_Entity type value {}", value.type_),
         }

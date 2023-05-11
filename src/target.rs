@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    entity::{EntityHandle, PointHandle, SomeEntityHandle},
+    entity::{EntityHandle, SomeEntityHandle},
 };
 use std::fmt::Debug;
 
@@ -16,7 +16,7 @@ pub struct OnWorkplane(pub f64, pub f64);
 
 impl AsTarget for OnWorkplane {
     fn into_some_entity_handle(h: u32) -> SomeEntityHandle {
-        SomeEntityHandle::Point(PointHandle::OnWorkplane(EntityHandle::new(h)))
+        SomeEntityHandle::PointOnWorkplane(EntityHandle::new(h))
     }
 
     fn slvs_type() -> i32 {
@@ -41,7 +41,7 @@ pub struct In3d(pub f64, pub f64, pub f64);
 
 impl AsTarget for In3d {
     fn into_some_entity_handle(h: u32) -> SomeEntityHandle {
-        SomeEntityHandle::Point(PointHandle::In3d(EntityHandle::new(h)))
+        SomeEntityHandle::PointIn3d(EntityHandle::new(h))
     }
 
     fn slvs_type() -> i32 {
