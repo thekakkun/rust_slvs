@@ -13,17 +13,15 @@ data (structs that implement [`entity::AsEntityData`] and [`constraint::AsConstr
 use the handles as "keys" to reference elements, and data structs as typed "values"
 to add and update elements within `System`.
 
-# Example: In 3d space.
-
+# Examples
 
 ```rust
-// Initialize the system, and create a single [`group`].
+// Initialize the system, and create a single group.
 let mut sys = System::new();
 let g = sys.add_group();
 
-// Create two [points][`entity::Point`]. The first at coordinates (10, 10, 10) and
+// Create two points. The first at coordinates (10, 10, 10) and
 // the second at (20, 20, 20).
-
 let p1 = sys
     .sketch(&g, Point::<In3d>::new(10.0, 10.0, 10.0))
     .expect("p1 created");
@@ -35,10 +33,10 @@ let p2 = sys
 sys.sketch(&g, LineSegment::<In3d>::new(p1, p2))
     .expect("line segment created");
 
-// Constrain the  PtPtDistance between the two points to be 30 units.
+// Constrain the PtPtDistance between the two points to be 30 units.
 sys.constrain(PtPtDistance::new(g, p1, p2, 30.0, None))
 
-// Specifying set_dragged() on an entity tells the solver that the entity should
+// Specifying set_dragged() on an entity tells the solver that said entity should
 // be kept as close as possible to its initial location.
 sys.set_dragged(&p2);
 
