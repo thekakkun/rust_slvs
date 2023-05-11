@@ -167,6 +167,10 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
+    pub fn group_handles(&self) -> Vec<Group> {
+        self.groups.list.clone()
+    }
+
     pub fn entity_data<E>(&self, entity_handle: &EntityHandle<E>) -> Result<E, &'static str>
     where
         E: AsEntityData + From<Slvs_Entity>,
@@ -230,7 +234,11 @@ impl System {
         Ok(())
     }
 
-    pub fn update_entity<E, F>(&mut self, entity_handle: &EntityHandle<E>, f: F) -> Result<E, &'static str>
+    pub fn update_entity<E, F>(
+        &mut self,
+        entity_handle: &EntityHandle<E>,
+        f: F,
+    ) -> Result<E, &'static str>
     where
         E: AsEntityData + From<Slvs_Entity>,
         F: FnOnce(&mut E),
@@ -280,7 +288,9 @@ impl System {
         f(&mut constraint_data);
         self.validate_constraint_data(&constraint_data)?;
 
-        let slvs_constraint = self.mut_slvs_constraint(constraint_handle.handle()).unwrap();
+        let slvs_constraint = self
+            .mut_slvs_constraint(constraint_handle.handle())
+            .unwrap();
         slvs_constraint.set_group(constraint_data.group());
 
         if let Some(val) = constraint_data.val() {
