@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::{iter::zip, marker::PhantomData};
+use std::iter::zip;
 
 use crate::{
     bindings::{
@@ -111,12 +111,9 @@ impl System {
 
         self.entities.list.push(new_slvs_entity);
 
-        let entity: EntityHandle<E> = EntityHandle {
-            handle: new_slvs_entity.h,
-            phantom: PhantomData,
-        };
+        let entity_handle = EntityHandle::new(new_slvs_entity.h);
 
-        Ok(entity)
+        Ok(entity_handle)
     }
 
     pub fn constrain<C: AsConstraintData + 'static>(
@@ -147,9 +144,9 @@ impl System {
 
         self.constraints.list.push(new_slvs_constraint);
 
-        let constraint = ConstraintHandle::new(new_slvs_constraint.h);
+        let constraint_handle = ConstraintHandle::new(new_slvs_constraint.h);
 
-        Ok(constraint)
+        Ok(constraint_handle)
     }
 
     // Private as user has no reason to create bare param without linking to an entity.
@@ -166,15 +163,15 @@ impl System {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Reading element data
+// Getting element data
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn entity_data<E>(&self, entity: &EntityHandle<E>) -> Result<E, &'static str>
+    pub fn entity_data<E>(&self, entity_handle: &EntityHandle<E>) -> Result<E, &'static str>
     where
         E: AsEntityData + From<Slvs_Entity>,
     {
-        let slvs_entity = self.slvs_entity(entity.handle())?;
+        let slvs_entity = self.slvs_entity(entity_handle.handle())?;
         let mut entity_data = E::from(*slvs_entity);
 
         let param_vals: Vec<_> = slvs_entity
@@ -202,7 +199,7 @@ impl System {
         self.entities
             .list
             .iter()
-            .map(|&entity| entity.into())
+            .map(|&slvs_entity| slvs_entity.into())
             .collect()
     }
 
@@ -233,18 +230,18 @@ impl System {
         Ok(())
     }
 
-    pub fn update_entity<E, F>(&mut self, entity: &EntityHandle<E>, f: F) -> Result<E, &'static str>
+    pub fn update_entity<E, F>(&mut self, entity_handle: &EntityHandle<E>, f: F) -> Result<E, &'static str>
     where
         E: AsEntityData + From<Slvs_Entity>,
         F: FnOnce(&mut E),
     {
-        let mut entity_data = self.entity_data(entity)?;
+        let mut entity_data = self.entity_data(entity_handle)?;
 
         f(&mut entity_data);
         self.validate_entity_data(&entity_data)?;
 
         let param_h = {
-            let slvs_entity = self.mut_slvs_entity(entity.handle()).unwrap();
+            let slvs_entity = self.mut_slvs_entity(entity_handle.handle()).unwrap();
 
             slvs_entity.set_group(entity_data.group());
 
@@ -271,19 +268,19 @@ impl System {
 
     pub fn update_constraint<C, F>(
         &mut self,
-        constraint: &ConstraintHandle<C>,
+        constraint_handle: &ConstraintHandle<C>,
         f: F,
     ) -> Result<C, &'static str>
     where
         C: AsConstraintData + From<Slvs_Constraint>,
         F: FnOnce(&mut C),
     {
-        let mut constraint_data = self.constraint_data(constraint)?;
+        let mut constraint_data = self.constraint_data(constraint_handle)?;
 
         f(&mut constraint_data);
         self.validate_constraint_data(&constraint_data)?;
 
-        let slvs_constraint = self.mut_slvs_constraint(constraint.handle()).unwrap();
+        let slvs_constraint = self.mut_slvs_constraint(constraint_handle.handle()).unwrap();
         slvs_constraint.set_group(constraint_data.group());
 
         if let Some(val) = constraint_data.val() {
@@ -320,12 +317,12 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<E>(&mut self, entity: EntityHandle<E>) -> Result<E, &'static str>
+    pub fn delete_entity<E>(&mut self, entity_handle: EntityHandle<E>) -> Result<E, &'static str>
     where
         E: AsEntityData + From<Slvs_Entity>,
     {
-        let entity_data = self.entity_data(&entity)?;
-        let ix = self.entity_ix(entity.handle())?;
+        let entity_data = self.entity_data(&entity_handle)?;
+        let ix = self.entity_ix(entity_handle.handle())?;
         let deleted_entity = self.entities.list.remove(ix);
 
         for param_h in deleted_entity.param {
@@ -337,14 +334,14 @@ impl System {
 
     pub fn delete_constraint<C>(
         &mut self,
-        constraint: ConstraintHandle<C>,
+        constraint_handle: ConstraintHandle<C>,
     ) -> Result<C, &'static str>
     where
         C: AsConstraintData + From<Slvs_Constraint>,
     {
-        let constraint_data = self.constraint_data(&constraint)?;
+        let constraint_data = self.constraint_data(&constraint_handle)?;
 
-        let ix = self.constraint_ix(constraint.handle())?;
+        let ix = self.constraint_ix(constraint_handle.handle())?;
         self.constraints.list.remove(ix);
 
         Ok(constraint_data)
@@ -356,8 +353,8 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn set_dragged(&mut self, entity: &EntityHandle<impl AsEntityData>) {
-        if let Ok(slvs_entity) = self.slvs_entity(entity.handle()) {
+    pub fn set_dragged(&mut self, entity_handle: &EntityHandle<impl AsEntityData>) {
+        if let Ok(slvs_entity) = self.slvs_entity(entity_handle.handle()) {
             self.dragged = slvs_entity.param;
         }
     }
@@ -436,14 +433,14 @@ impl System {
         h: Slvs_hEntity,
         workplane: Slvs_hEntity,
     ) -> Result<(), &'static str> {
-        let entity = self.slvs_entity(h)?;
+        let slvs_entity = self.slvs_entity(h)?;
 
-        match entity.type_ as _ {
-            SLVS_E_NORMAL_IN_3D => match entity.h == self.slvs_entity(workplane)?.normal {
+        match slvs_entity.type_ as _ {
+            SLVS_E_NORMAL_IN_3D => match slvs_entity.h == self.slvs_entity(workplane)?.normal {
                 true => Ok(()),
                 false => Err("Normal in 3d does not match workplane's normal."),
             },
-            _ => match entity.wrkpl == workplane {
+            _ => match slvs_entity.wrkpl == workplane {
                 true => Ok(()),
                 false => Err("Entity not on expected workplane."),
             },
