@@ -15,7 +15,7 @@ pub struct ArcOfCircle {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,
     pub center: EntityHandle<Point<OnWorkplane>>,
-    pub arc_begin: EntityHandle<Point<OnWorkplane>>,
+    pub arc_start: EntityHandle<Point<OnWorkplane>>,
     pub arc_end: EntityHandle<Point<OnWorkplane>>,
     pub normal: EntityHandle<Normal>,
 }
@@ -25,7 +25,7 @@ impl ArcOfCircle {
         group: Group,
         workplane: EntityHandle<Workplane>,
         center: EntityHandle<Point<OnWorkplane>>,
-        arc_begin: EntityHandle<Point<OnWorkplane>>,
+        arc_start: EntityHandle<Point<OnWorkplane>>,
         arc_end: EntityHandle<Point<OnWorkplane>>,
         normal: EntityHandle<Normal>,
     ) -> Self {
@@ -33,7 +33,7 @@ impl ArcOfCircle {
             group,
             workplane,
             center,
-            arc_begin,
+            arc_start,
             arc_end,
             normal,
         }
@@ -63,7 +63,7 @@ impl AsEntityData for ArcOfCircle {
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![
             self.center.handle(),
-            self.arc_begin.handle(),
+            self.arc_start.handle(),
             self.arc_end.handle(),
         ])
     }
@@ -79,7 +79,7 @@ impl From<Slvs_Entity> for ArcOfCircle {
             group: Group(value.group),
             workplane: EntityHandle::new(value.wrkpl),
             center: EntityHandle::new(value.point[0]),
-            arc_begin: EntityHandle::new(value.point[1]),
+            arc_start: EntityHandle::new(value.point[1]),
             arc_end: EntityHandle::new(value.point[2]),
             normal: EntityHandle::new(value.normal),
         }

@@ -18,7 +18,7 @@ where
     pub workplane: EntityHandle<Workplane>,
     pub cubic: EntityHandle<C>,
     pub line: EntityHandle<L>,
-    pub to_beginning: bool,
+    pub to_start: bool,
 }
 
 impl<C, L> CubicLineTangent<C, L>
@@ -31,14 +31,14 @@ where
         workplane: EntityHandle<Workplane>,
         arc: EntityHandle<C>,
         line: EntityHandle<L>,
-        to_beginning: bool,
+        to_start: bool,
     ) -> Self {
         Self {
             group,
             workplane,
             cubic: arc,
             line,
-            to_beginning,
+            to_start,
         }
     }
 }
@@ -65,7 +65,7 @@ where
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_beginning, false]
+        [self.to_start, false]
     }
 }
 
@@ -80,7 +80,7 @@ where
             workplane: EntityHandle::new(value.wrkpl),
             cubic: EntityHandle::new(value.entityA),
             line: EntityHandle::new(value.entityB),
-            to_beginning: value.other != 0,
+            to_start: value.other != 0,
         }
     }
 }

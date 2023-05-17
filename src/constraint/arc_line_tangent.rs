@@ -14,7 +14,7 @@ pub struct ArcLineTangent<L: AsLineSegment> {
     pub workplane: EntityHandle<Workplane>,
     pub arc: EntityHandle<ArcOfCircle>,
     pub line: EntityHandle<L>,
-    pub to_beginning: bool,
+    pub to_start: bool,
 }
 
 impl<L: AsLineSegment> ArcLineTangent<L> {
@@ -23,14 +23,14 @@ impl<L: AsLineSegment> ArcLineTangent<L> {
         workplane: EntityHandle<Workplane>,
         arc: EntityHandle<ArcOfCircle>,
         line: EntityHandle<L>,
-        to_beginning: bool,
+        to_start: bool,
     ) -> Self {
         Self {
             group,
             workplane,
             arc,
             line,
-            to_beginning,
+            to_start,
         }
     }
 }
@@ -53,7 +53,7 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_beginning, false]
+        [self.to_start, false]
     }
 }
 
@@ -64,7 +64,7 @@ impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineTangent<L> {
             workplane: EntityHandle::new(value.wrkpl),
             arc: EntityHandle::new(value.entityA),
             line: EntityHandle::new(value.entityB),
-            to_beginning: value.other != 0,
+            to_start: value.other != 0,
         }
     }
 }

@@ -18,8 +18,8 @@ where
     pub workplane: EntityHandle<Workplane>,
     pub curve_a: EntityHandle<CA>,
     pub curve_b: EntityHandle<CB>,
-    pub to_curve_a_beginning: bool,
-    pub to_curve_b_beginning: bool,
+    pub to_curve_a_start: bool,
+    pub to_curve_b_start: bool,
 }
 
 impl<CA, CB> CurveCurveTangent<CA, CB>
@@ -32,16 +32,16 @@ where
         workplane: EntityHandle<Workplane>,
         curve_a: EntityHandle<CA>,
         curve_b: EntityHandle<CB>,
-        to_curve_a_beginning: bool,
-        to_curve_b_beginning: bool,
+        to_curve_a_start: bool,
+        to_curve_b_start: bool,
     ) -> Self {
         Self {
             group,
             workplane,
             curve_a,
             curve_b,
-            to_curve_a_beginning,
-            to_curve_b_beginning,
+            to_curve_a_start,
+            to_curve_b_start,
         }
     }
 }
@@ -68,7 +68,7 @@ where
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_curve_a_beginning, self.to_curve_b_beginning]
+        [self.to_curve_a_start, self.to_curve_b_start]
     }
 }
 
@@ -83,8 +83,8 @@ where
             workplane: EntityHandle::new(value.wrkpl),
             curve_a: EntityHandle::new(value.entityA),
             curve_b: EntityHandle::new(value.entityB),
-            to_curve_a_beginning: value.other != 0,
-            to_curve_b_beginning: value.other2 != 0,
+            to_curve_a_start: value.other != 0,
+            to_curve_b_start: value.other2 != 0,
         }
     }
 }
