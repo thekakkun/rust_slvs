@@ -167,8 +167,26 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
-    pub fn group_handles(&self) -> Vec<Group> {
+    pub fn groups(&self) -> Vec<Group> {
         self.groups.list.clone()
+    }
+
+    pub fn entities(&self) -> Vec<SomeEntityHandle> {
+        self.entities
+            .list
+            .iter()
+            .map(|&slvs_entity| slvs_entity.into())
+            .collect()
+    }
+
+    pub fn entities_in_group(&self, group: &Group) -> Vec<SomeEntityHandle> {
+        self.entities
+            .list
+            .iter()
+            .filter_map(|&slvs_entity| {
+                (slvs_entity.group == group.handle()).then_some(slvs_entity.into())
+            })
+            .collect()
     }
 
     pub fn entity_data<E>(&self, entity_handle: &EntityHandle<E>) -> Result<E, &'static str>
@@ -199,12 +217,18 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn entity_handles(&self) -> Vec<SomeEntityHandle> {
-        self.entities
-            .list
-            .iter()
-            .map(|&slvs_entity| slvs_entity.into())
-            .collect()
+    pub fn constraint_handles(&self) -> Vec<SomeEntityHandle> {
+        // need to return SomeConstraintHandle
+        todo!();
+    }
+
+    pub fn constraints_in_group(&self, group: &Group) -> Vec<SomeEntityHandle> {
+        // need to return SomeConstraintHandle
+        todo!();
+    }
+
+    pub fn constraints_for_entity(&self) {
+        todo!()
     }
 
     pub fn constraint_data<C: AsConstraintData + From<Slvs_Constraint>>(
