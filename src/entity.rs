@@ -204,8 +204,7 @@ impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
 // Entity Data
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsEntityData: Debug + Copy {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;
+pub trait AsEntityData: Copy + Debug {
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str>;
 
     fn slvs_type(&self) -> i32;

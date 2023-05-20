@@ -1,18 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    entity::{EntityHandle, SomeEntityHandle},
-};
+use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
 pub enum Target {
     OnWorkplane,
-    In3d
+    In3d,
 }
 
 pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;
     fn slvs_type() -> i32;
     fn target_type() -> Target;
 }
@@ -21,10 +17,6 @@ pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
 pub struct OnWorkplane(pub f64, pub f64);
 
 impl AsTarget for OnWorkplane {
-    fn into_some_entity_handle(h: u32) -> SomeEntityHandle {
-        SomeEntityHandle::PointOnWorkplane(EntityHandle::new(h))
-    }
-
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_2D as _
     }
@@ -50,10 +42,6 @@ impl From<OnWorkplane> for Vec<f64> {
 pub struct In3d(pub f64, pub f64, pub f64);
 
 impl AsTarget for In3d {
-    fn into_some_entity_handle(h: u32) -> SomeEntityHandle {
-        SomeEntityHandle::PointIn3d(EntityHandle::new(h))
-    }
-
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_3D as _
     }

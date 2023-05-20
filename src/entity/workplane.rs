@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Normal, Point, SomeEntityHandle};
+use super::{AsEntityData, EntityHandle, Normal, Point};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     element::AsHandle,
@@ -30,10 +30,6 @@ impl Workplane {
 }
 
 impl AsEntityData for Workplane {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        SomeEntityHandle::Normal(EntityHandle::new(handle))
-    }
-
     fn from_system(
         sys: &crate::System,
         entity_handle: &EntityHandle<Self>,

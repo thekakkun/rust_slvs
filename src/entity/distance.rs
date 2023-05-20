@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use super::{AsEntityData, EntityHandle, SomeEntityHandle, Workplane};
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane, Target},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -40,13 +40,6 @@ impl Distance<In3d> {
 }
 
 impl<T: AsTarget> AsEntityData for Distance<T> {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::target_type() as _ {
-            Target::OnWorkplane => SomeEntityHandle::DistanceOnWorkplane(EntityHandle::new(handle)),
-            Target::In3d => SomeEntityHandle::DistanceIn3d(EntityHandle::new(handle)),
-        }
-    }
-
     fn from_system(
         sys: &crate::System,
         entity_handle: &EntityHandle<Self>,

@@ -38,10 +38,6 @@ impl Point<In3d> {
 impl<T: AsTarget> AsPoint for Point<T> {}
 
 impl<T: AsTarget> AsEntityData for Point<T> {
-    fn into_some_entity_handle(handle: u32) -> super::SomeEntityHandle {
-        T::into_some_entity_handle(handle)
-    }
-
     fn from_system(
         sys: &crate::System,
         entity_handle: &EntityHandle<Self>,

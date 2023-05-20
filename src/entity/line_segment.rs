@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, LineSegmentHandle, Point,
-    SomeEntityHandle, Workplane,
+    Workplane,
 };
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
@@ -51,15 +51,6 @@ impl LineSegment<In3d> {
 }
 
 impl<T: AsTarget> AsEntityData for LineSegment<T> {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::target_type() as _ {
-            Target::OnWorkplane => {
-                SomeEntityHandle::LineSegmentOnWorkplane(EntityHandle::new(handle))
-            }
-            Target::In3d => SomeEntityHandle::LineSegmentIn3d(EntityHandle::new(handle)),
-        }
-    }
-
     fn from_system(
         sys: &crate::System,
         entity_handle: &EntityHandle<Self>,

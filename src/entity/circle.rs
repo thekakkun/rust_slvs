@@ -1,14 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::{
-    AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,
-};
+use super::{AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane, Target},
+    target::{AsTarget, In3d, OnWorkplane},
     System,
 };
 
@@ -59,13 +57,6 @@ impl Circle<In3d> {
 impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::target_type() as _ {
-            Target::OnWorkplane => SomeEntityHandle::CircleOnWorkplane(EntityHandle::new(handle)),
-            Target::In3d => SomeEntityHandle::CircleIn3d(EntityHandle::new(handle)),
-        }
-    }
-
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
 

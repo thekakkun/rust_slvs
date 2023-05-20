@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, SomeEntityHandle, Workplane};
+use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane, Target},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -61,13 +61,6 @@ impl<T: AsTarget> AsCubic for Cubic<T> {}
 impl<T: AsTarget> AsCurve for Cubic<T> {}
 
 impl<T: AsTarget> AsEntityData for Cubic<T> {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::target_type() as _ {
-            Target::OnWorkplane => SomeEntityHandle::CubicOnWorkplane(EntityHandle::new(handle)),
-            Target::In3d => SomeEntityHandle::CubicIn3d(EntityHandle::new(handle)),
-        }
-    }
-
     fn from_system(
         sys: &crate::System,
         entity_handle: &EntityHandle<Self>,
