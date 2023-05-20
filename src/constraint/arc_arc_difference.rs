@@ -33,7 +33,7 @@ impl ArcArcDifference {
 }
 
 impl AsConstraintData for ArcArcDifference {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_ARC_DIFFERENCE as _
     }
 

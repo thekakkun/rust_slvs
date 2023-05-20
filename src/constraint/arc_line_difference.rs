@@ -33,7 +33,7 @@ impl<L: AsLineSegment> ArcLineDifference<L> {
 }
 
 impl<L: AsLineSegment> AsConstraintData for ArcLineDifference<L> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_DIFFERENCE as _
     }
 

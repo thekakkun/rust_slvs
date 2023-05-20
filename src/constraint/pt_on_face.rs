@@ -26,7 +26,7 @@ impl<P: AsPoint> PtOnFace<P> {
 }
 
 impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_FACE as _
     }
 

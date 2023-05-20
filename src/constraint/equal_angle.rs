@@ -57,7 +57,7 @@ where
     LC: AsLineSegment,
     LD: AsLineSegment,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_ANGLE as _
     }
 

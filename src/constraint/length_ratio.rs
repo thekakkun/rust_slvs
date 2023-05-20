@@ -48,7 +48,7 @@ where
     LA: AsLineSegment,
     LB: AsLineSegment,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_LENGTH_RATIO as _
     }
 

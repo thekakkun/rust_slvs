@@ -49,7 +49,7 @@ where
     PA: AsPoint,
     PB: AsPoint,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_HORIZONTAL as _
     }
 
@@ -103,7 +103,7 @@ impl<L: AsLineSegment> LineHorizontal<L> {
 }
 
 impl<L: AsLineSegment> AsConstraintData for LineHorizontal<L> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_HORIZONTAL as _
     }
 

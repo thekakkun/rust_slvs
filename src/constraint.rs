@@ -94,24 +94,9 @@ use crate::{
     element::AsHandle,
 };
 
-pub trait AsConstraintData: Copy + Debug {
-    fn type_(&self) -> i32;
-    fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn group(&self) -> Slvs_hGroup;
-
-    fn val(&self) -> Option<f64> {
-        None
-    }
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-    fn others(&self) -> [bool; 2] {
-        [false, false]
-    }
-}
+////////////////////////////////////////////////////////////////////////////////
+// Constraint Handle
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ConstraintHandle<T: AsConstraintData> {
@@ -142,5 +127,28 @@ impl<T: AsConstraintData> Debug for ConstraintHandle<T> {
 impl<T: AsConstraintData> AsHandle for ConstraintHandle<T> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity Data
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsConstraintData: Copy + Debug {
+    fn slvs_type(&self) -> i32;
+    fn workplane(&self) -> Option<Slvs_hEntity>;
+    fn group(&self) -> Slvs_hGroup;
+
+    fn val(&self) -> Option<f64> {
+        None
+    }
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn others(&self) -> [bool; 2] {
+        [false, false]
     }
 }

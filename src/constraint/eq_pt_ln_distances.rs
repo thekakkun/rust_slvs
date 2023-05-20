@@ -57,7 +57,7 @@ where
     LB: AsLineSegment,
     PB: AsPoint,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_EQ_PT_LN_DISTANCES as _
     }
 

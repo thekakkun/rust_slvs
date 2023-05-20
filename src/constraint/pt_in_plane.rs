@@ -26,7 +26,7 @@ impl<P: AsPoint> PtInPlane<P> {
 }
 
 impl<P: AsPoint> AsConstraintData for PtInPlane<P> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_IN_PLANE as _
     }
 

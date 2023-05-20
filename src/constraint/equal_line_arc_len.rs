@@ -33,7 +33,7 @@ impl<L: AsLineSegment> EqualLineArcLen<L> {
 }
 
 impl<L: AsLineSegment> AsConstraintData for EqualLineArcLen<L> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_LINE_ARC_LEN as _
     }
 

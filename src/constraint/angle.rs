@@ -2,34 +2,26 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ANGLE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ANGLE},
     element::AsHandle,
-    entity::{AsLineSegment, EntityHandle, Workplane},
+    entity::{EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Angle<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
+pub struct Angle {
     pub group: Group,
-    pub line_a: EntityHandle<LA>,
-    pub line_b: EntityHandle<LB>,
+    pub line_a: LineSegmentHandle,
+    pub line_b: LineSegmentHandle,
     pub angle: f64,
     pub workplane: Option<EntityHandle<Workplane>>,
 }
 
-impl<LA, LB> Angle<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
+impl Angle {
     pub fn new(
         group: Group,
-        line_a: EntityHandle<LA>,
-        line_b: EntityHandle<LB>,
+        line_a: LineSegmentHandle,
+        line_b: LineSegmentHandle,
         angle: f64,
         workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
@@ -43,12 +35,8 @@ where
     }
 }
 
-impl<LA, LB> AsConstraintData for Angle<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
-    fn type_(&self) -> i32 {
+impl AsConstraintData for Angle {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_ANGLE as _
     }
 
@@ -69,21 +57,21 @@ where
     }
 }
 
-impl<LA, LB> From<Slvs_Constraint> for Angle<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            line_a: EntityHandle::new(value.entityA),
-            line_b: EntityHandle::new(value.entityB),
-            angle: value.valA,
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-        }
-    }
-}
+// impl<LA, LB> From<Slvs_Constraint> for Angle<LA, LB>
+// where
+//     LA: AsLineSegment,
+//     LB: AsLineSegment,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             line_a: EntityHandle::new(value.entityA),
+//             line_b: EntityHandle::new(value.entityB),
+//             angle: value.valA,
+//             workplane: match value.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//         }
+//     }
+// }

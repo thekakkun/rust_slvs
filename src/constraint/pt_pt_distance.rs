@@ -48,7 +48,7 @@ where
     PA: AsPoint,
     PB: AsPoint,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_PT_DISTANCE as _
     }
 

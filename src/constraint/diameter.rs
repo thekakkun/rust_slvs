@@ -26,7 +26,7 @@ impl<A: AsArc> Diameter<A> {
 }
 
 impl<A: AsArc> AsConstraintData for Diameter<A> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_DIAMETER as _
     }
 

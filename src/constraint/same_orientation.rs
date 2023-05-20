@@ -30,7 +30,7 @@ impl SameOrientation {
 }
 
 impl AsConstraintData for SameOrientation {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_SAME_ORIENTATION as _
     }
 

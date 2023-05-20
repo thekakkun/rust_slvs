@@ -51,7 +51,7 @@ where
     PB: AsPoint,
     PT: As2dProjectionTarget,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PROJ_PT_DISTANCE as _
     }
 

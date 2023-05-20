@@ -51,7 +51,7 @@ where
     CA: AsCurve,
     CB: AsCurve,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_CURVE_CURVE_TANGENT as _
     }
 

@@ -125,7 +125,7 @@ impl System {
         let mut new_slvs_constraint = Slvs_Constraint::new(
             self.constraints.get_next_h(),
             constraint_data.group(),
-            constraint_data.type_(),
+            constraint_data.slvs_type(),
         );
 
         if let Some(workplane) = constraint_data.workplane() {

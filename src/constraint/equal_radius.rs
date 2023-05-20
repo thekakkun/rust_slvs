@@ -38,7 +38,7 @@ where
     AA: AsArc,
     AB: AsArc,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
 

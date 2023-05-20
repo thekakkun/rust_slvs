@@ -33,7 +33,7 @@ impl<P: AsPoint> PtFaceDistance<P> {
 }
 
 impl<P: AsPoint> AsConstraintData for PtFaceDistance<P> {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_FACE_DISTANCE as _
     }
 

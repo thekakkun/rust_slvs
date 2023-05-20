@@ -34,7 +34,7 @@ where
     P: AsPoint,
     A: AsArc,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_CIRCLE as _
     }
 

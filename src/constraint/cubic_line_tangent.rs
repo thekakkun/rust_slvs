@@ -48,7 +48,7 @@ where
     C: AsCubic,
     L: AsLineSegment,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_CUBIC_LINE_TANGENT as _
     }
 

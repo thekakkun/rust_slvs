@@ -45,7 +45,7 @@ where
     P: AsPoint,
     L: AsLineSegment,
 {
-    fn type_(&self) -> i32 {
+    fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_LINE as _
     }
 
