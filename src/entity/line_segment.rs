@@ -86,11 +86,4 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 }
 
 impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
-impl<T: AsTarget> AsLineSegment for LineSegment<T> {
-    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle {
-        match T::target_type() {
-            Target::OnWorkplane => LineSegmentHandle::OnWorkplane(EntityHandle::new(handle)),
-            Target::In3d => LineSegmentHandle::In3d(EntityHandle::new(handle)),
-        }
-    }
-}
+impl<T: AsTarget> AsLineSegment for LineSegment<T> {}

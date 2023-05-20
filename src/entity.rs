@@ -138,6 +138,54 @@ impl From<LineSegmentHandle> for SomeEntityHandle {
 // Entity handle for some 2d things that can be a projection target
 ////////////////////////////////////////////////////////////////////////////////
 
+pub trait As2dProjectionTarget: AsEntityData {}
+
+#[enum_dispatch(ProjectionTargetHandle)]
+pub trait AsProjectionTargetHandle {}
+impl AsProjectionTargetHandle for EntityHandle<LineSegment<OnWorkplane>> {}
+impl AsProjectionTargetHandle for EntityHandle<LineSegment<In3d>> {}
+impl AsProjectionTargetHandle for EntityHandle<Normal> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum ProjectionTargetHandle {
+    LineSegmentOnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
+    LineSegmentIn3d(EntityHandle<LineSegment<In3d>>),
+    Normal(EntityHandle<Normal>),
+}
+
+impl TryFrom<Slvs_Entity> for ProjectionTargetHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_LINE_SEGMENT => match value.wrkpl {
+                0 => Ok(ProjectionTargetHandle::LineSegmentIn3d(value.into())),
+                _ => Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(value.into())),
+            },
+            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
+                Ok(ProjectionTargetHandle::Normal(value.into()))
+            }
+            _ => Err("Expected Slvs_Entity type of line segment"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::LineSegmentOnWorkplane(h) => {
+                Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(h))
+            }
+            SomeEntityHandle::LineSegmentIn3d(h) => Ok(ProjectionTargetHandle::LineSegmentIn3d(h)),
+            SomeEntityHandle::Normal(h) => Ok(ProjectionTargetHandle::Normal(h)),
+            _ => Err("Expected LineSegment variant of SomeEntityHandle"),
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some arc
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,9 +202,7 @@ impl From<LineSegmentHandle> for SomeEntityHandle {
 // Entity handle for some line
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsLineSegment: AsEntityData {
-    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle;
-}
+pub trait AsLineSegment: AsEntityData {}
 
 #[enum_dispatch(LineSegmentHandle)]
 pub trait AsLineSegmentHandle {}
@@ -225,7 +271,6 @@ pub trait AsEntityData: Copy + Debug {
     }
 }
 
-pub trait As2dProjectionTarget: AsEntityData {}
 pub trait AsArc: AsEntityData {}
 pub trait AsCubic: AsEntityData {}
 pub trait AsCurve: AsEntityData {}
