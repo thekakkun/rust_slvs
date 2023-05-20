@@ -16,10 +16,9 @@ mod normal;
 mod point;
 mod workplane;
 
-use std::{any::type_name, fmt::Debug, marker::PhantomData};
-
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{
@@ -125,11 +124,59 @@ impl From<Slvs_Entity> for SomeEntityHandle {
     }
 }
 
+impl From<ArcHandle> for SomeEntityHandle {
+    fn from(value: ArcHandle) -> Self {
+        match value {
+            ArcHandle::ArcOfCircle(h) => Self::ArcOfCircle(h),
+            ArcHandle::CircleOnWorkplane(h) => Self::CircleOnWorkplane(h),
+            ArcHandle::CircleIn3d(h) => Self::CircleIn3d(h),
+        }
+    }
+}
+
+impl From<CubicHandle> for SomeEntityHandle {
+    fn from(value: CubicHandle) -> Self {
+        match value {
+            CubicHandle::OnWorkplane(h) => Self::CubicOnWorkplane(h),
+            CubicHandle::In3d(h) => Self::CubicIn3d(h),
+        }
+    }
+}
+
+impl From<CurveHandle> for SomeEntityHandle {
+    fn from(value: CurveHandle) -> Self {
+        match value {
+            CurveHandle::ArcOfCircle(h) => Self::ArcOfCircle(h),
+            CurveHandle::CubicOnWorkplane(h) => Self::CubicOnWorkplane(h),
+            CurveHandle::CubicIn3d(h) => Self::CubicIn3d(h),
+        }
+    }
+}
+
 impl From<LineSegmentHandle> for SomeEntityHandle {
     fn from(value: LineSegmentHandle) -> Self {
         match value {
             LineSegmentHandle::OnWorkplane(h) => Self::LineSegmentOnWorkplane(h),
             LineSegmentHandle::In3d(h) => Self::LineSegmentIn3d(h),
+        }
+    }
+}
+
+impl From<PointHandle> for SomeEntityHandle {
+    fn from(value: PointHandle) -> Self {
+        match value {
+            PointHandle::OnWorkplane(h) => Self::PointOnWorkplane(h),
+            PointHandle::In3d(h) => Self::PointIn3d(h),
+        }
+    }
+}
+
+impl From<ProjectionTargetHandle> for SomeEntityHandle {
+    fn from(value: ProjectionTargetHandle) -> Self {
+        match value {
+            ProjectionTargetHandle::LineSegmentOnWorkplane(h) => Self::LineSegmentOnWorkplane(h),
+            ProjectionTargetHandle::LineSegmentIn3d(h) => Self::LineSegmentIn3d(h),
+            ProjectionTargetHandle::Normal(h) => Self::Normal(h),
         }
     }
 }
