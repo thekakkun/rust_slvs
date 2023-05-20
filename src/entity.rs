@@ -135,68 +135,144 @@ impl From<LineSegmentHandle> for SomeEntityHandle {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some 2d things that can be a projection target
+// Entity handle for some arc
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait As2dProjectionTarget: AsEntityData {}
+pub trait AsArc: AsEntityData {}
 
-#[enum_dispatch(ProjectionTargetHandle)]
-pub trait AsProjectionTargetHandle {}
-impl AsProjectionTargetHandle for EntityHandle<LineSegment<OnWorkplane>> {}
-impl AsProjectionTargetHandle for EntityHandle<LineSegment<In3d>> {}
-impl AsProjectionTargetHandle for EntityHandle<Normal> {}
+#[enum_dispatch(ArcHandle)]
+trait AsArcHandle {}
+impl AsArcHandle for EntityHandle<ArcOfCircle> {}
+impl AsArcHandle for EntityHandle<Circle<OnWorkplane>> {}
+impl AsArcHandle for EntityHandle<Circle<In3d>> {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
-pub enum ProjectionTargetHandle {
-    LineSegmentOnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
-    LineSegmentIn3d(EntityHandle<LineSegment<In3d>>),
-    Normal(EntityHandle<Normal>),
+pub enum ArcHandle {
+    ArcOfCircle(EntityHandle<ArcOfCircle>),
+    CircleOnWorkplane(EntityHandle<Circle<OnWorkplane>>),
+    CircleIn3d(EntityHandle<Circle<In3d>>),
 }
 
-impl TryFrom<Slvs_Entity> for ProjectionTargetHandle {
+impl TryFrom<Slvs_Entity> for ArcHandle {
     type Error = &'static str;
 
     fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
         match value.type_ as _ {
-            SLVS_E_LINE_SEGMENT => match value.wrkpl {
-                0 => Ok(ProjectionTargetHandle::LineSegmentIn3d(value.into())),
-                _ => Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(value.into())),
+            SLVS_E_ARC_OF_CIRCLE => Ok(ArcHandle::ArcOfCircle(value.into())),
+            SLVS_E_CIRCLE => match value.wrkpl {
+                0 => Ok(ArcHandle::CircleIn3d(value.into())),
+                _ => Ok(ArcHandle::CircleOnWorkplane(value.into())),
             },
-            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
-                Ok(ProjectionTargetHandle::Normal(value.into()))
-            }
-            _ => Err("Expected Slvs_Entity type of line segment"),
+            _ => Err("Expected Slvs_Entity type of arc or circle"),
         }
     }
 }
 
-impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
+impl TryFrom<SomeEntityHandle> for ArcHandle {
     type Error = &'static str;
 
     fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
         match value {
-            SomeEntityHandle::LineSegmentOnWorkplane(h) => {
-                Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(h))
-            }
-            SomeEntityHandle::LineSegmentIn3d(h) => Ok(ProjectionTargetHandle::LineSegmentIn3d(h)),
-            SomeEntityHandle::Normal(h) => Ok(ProjectionTargetHandle::Normal(h)),
-            _ => Err("Expected LineSegment variant of SomeEntityHandle"),
+            SomeEntityHandle::ArcOfCircle(h) => Ok(ArcHandle::ArcOfCircle(h)),
+            SomeEntityHandle::CircleOnWorkplane(h) => Ok(ArcHandle::CircleOnWorkplane(h)),
+            SomeEntityHandle::CircleIn3d(h) => Ok(ArcHandle::CircleIn3d(h)),
+            _ => Err("Expected Arc or Circle variant of SomeEntityHandle"),
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some arc
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some cubic
 ////////////////////////////////////////////////////////////////////////////////
 
+pub trait AsCubic: AsEntityData {}
+
+#[enum_dispatch(CubicHandle)]
+trait AsCubicHandle {}
+impl AsCubicHandle for EntityHandle<Cubic<OnWorkplane>> {}
+impl AsCubicHandle for EntityHandle<Cubic<In3d>> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum CubicHandle {
+    OnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
+    In3d(EntityHandle<Cubic<In3d>>),
+}
+
+impl TryFrom<Slvs_Entity> for CubicHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_CUBIC => match value.wrkpl {
+                0 => Ok(CubicHandle::In3d(value.into())),
+                _ => Ok(CubicHandle::OnWorkplane(value.into())),
+            },
+            _ => Err("Expected Slvs_Entity type of cubic"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for CubicHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::CubicOnWorkplane(h) => Ok(CubicHandle::OnWorkplane(h)),
+            SomeEntityHandle::CubicIn3d(h) => Ok(CubicHandle::In3d(h)),
+            _ => Err("Expected Cubic variant of SomeEntityHandle"),
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some curve
 ////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsCurve: AsEntityData {}
+
+#[enum_dispatch(CurveHandle)]
+trait AsCurveHandle {}
+impl AsCurveHandle for EntityHandle<ArcOfCircle> {}
+impl AsCurveHandle for EntityHandle<Cubic<OnWorkplane>> {}
+impl AsCurveHandle for EntityHandle<Cubic<In3d>> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum CurveHandle {
+    ArcOfCircle(EntityHandle<ArcOfCircle>),
+    CubicOnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
+    CubicIn3d(EntityHandle<Cubic<In3d>>),
+}
+
+impl TryFrom<Slvs_Entity> for CurveHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_ARC_OF_CIRCLE => Ok(CurveHandle::ArcOfCircle(value.into())),
+            SLVS_E_CUBIC => match value.wrkpl {
+                0 => Ok(CurveHandle::CubicIn3d(value.into())),
+                _ => Ok(CurveHandle::CubicOnWorkplane(value.into())),
+            },
+            _ => Err("Expected Slvs_Entity type of arc or cubic"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for CurveHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::ArcOfCircle(h) => Ok(CurveHandle::ArcOfCircle(h)),
+            SomeEntityHandle::CubicOnWorkplane(h) => Ok(CurveHandle::CubicOnWorkplane(h)),
+            SomeEntityHandle::CubicIn3d(h) => Ok(CurveHandle::CubicIn3d(h)),
+            _ => Err("Expected Arc or Cubic variant of SomeEntityHandle"),
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some line
@@ -205,7 +281,7 @@ impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
 pub trait AsLineSegment: AsEntityData {}
 
 #[enum_dispatch(LineSegmentHandle)]
-pub trait AsLineSegmentHandle {}
+trait AsLineSegmentHandle {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<OnWorkplane>> {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<In3d>> {}
 
@@ -246,6 +322,96 @@ impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
 // Entity handle for some point
 ////////////////////////////////////////////////////////////////////////////////
 
+pub trait AsPoint: AsEntityData {}
+
+#[enum_dispatch(PointHandle)]
+trait AsPointHandle {}
+impl AsPointHandle for EntityHandle<Point<OnWorkplane>> {}
+impl AsPointHandle for EntityHandle<Point<In3d>> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum PointHandle {
+    OnWorkplane(EntityHandle<Point<OnWorkplane>>),
+    In3d(EntityHandle<Point<In3d>>),
+}
+
+impl TryFrom<Slvs_Entity> for PointHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_POINT_IN_2D => Ok(PointHandle::OnWorkplane(value.into())),
+            SLVS_E_POINT_IN_3D => Ok(PointHandle::In3d(value.into())),
+            _ => Err("Expected Slvs_Entity type of point"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for PointHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::PointOnWorkplane(h) => Ok(PointHandle::OnWorkplane(h)),
+            SomeEntityHandle::PointIn3d(h) => Ok(PointHandle::In3d(h)),
+            _ => Err("Expected Point variant of SomeEntityHandle"),
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some 2d things that can be a projection target
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait As2dProjectionTarget: AsEntityData {}
+
+#[enum_dispatch(ProjectionTargetHandle)]
+trait AsProjectionTargetHandle {}
+impl AsProjectionTargetHandle for EntityHandle<LineSegment<OnWorkplane>> {}
+impl AsProjectionTargetHandle for EntityHandle<LineSegment<In3d>> {}
+impl AsProjectionTargetHandle for EntityHandle<Normal> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum ProjectionTargetHandle {
+    LineSegmentOnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
+    LineSegmentIn3d(EntityHandle<LineSegment<In3d>>),
+    Normal(EntityHandle<Normal>),
+}
+
+impl TryFrom<Slvs_Entity> for ProjectionTargetHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
+                Ok(ProjectionTargetHandle::Normal(value.into()))
+            }
+            SLVS_E_LINE_SEGMENT => match value.wrkpl {
+                0 => Ok(ProjectionTargetHandle::LineSegmentIn3d(value.into())),
+                _ => Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(value.into())),
+            },
+            _ => Err("Expected Slvs_Entity type of line segment or normal"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::LineSegmentOnWorkplane(h) => {
+                Ok(ProjectionTargetHandle::LineSegmentOnWorkplane(h))
+            }
+            SomeEntityHandle::LineSegmentIn3d(h) => Ok(ProjectionTargetHandle::LineSegmentIn3d(h)),
+            SomeEntityHandle::Normal(h) => Ok(ProjectionTargetHandle::Normal(h)),
+            _ => Err("Expected LineSegment or Normal variant of SomeEntityHandle"),
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Entity Data
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,8 +436,3 @@ pub trait AsEntityData: Copy + Debug {
         None
     }
 }
-
-pub trait AsArc: AsEntityData {}
-pub trait AsCubic: AsEntityData {}
-pub trait AsCurve: AsEntityData {}
-pub trait AsPoint: AsEntityData {}

@@ -1,14 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::{
-    As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, LineSegmentHandle, Point,
-    Workplane,
-};
+use super::{As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane, Target},
+    target::{AsTarget, In3d, OnWorkplane},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
