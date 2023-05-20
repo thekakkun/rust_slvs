@@ -191,30 +191,9 @@ impl System {
 
     pub fn entity_data<E>(&self, entity_handle: &EntityHandle<E>) -> Result<E, &'static str>
     where
-        E: AsEntityData + From<Slvs_Entity>,
+        E: AsEntityData,
     {
-        let slvs_entity = self.slvs_entity(entity_handle.handle())?;
-        let mut entity_data = E::from(*slvs_entity);
-
-        let param_vals: Vec<_> = slvs_entity
-            .param
-            .iter()
-            .filter_map(|&param_h| {
-                if param_h == 0 {
-                    None
-                } else if let Ok(slvs_param) = self.slvs_param(param_h) {
-                    Some(slvs_param.val)
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        if !param_vals.is_empty() {
-            entity_data.set_vals(param_vals);
-        }
-
-        Ok(entity_data)
+        E::from_system(self, entity_handle)
     }
 
     pub fn constraint_handles(&self) -> Vec<SomeEntityHandle> {
@@ -264,7 +243,7 @@ impl System {
         f: F,
     ) -> Result<E, &'static str>
     where
-        E: AsEntityData + From<Slvs_Entity>,
+        E: AsEntityData,
         F: FnOnce(&mut E),
     {
         let mut entity_data = self.entity_data(entity_handle)?;
@@ -353,7 +332,7 @@ impl System {
 
     pub fn delete_entity<E>(&mut self, entity_handle: EntityHandle<E>) -> Result<E, &'static str>
     where
-        E: AsEntityData + From<Slvs_Entity>,
+        E: AsEntityData,
     {
         let entity_data = self.entity_data(&entity_handle)?;
         let ix = self.entity_ix(entity_handle.handle())?;

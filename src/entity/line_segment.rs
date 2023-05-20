@@ -6,8 +6,7 @@ use super::{
 };
 use crate::{
     bindings::{
-        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT, SLVS_E_POINT_IN_2D,
-        SLVS_E_POINT_IN_3D,
+        Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D,
     },
     element::AsHandle,
     group::Group,
@@ -64,6 +63,23 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
         }
     }
 
+    fn from_system(
+        sys: &crate::System,
+        entity_handle: &EntityHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            workplane: match slvs_entity.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            point_a: EntityHandle::new(slvs_entity.point[0]),
+            point_b: EntityHandle::new(slvs_entity.point[1]),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_LINE_SEGMENT as _
     }
@@ -83,17 +99,3 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 
 impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
 impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
-
-impl<T: AsTarget> From<Slvs_Entity> for LineSegment<T> {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-            point_a: EntityHandle::new(value.point[0]),
-            point_b: EntityHandle::new(value.point[1]),
-        }
-    }
-}

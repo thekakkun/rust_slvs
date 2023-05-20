@@ -4,8 +4,7 @@ use std::marker::PhantomData;
 use super::{AsEntityData, EntityHandle, SomeEntityHandle, Workplane};
 use crate::{
     bindings::{
-        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE, SLVS_E_POINT_IN_2D,
-        SLVS_E_POINT_IN_3D,
+        Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D,
     },
     element::AsHandle,
     group::Group,
@@ -51,6 +50,24 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
         }
     }
 
+    fn from_system(
+        sys: &crate::System,
+        entity_handle: &EntityHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+        let distance = sys.slvs_param(slvs_entity.param[0])?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            workplane: match slvs_entity.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            val: distance.val,
+            phantom: PhantomData,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_DISTANCE as _
     }
@@ -69,19 +86,5 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
 
     fn set_vals(&mut self, vals: Vec<f64>) {
         self.val = vals[0]
-    }
-}
-
-impl<T: AsTarget> From<Slvs_Entity> for Distance<T> {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-            val: 0.0,
-            phantom: PhantomData,
-        }
     }
 }

@@ -2,10 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, SomeEntityHandle, Workplane};
 use crate::{
-    bindings::{
-        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC, SLVS_E_POINT_IN_2D,
-        SLVS_E_POINT_IN_3D,
-    },
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
@@ -72,6 +69,25 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
         }
     }
 
+    fn from_system(
+        sys: &crate::System,
+        entity_handle: &EntityHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            workplane: match slvs_entity.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            start_point: EntityHandle::new(slvs_entity.point[0]),
+            start_control: EntityHandle::new(slvs_entity.point[1]),
+            end_control: EntityHandle::new(slvs_entity.point[2]),
+            end_point: EntityHandle::new(slvs_entity.point[3]),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_CUBIC as _
     }
@@ -91,21 +107,5 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
             self.end_control.handle(),
             self.end_point.handle(),
         ])
-    }
-}
-
-impl<T: AsTarget> From<Slvs_Entity> for Cubic<T> {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-            start_point: EntityHandle::new(value.point[0]),
-            start_control: EntityHandle::new(value.point[1]),
-            end_control: EntityHandle::new(value.point[2]),
-            end_point: EntityHandle::new(value.point[3]),
-        }
     }
 }

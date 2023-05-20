@@ -5,13 +5,11 @@ use super::{
     AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,
 };
 use crate::{
-    bindings::{
-        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE, SLVS_E_POINT_IN_2D,
-        SLVS_E_POINT_IN_3D,
-    },
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -69,6 +67,21 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
         }
     }
 
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            workplane: match slvs_entity.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+            center: EntityHandle::new(slvs_entity.point[0]),
+            radius: EntityHandle::new(slvs_entity.distance),
+            normal: EntityHandle::new(slvs_entity.normal),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_CIRCLE as _
     }
@@ -91,20 +104,5 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
 
     fn distance(&self) -> Option<Slvs_hEntity> {
         Some(self.radius.handle())
-    }
-}
-
-impl<T: AsTarget> From<Slvs_Entity> for Circle<T> {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-            center: EntityHandle::new(value.point[0]),
-            radius: EntityHandle::new(value.distance),
-            normal: EntityHandle::new(value.normal),
-        }
     }
 }

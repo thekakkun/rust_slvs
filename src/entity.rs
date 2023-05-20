@@ -27,35 +27,12 @@ use crate::{
     },
     element::AsHandle,
     target::{In3d, OnWorkplane},
+    System,
 };
 
-pub trait AsEntityData: Debug + Copy {
-    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;
-    fn slvs_type(&self) -> i32;
-    fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn group(&self) -> Slvs_hGroup;
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        None
-    }
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-    fn distance(&self) -> Option<Slvs_hEntity> {
-        None
-    }
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
-    }
-    fn set_vals(&mut self, _vals: Vec<f64>) {}
-}
-
-pub trait As2dProjectionTarget: AsEntityData {}
-pub trait AsArc: AsEntityData {}
-pub trait AsCubic: AsEntityData {}
-pub trait AsCurve: AsEntityData {}
-pub trait AsLineSegment: AsEntityData {}
-pub trait AsPoint: AsEntityData {}
+////////////////////////////////////////////////////////////////////////////////
+// Entity Handle
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityHandle<T: AsEntityData> {
@@ -72,6 +49,12 @@ impl<E: AsEntityData> EntityHandle<E> {
     }
 }
 
+impl<E: AsEntityData> AsHandle for EntityHandle<E> {
+    fn handle(&self) -> u32 {
+        self.handle
+    }
+}
+
 impl<E: AsEntityData> Debug for EntityHandle<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -80,12 +63,6 @@ impl<E: AsEntityData> Debug for EntityHandle<E> {
             self.handle,
             type_name::<E>()
         )
-    }
-}
-
-impl<E: AsEntityData> AsHandle for EntityHandle<E> {
-    fn handle(&self) -> u32 {
-        self.handle
     }
 }
 
@@ -108,10 +85,6 @@ impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Some sort of entity handle
-////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SomeEntityHandle {
@@ -184,6 +157,44 @@ impl<E: AsEntityData> From<EntityHandle<E>> for SomeEntityHandle {
         E::into_some_entity_handle(value.handle())
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity Data
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsEntityData: Debug + Copy {
+    fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str>;
+
+    fn slvs_type(&self) -> i32;
+    fn workplane(&self) -> Option<Slvs_hEntity>;
+    fn group(&self) -> Slvs_hGroup;
+
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        None
+    }
+    fn normal(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn distance(&self) -> Option<Slvs_hEntity> {
+        None
+    }
+    fn param_vals(&self) -> Option<Vec<f64>> {
+        None
+    }
+    fn set_vals(&mut self, _vals: Vec<f64>) {}
+}
+
+pub trait As2dProjectionTarget: AsEntityData {}
+pub trait AsArc: AsEntityData {}
+pub trait AsCubic: AsEntityData {}
+pub trait AsCurve: AsEntityData {}
+pub trait AsLineSegment: AsEntityData {}
+pub trait AsPoint: AsEntityData {}
+
+////////////////////////////////////////////////////////////////////////////////
+// Some sort of entity handle
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some 2d things that can be a projection target

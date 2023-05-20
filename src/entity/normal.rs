@@ -40,6 +40,27 @@ impl AsEntityData for Normal {
         SomeEntityHandle::Normal(EntityHandle::new(handle))
     }
 
+    fn from_system(
+        sys: &crate::System,
+        entity_handle: &EntityHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(match slvs_entity.wrkpl {
+            0 => Self::In3d {
+                group: Group(slvs_entity.group),
+                w: 0.0,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            h => Self::OnWorkplane {
+                group: Group(slvs_entity.group),
+                workplane: EntityHandle::new(h),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         match self {
             Self::OnWorkplane { .. } => SLVS_E_NORMAL_IN_2D as _,

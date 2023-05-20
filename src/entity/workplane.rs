@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{AsEntityData, EntityHandle, Normal, Point, SomeEntityHandle};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     element::AsHandle,
     group::Group,
     target::In3d,
@@ -34,6 +34,19 @@ impl AsEntityData for Workplane {
         SomeEntityHandle::Normal(EntityHandle::new(handle))
     }
 
+    fn from_system(
+        sys: &crate::System,
+        entity_handle: &EntityHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            origin: EntityHandle::new(slvs_entity.point[0]),
+            normal: EntityHandle::new(slvs_entity.normal),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_WORKPLANE as _
     }
@@ -52,15 +65,5 @@ impl AsEntityData for Workplane {
 
     fn normal(&self) -> Option<Slvs_hEntity> {
         Some(self.normal.handle())
-    }
-}
-
-impl From<Slvs_Entity> for Workplane {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            origin: EntityHandle::new(value.point[0]),
-            normal: EntityHandle::new(value.normal),
-        }
     }
 }

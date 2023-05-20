@@ -4,10 +4,11 @@ use super::{
     AsArc, AsCurve, AsEntityData, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,
 };
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
     element::AsHandle,
     group::Group,
     target::OnWorkplane,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -48,6 +49,19 @@ impl AsEntityData for ArcOfCircle {
         SomeEntityHandle::ArcOfCircle(EntityHandle::new(handle))
     }
 
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
+        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_entity.group),
+            workplane: EntityHandle::new(slvs_entity.wrkpl),
+            center: EntityHandle::new(slvs_entity.point[0]),
+            arc_start: EntityHandle::new(slvs_entity.point[1]),
+            arc_end: EntityHandle::new(slvs_entity.point[2]),
+            normal: EntityHandle::new(slvs_entity.normal),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_E_ARC_OF_CIRCLE as _
     }
@@ -70,18 +84,5 @@ impl AsEntityData for ArcOfCircle {
 
     fn normal(&self) -> Option<Slvs_hEntity> {
         Some(self.normal.handle())
-    }
-}
-
-impl From<Slvs_Entity> for ArcOfCircle {
-    fn from(value: Slvs_Entity) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            center: EntityHandle::new(value.point[0]),
-            arc_start: EntityHandle::new(value.point[1]),
-            arc_end: EntityHandle::new(value.point[2]),
-            normal: EntityHandle::new(value.normal),
-        }
     }
 }
