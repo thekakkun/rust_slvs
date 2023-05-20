@@ -6,9 +6,15 @@ use crate::{
 };
 use std::fmt::Debug;
 
+pub enum Target {
+    OnWorkplane,
+    In3d
+}
+
 pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle;
     fn slvs_type() -> i32;
+    fn target_type() -> Target;
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -21,6 +27,10 @@ impl AsTarget for OnWorkplane {
 
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_2D as _
+    }
+
+    fn target_type() -> Target {
+        Target::OnWorkplane
     }
 }
 
@@ -46,6 +56,10 @@ impl AsTarget for In3d {
 
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_3D as _
+    }
+
+    fn target_type() -> Target {
+        Target::In3d
     }
 }
 

@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use super::{AsEntityData, AsPoint, EntityHandle, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    bindings::{Slvs_hEntity, Slvs_hGroup},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    target::{AsTarget, In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -49,8 +49,8 @@ impl<T: AsTarget> AsEntityData for Point<T> {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
         let param_handle_iter = slvs_entity.param.iter();
 
-        match slvs_entity.type_ as _ {
-            SLVS_E_POINT_IN_2D => {
+        match T::target_type() as _ {
+            Target::OnWorkplane => {
                 let points: Result<Vec<_>, _> = param_handle_iter
                     .take(2)
                     .map(|param_h| {
@@ -65,7 +65,7 @@ impl<T: AsTarget> AsEntityData for Point<T> {
                     coords: T::from(points?),
                 })
             }
-            SLVS_E_POINT_IN_3D => {
+            Target::In3d => {
                 let points: Result<Vec<_>, _> = param_handle_iter
                     .take(3)
                     .map(|param_h| {
@@ -80,7 +80,6 @@ impl<T: AsTarget> AsEntityData for Point<T> {
                     coords: T::from(points?),
                 })
             }
-            _ => Err("Unexpected slvs_entity.type_"),
         }
     }
 
@@ -102,23 +101,5 @@ impl<T: AsTarget> AsEntityData for Point<T> {
 
     fn set_vals(&mut self, vals: Vec<f64>) {
         self.coords = vals.into();
-    }
-}
-
-impl<T: AsTarget + Default> From<Slvs_Entity> for Point<T> {
-    fn from(value: Slvs_Entity) -> Self {
-        if value.type_ == SLVS_E_POINT_IN_2D as _ {
-            Self {
-                group: Group(value.group),
-                workplane: Some(EntityHandle::new(value.wrkpl)),
-                coords: T::default(),
-            }
-        } else {
-            Self {
-                group: Group(value.group),
-                workplane: None,
-                coords: T::default(),
-            }
-        }
     }
 }

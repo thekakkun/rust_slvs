@@ -5,10 +5,10 @@ use super::{
     AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle, Workplane,
 };
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    target::{AsTarget, In3d, OnWorkplane, Target},
     System,
 };
 
@@ -60,10 +60,9 @@ impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::slvs_type() as _ {
-            SLVS_E_POINT_IN_2D => SomeEntityHandle::CircleOnWorkplane(EntityHandle::new(handle)),
-            SLVS_E_POINT_IN_3D => SomeEntityHandle::CircleIn3d(EntityHandle::new(handle)),
-            _ => panic!("Unknown slvs_type {}", T::slvs_type()),
+        match T::target_type() as _ {
+            Target::OnWorkplane => SomeEntityHandle::CircleOnWorkplane(EntityHandle::new(handle)),
+            Target::In3d => SomeEntityHandle::CircleIn3d(EntityHandle::new(handle)),
         }
     }
 

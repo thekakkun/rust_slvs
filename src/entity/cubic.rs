@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, SomeEntityHandle, Workplane};
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    target::{AsTarget, In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -62,10 +62,9 @@ impl<T: AsTarget> AsCurve for Cubic<T> {}
 
 impl<T: AsTarget> AsEntityData for Cubic<T> {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::slvs_type() as _ {
-            SLVS_E_POINT_IN_2D => SomeEntityHandle::CubicOnWorkplane(EntityHandle::new(handle)),
-            SLVS_E_POINT_IN_3D => SomeEntityHandle::CubicIn3d(EntityHandle::new(handle)),
-            _ => panic!("Unknown slvs_type {}", T::slvs_type()),
+        match T::target_type() as _ {
+            Target::OnWorkplane => SomeEntityHandle::CubicOnWorkplane(EntityHandle::new(handle)),
+            Target::In3d => SomeEntityHandle::CubicIn3d(EntityHandle::new(handle)),
         }
     }
 

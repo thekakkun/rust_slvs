@@ -1,16 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, Point, SomeEntityHandle,
-    Workplane,
+    As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, LineSegmentHandle, Point,
+    SomeEntityHandle, Workplane,
 };
 use crate::{
-    bindings::{
-        Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D,
-    },
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
     element::AsHandle,
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    target::{AsTarget, In3d, OnWorkplane, Target},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -54,12 +52,11 @@ impl LineSegment<In3d> {
 
 impl<T: AsTarget> AsEntityData for LineSegment<T> {
     fn into_some_entity_handle(handle: u32) -> SomeEntityHandle {
-        match T::slvs_type() as _ {
-            SLVS_E_POINT_IN_2D => {
+        match T::target_type() as _ {
+            Target::OnWorkplane => {
                 SomeEntityHandle::LineSegmentOnWorkplane(EntityHandle::new(handle))
             }
-            SLVS_E_POINT_IN_3D => SomeEntityHandle::LineSegmentIn3d(EntityHandle::new(handle)),
-            _ => panic!("Unknown slvs_type {}", T::slvs_type()),
+            Target::In3d => SomeEntityHandle::LineSegmentIn3d(EntityHandle::new(handle)),
         }
     }
 
@@ -98,4 +95,11 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
 }
 
 impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
-impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
+impl<T: AsTarget> AsLineSegment for LineSegment<T> {
+    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle {
+        match T::target_type() {
+            Target::OnWorkplane => LineSegmentHandle::OnWorkplane(EntityHandle::new(handle)),
+            Target::In3d => LineSegmentHandle::In3d(EntityHandle::new(handle)),
+        }
+    }
+}

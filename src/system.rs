@@ -171,37 +171,28 @@ impl System {
         self.groups.list.clone()
     }
 
-    pub fn entities(&self) -> Vec<SomeEntityHandle> {
-        self.entities
-            .list
-            .iter()
-            .map(|&slvs_entity| slvs_entity.into())
-            .collect()
-    }
-
-    pub fn entities_in_group(&self, group: &Group) -> Vec<SomeEntityHandle> {
+    pub fn entity_handles(&self, group: Option<&Group>) -> Vec<SomeEntityHandle> {
         self.entities
             .list
             .iter()
             .filter_map(|&slvs_entity| {
-                (slvs_entity.group == group.handle()).then_some(slvs_entity.into())
+                if let Some(group) = group {
+                    (slvs_entity.group == group.handle()).then_some(slvs_entity.into())
+                } else {
+                    Some(slvs_entity.into())
+                }
             })
             .collect()
     }
 
-    pub fn entity_data<E>(&self, entity_handle: &EntityHandle<E>) -> Result<E, &'static str>
-    where
-        E: AsEntityData,
-    {
+    pub fn entity_data<E: AsEntityData>(
+        &self,
+        entity_handle: &EntityHandle<E>,
+    ) -> Result<E, &'static str> {
         E::from_system(self, entity_handle)
     }
 
-    pub fn constraint_handles(&self) -> Vec<SomeEntityHandle> {
-        // need to return SomeConstraintHandle
-        todo!();
-    }
-
-    pub fn constraints_in_group(&self, group: &Group) -> Vec<SomeEntityHandle> {
+    pub fn constraint_handles(&self, group: Option<&Group>) -> Vec<SomeEntityHandle> {
         // need to return SomeConstraintHandle
         todo!();
     }
@@ -330,10 +321,10 @@ impl System {
         Ok(())
     }
 
-    pub fn delete_entity<E>(&mut self, entity_handle: EntityHandle<E>) -> Result<E, &'static str>
-    where
-        E: AsEntityData,
-    {
+    pub fn delete_entity<E: AsEntityData>(
+        &mut self,
+        entity_handle: EntityHandle<E>,
+    ) -> Result<E, &'static str> {
         let entity_data = self.entity_data(&entity_handle)?;
         let ix = self.entity_ix(entity_handle.handle())?;
         let deleted_entity = self.entities.list.remove(ix);

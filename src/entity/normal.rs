@@ -47,13 +47,16 @@ impl AsEntityData for Normal {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
 
         Ok(match slvs_entity.wrkpl {
-            0 => Self::In3d {
-                group: Group(slvs_entity.group),
-                w: 0.0,
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            0 => {
+                let [w, x, y, z] = slvs_entity.param;
+                Self::In3d {
+                    group: Group(slvs_entity.group),
+                    w: sys.slvs_param(w)?.val,
+                    x: sys.slvs_param(x)?.val,
+                    y: sys.slvs_param(y)?.val,
+                    z: sys.slvs_param(z)?.val,
+                }
+            }
             h => Self::OnWorkplane {
                 group: Group(slvs_entity.group),
                 workplane: EntityHandle::new(h),

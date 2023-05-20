@@ -72,19 +72,19 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
-impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
-    type Error = &'static str;
+// impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
+//     type Error = &'static str;
 
-    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
-        let entity_handle = Self::new(value.handle());
+//     fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+//         let entity_handle = Self::new(value.handle());
 
-        if value == entity_handle.into() {
-            Ok(entity_handle)
-        } else {
-            Err("Not of expected type")
-        }
-    }
-}
+//         if value == entity_handle.into() {
+//             Ok(entity_handle)
+//         } else {
+//             Err("Not of expected type")
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SomeEntityHandle {
@@ -189,12 +189,7 @@ pub trait As2dProjectionTarget: AsEntityData {}
 pub trait AsArc: AsEntityData {}
 pub trait AsCubic: AsEntityData {}
 pub trait AsCurve: AsEntityData {}
-pub trait AsLineSegment: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
-
-////////////////////////////////////////////////////////////////////////////////
-// Some sort of entity handle
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some 2d things that can be a projection target
@@ -216,6 +211,11 @@ pub trait AsPoint: AsEntityData {}
 // Entity handle for some line
 ////////////////////////////////////////////////////////////////////////////////
 
+pub trait AsLineSegment: AsEntityData {
+    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum LineSegmentHandle {
     OnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
     In3d(EntityHandle<LineSegment<In3d>>),
@@ -248,8 +248,8 @@ impl TryFrom<Slvs_Entity> for LineSegmentHandle {
     fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
         match value.type_ as _ {
             SLVS_E_LINE_SEGMENT => match value.wrkpl {
-                0 => Ok(LineSegmentHandle::In3d(value.try_into().unwrap())),
-                _ => Ok(LineSegmentHandle::OnWorkplane(value.try_into().unwrap())),
+                0 => Ok(LineSegmentHandle::In3d(value.into())),
+                _ => Ok(LineSegmentHandle::OnWorkplane(value.into())),
             },
             _ => Err("Expected Slvs_Entity type of line segment"),
         }
