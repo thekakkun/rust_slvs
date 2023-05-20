@@ -224,7 +224,6 @@ pub trait AsEntityData: Debug + Copy {
     fn param_vals(&self) -> Option<Vec<f64>> {
         None
     }
-    fn set_vals(&mut self, _vals: Vec<f64>) {}
 }
 
 pub trait As2dProjectionTarget: AsEntityData {}

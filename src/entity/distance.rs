@@ -3,9 +3,7 @@ use std::marker::PhantomData;
 
 use super::{AsEntityData, EntityHandle, SomeEntityHandle, Workplane};
 use crate::{
-    bindings::{
-        Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE,
-    },
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
     element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane, Target},
@@ -81,9 +79,5 @@ impl<T: AsTarget> AsEntityData for Distance<T> {
 
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(vec![self.val])
-    }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
     }
 }

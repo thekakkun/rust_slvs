@@ -91,15 +91,6 @@ impl AsEntityData for Normal {
             Self::In3d { w, x, y, z, .. } => Some(vec![*w, *x, *y, *z]),
         }
     }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        if let Normal::In3d { w, x, y, z, .. } = self {
-            *w = vals[0];
-            *x = vals[1];
-            *y = vals[2];
-            *z = vals[3];
-        }
-    }
 }
 
 impl From<Slvs_Entity> for Normal {

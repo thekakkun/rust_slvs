@@ -98,8 +98,4 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     fn param_vals(&self) -> Option<Vec<f64>> {
         Some(self.coords.into())
     }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.coords = vals.into();
-    }
 }
