@@ -16,8 +16,10 @@ mod normal;
 mod point;
 mod workplane;
 
-use serde::{Deserialize, Serialize};
 use std::{any::type_name, fmt::Debug, marker::PhantomData};
+
+use enum_dispatch::enum_dispatch;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     bindings::{
@@ -72,21 +74,12 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
-// impl<E: AsEntityData> TryFrom<SomeEntityHandle> for EntityHandle<E> {
-//     type Error = &'static str;
-
-//     fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
-//         let entity_handle = Self::new(value.handle());
-
-//         if value == entity_handle.into() {
-//             Ok(entity_handle)
-//         } else {
-//             Err("Not of expected type")
-//         }
-//     }
-// }
+#[enum_dispatch(SomeEntityHandle)]
+pub trait AsEntityHandle {}
+impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
 pub enum SomeEntityHandle {
     ArcOfCircle(EntityHandle<ArcOfCircle>),
     CircleOnWorkplane(EntityHandle<Circle<OnWorkplane>>),
@@ -101,26 +94,6 @@ pub enum SomeEntityHandle {
     PointOnWorkplane(EntityHandle<Point<OnWorkplane>>),
     PointIn3d(EntityHandle<Point<In3d>>),
     Workplane(EntityHandle<Workplane>),
-}
-
-impl AsHandle for SomeEntityHandle {
-    fn handle(&self) -> u32 {
-        match self {
-            SomeEntityHandle::ArcOfCircle(e) => e.handle(),
-            SomeEntityHandle::CircleOnWorkplane(e) => e.handle(),
-            SomeEntityHandle::CircleIn3d(e) => e.handle(),
-            SomeEntityHandle::CubicOnWorkplane(e) => e.handle(),
-            SomeEntityHandle::CubicIn3d(e) => e.handle(),
-            SomeEntityHandle::DistanceOnWorkplane(e) => e.handle(),
-            SomeEntityHandle::DistanceIn3d(e) => e.handle(),
-            SomeEntityHandle::LineSegmentOnWorkplane(e) => e.handle(),
-            SomeEntityHandle::LineSegmentIn3d(e) => e.handle(),
-            SomeEntityHandle::Normal(e) => e.handle(),
-            SomeEntityHandle::PointOnWorkplane(e) => e.handle(),
-            SomeEntityHandle::PointIn3d(e) => e.handle(),
-            SomeEntityHandle::Workplane(e) => e.handle(),
-        }
-    }
 }
 
 impl From<Slvs_Entity> for SomeEntityHandle {
@@ -152,11 +125,80 @@ impl From<Slvs_Entity> for SomeEntityHandle {
     }
 }
 
-impl<E: AsEntityData> From<EntityHandle<E>> for SomeEntityHandle {
-    fn from(value: EntityHandle<E>) -> Self {
-        E::into_some_entity_handle(value.handle())
+impl From<LineSegmentHandle> for SomeEntityHandle {
+    fn from(value: LineSegmentHandle) -> Self {
+        match value {
+            LineSegmentHandle::OnWorkplane(h) => Self::LineSegmentOnWorkplane(h),
+            LineSegmentHandle::In3d(h) => Self::LineSegmentIn3d(h),
+        }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some 2d things that can be a projection target
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some arc
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some cubic
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some curve
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some line
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait AsLineSegment: AsEntityData {
+    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle;
+}
+
+#[enum_dispatch(LineSegmentHandle)]
+pub trait AsLineSegmentHandle {}
+impl AsLineSegmentHandle for EntityHandle<LineSegment<OnWorkplane>> {}
+impl AsLineSegmentHandle for EntityHandle<LineSegment<In3d>> {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[enum_dispatch]
+pub enum LineSegmentHandle {
+    OnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
+    In3d(EntityHandle<LineSegment<In3d>>),
+}
+
+impl TryFrom<Slvs_Entity> for LineSegmentHandle {
+    type Error = &'static str;
+
+    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
+        match value.type_ as _ {
+            SLVS_E_LINE_SEGMENT => match value.wrkpl {
+                0 => Ok(LineSegmentHandle::In3d(value.into())),
+                _ => Ok(LineSegmentHandle::OnWorkplane(value.into())),
+            },
+            _ => Err("Expected Slvs_Entity type of line segment"),
+        }
+    }
+}
+
+impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
+    type Error = &'static str;
+
+    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
+        match value {
+            SomeEntityHandle::LineSegmentOnWorkplane(h) => Ok(LineSegmentHandle::OnWorkplane(h)),
+            SomeEntityHandle::LineSegmentIn3d(h) => Ok(LineSegmentHandle::In3d(h)),
+            _ => Err("Expected LineSegment variant of SomeEntityHandle"),
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entity handle for some point
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Entity Data
@@ -190,84 +232,3 @@ pub trait AsArc: AsEntityData {}
 pub trait AsCubic: AsEntityData {}
 pub trait AsCurve: AsEntityData {}
 pub trait AsPoint: AsEntityData {}
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some 2d things that can be a projection target
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some arc
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some cubic
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some curve
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some line
-////////////////////////////////////////////////////////////////////////////////
-
-pub trait AsLineSegment: AsEntityData {
-    fn into_line_segment_handle(handle: u32) -> LineSegmentHandle;
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum LineSegmentHandle {
-    OnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
-    In3d(EntityHandle<LineSegment<In3d>>),
-}
-
-impl AsHandle for LineSegmentHandle {
-    fn handle(&self) -> u32 {
-        match self {
-            LineSegmentHandle::OnWorkplane(e) => e.handle(),
-            LineSegmentHandle::In3d(e) => e.handle(),
-        }
-    }
-}
-
-impl From<EntityHandle<LineSegment<OnWorkplane>>> for LineSegmentHandle {
-    fn from(value: EntityHandle<LineSegment<OnWorkplane>>) -> Self {
-        LineSegmentHandle::OnWorkplane(value)
-    }
-}
-
-impl From<EntityHandle<LineSegment<In3d>>> for LineSegmentHandle {
-    fn from(value: EntityHandle<LineSegment<In3d>>) -> Self {
-        LineSegmentHandle::In3d(value)
-    }
-}
-
-impl TryFrom<Slvs_Entity> for LineSegmentHandle {
-    type Error = &'static str;
-
-    fn try_from(value: Slvs_Entity) -> Result<Self, Self::Error> {
-        match value.type_ as _ {
-            SLVS_E_LINE_SEGMENT => match value.wrkpl {
-                0 => Ok(LineSegmentHandle::In3d(value.into())),
-                _ => Ok(LineSegmentHandle::OnWorkplane(value.into())),
-            },
-            _ => Err("Expected Slvs_Entity type of line segment"),
-        }
-    }
-}
-
-impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
-    type Error = &'static str;
-
-    fn try_from(value: SomeEntityHandle) -> Result<Self, Self::Error> {
-        match value {
-            SomeEntityHandle::LineSegmentOnWorkplane(h) => Ok(LineSegmentHandle::OnWorkplane(h)),
-            SomeEntityHandle::LineSegmentIn3d(h) => Ok(LineSegmentHandle::In3d(h)),
-            _ => Err("Expected LineSegment variant of SomeEntityHandle"),
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some point
-////////////////////////////////////////////////////////////////////////////////
