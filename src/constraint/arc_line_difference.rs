@@ -2,25 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_DIFFERENCE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_DIFFERENCE},
     element::AsHandle,
-    entity::{ArcOfCircle, AsLineSegment, EntityHandle},
+    entity::{ArcOfCircle, EntityHandle, LineSegmentHandle},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct ArcLineDifference<L: AsLineSegment> {
+pub struct ArcLineDifference {
     pub group: Group,
     pub arc: EntityHandle<ArcOfCircle>,
-    pub line: EntityHandle<L>,
+    pub line: LineSegmentHandle,
     pub difference: f64,
 }
 
-impl<L: AsLineSegment> ArcLineDifference<L> {
+impl ArcLineDifference {
     pub fn new(
         group: Group,
         arc: EntityHandle<ArcOfCircle>,
-        line: EntityHandle<L>,
+        line: LineSegmentHandle,
         difference: f64,
     ) -> Self {
         Self {
@@ -32,7 +32,7 @@ impl<L: AsLineSegment> ArcLineDifference<L> {
     }
 }
 
-impl<L: AsLineSegment> AsConstraintData for ArcLineDifference<L> {
+impl AsConstraintData for ArcLineDifference {
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_DIFFERENCE as _
     }
@@ -54,13 +54,13 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineDifference<L> {
     }
 }
 
-impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineDifference<L> {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            arc: EntityHandle::new(value.entityA),
-            line: EntityHandle::new(value.entityB),
-            difference: value.valA,
-        }
-    }
-}
+// impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineDifference<L> {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             arc: EntityHandle::new(value.entityA),
+//             line: EntityHandle::new(value.entityB),
+//             difference: value.valA,
+//         }
+//     }
+// }

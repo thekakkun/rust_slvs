@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SAME_ORIENTATION},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SAME_ORIENTATION},
     element::AsHandle,
     entity::{EntityHandle, Normal},
     group::Group,
@@ -47,12 +47,12 @@ impl AsConstraintData for SameOrientation {
     }
 }
 
-impl From<Slvs_Constraint> for SameOrientation {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            normal_a: EntityHandle::new(value.entityA),
-            normal_b: EntityHandle::new(value.entityB),
-        }
-    }
-}
+// impl From<Slvs_Constraint> for SameOrientation {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             normal_a: EntityHandle::new(value.entityA),
+//             normal_b: EntityHandle::new(value.entityB),
+//         }
+//     }
+// }

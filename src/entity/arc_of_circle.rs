@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsArc, AsCurve, AsEntityData, EntityHandle, Normal, Point, Workplane};
+use super::{AsEntityData, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
     element::AsHandle,
@@ -38,9 +38,6 @@ impl ArcOfCircle {
         }
     }
 }
-
-impl AsArc for ArcOfCircle {}
-impl AsCurve for ArcOfCircle {}
 
 impl AsEntityData for ArcOfCircle {
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {

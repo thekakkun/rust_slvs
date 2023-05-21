@@ -2,27 +2,27 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_TANGENT},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_TANGENT},
     element::AsHandle,
-    entity::{ArcOfCircle, AsLineSegment, EntityHandle, Workplane},
+    entity::{ArcOfCircle, EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct ArcLineTangent<L: AsLineSegment> {
+pub struct ArcLineTangent {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,
     pub arc: EntityHandle<ArcOfCircle>,
-    pub line: EntityHandle<L>,
+    pub line: LineSegmentHandle,
     pub to_start: bool,
 }
 
-impl<L: AsLineSegment> ArcLineTangent<L> {
+impl ArcLineTangent {
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
         arc: EntityHandle<ArcOfCircle>,
-        line: EntityHandle<L>,
+        line: LineSegmentHandle,
         to_start: bool,
     ) -> Self {
         Self {
@@ -35,7 +35,7 @@ impl<L: AsLineSegment> ArcLineTangent<L> {
     }
 }
 
-impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
+impl AsConstraintData for ArcLineTangent {
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_TANGENT as _
     }
@@ -57,14 +57,14 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineTangent<L> {
     }
 }
 
-impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineTangent<L> {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            arc: EntityHandle::new(value.entityA),
-            line: EntityHandle::new(value.entityB),
-            to_start: value.other != 0,
-        }
-    }
-}
+// impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineTangent<L> {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             workplane: EntityHandle::new(value.wrkpl),
+//             arc: EntityHandle::new(value.entityA),
+//             line: EntityHandle::new(value.entityB),
+//             to_start: value.other != 0,
+//         }
+//     }
+// }

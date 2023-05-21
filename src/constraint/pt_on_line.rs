@@ -2,33 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_LINE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_LINE},
     element::AsHandle,
-    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
+    entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PtOnLine<P, L>
-where
-    P: AsPoint,
-    L: AsLineSegment,
-{
+pub struct PtOnLine {
     pub group: Group,
-    pub point: EntityHandle<P>,
-    pub line: EntityHandle<L>,
+    pub point: PointHandle,
+    pub line: LineSegmentHandle,
     pub workplane: Option<EntityHandle<Workplane>>,
 }
 
-impl<P, L> PtOnLine<P, L>
-where
-    P: AsPoint,
-    L: AsLineSegment,
-{
+impl PtOnLine {
     pub fn new(
         group: Group,
-        point: EntityHandle<P>,
-        line: EntityHandle<L>,
+        point: PointHandle,
+        line: LineSegmentHandle,
         workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
@@ -40,11 +32,7 @@ where
     }
 }
 
-impl<P, L> AsConstraintData for PtOnLine<P, L>
-where
-    P: AsPoint,
-    L: AsLineSegment,
-{
+impl AsConstraintData for PtOnLine {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_LINE as _
     }
@@ -66,20 +54,20 @@ where
     }
 }
 
-impl<P, L> From<Slvs_Constraint> for PtOnLine<P, L>
-where
-    P: AsPoint,
-    L: AsLineSegment,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            point: EntityHandle::new(value.ptA),
-            line: EntityHandle::new(value.entityA),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-        }
-    }
-}
+// impl<P, L> From<Slvs_Constraint> for PtOnLine<P, L>
+// where
+//     P: AsPoint,
+//     L: AsLineSegment,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             point: EntityHandle::new(value.ptA),
+//             line: EntityHandle::new(value.entityA),
+//             workplane: match value.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//         }
+//     }
+// }

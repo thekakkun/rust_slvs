@@ -2,41 +2,29 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_ANGLE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_ANGLE},
     element::AsHandle,
-    entity::{AsLineSegment, EntityHandle, Workplane},
+    entity::{EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct EqualAngle<LA, LB, LC, LD>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-    LC: AsLineSegment,
-    LD: AsLineSegment,
-{
+pub struct EqualAngle {
     pub group: Group,
-    pub line_a: EntityHandle<LA>,
-    pub line_b: EntityHandle<LB>,
-    pub line_c: EntityHandle<LC>,
-    pub line_d: EntityHandle<LD>,
+    pub line_a: LineSegmentHandle,
+    pub line_b: LineSegmentHandle,
+    pub line_c: LineSegmentHandle,
+    pub line_d: LineSegmentHandle,
     pub workplane: Option<EntityHandle<Workplane>>,
 }
 
-impl<LA, LB, LC, LD> EqualAngle<LA, LB, LC, LD>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-    LC: AsLineSegment,
-    LD: AsLineSegment,
-{
+impl EqualAngle {
     pub fn new(
         group: Group,
-        line_a: EntityHandle<LA>,
-        line_b: EntityHandle<LB>,
-        line_c: EntityHandle<LC>,
-        line_d: EntityHandle<LD>,
+        line_a: LineSegmentHandle,
+        line_b: LineSegmentHandle,
+        line_c: LineSegmentHandle,
+        line_d: LineSegmentHandle,
         workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
@@ -50,13 +38,7 @@ where
     }
 }
 
-impl<LA, LB, LC, LD> AsConstraintData for EqualAngle<LA, LB, LC, LD>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-    LC: AsLineSegment,
-    LD: AsLineSegment,
-{
+impl AsConstraintData for EqualAngle {
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_ANGLE as _
     }
@@ -79,24 +61,24 @@ where
     }
 }
 
-impl<LA, LB, LC, LD> From<Slvs_Constraint> for EqualAngle<LA, LB, LC, LD>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-    LC: AsLineSegment,
-    LD: AsLineSegment,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            line_a: EntityHandle::new(value.entityA),
-            line_b: EntityHandle::new(value.entityB),
-            line_c: EntityHandle::new(value.entityC),
-            line_d: EntityHandle::new(value.entityD),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-        }
-    }
-}
+// impl<LA, LB, LC, LD> From<Slvs_Constraint> for EqualAngle<LA, LB, LC, LD>
+// where
+//     LA: AsLineSegment,
+//     LB: AsLineSegment,
+//     LC: AsLineSegment,
+//     LD: AsLineSegment,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             line_a: EntityHandle::new(value.entityA),
+//             line_b: EntityHandle::new(value.entityB),
+//             line_c: EntityHandle::new(value.entityC),
+//             line_d: EntityHandle::new(value.entityD),
+//             workplane: match value.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//         }
+//     }
+// }

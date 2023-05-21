@@ -24,7 +24,7 @@ pub use equal_angle::EqualAngle;
 pub use equal_length_lines::EqualLengthLines;
 pub use equal_line_arc_len::EqualLineArcLen;
 pub use equal_radius::EqualRadius;
-pub use horizontal::{LineHorizontal, PointsHorizontal};
+pub use horizontal::Horizontal;
 pub use length_difference::LengthDifference;
 pub use length_ratio::LengthRatio;
 pub use parallel::Parallel;
@@ -44,7 +44,7 @@ pub use symmetric::Symmetric;
 pub use symmetric_horiz::SymmetricHoriz;
 pub use symmetric_line::SymmetricLine;
 pub use symmetric_vert::SymmetricVert;
-pub use vertical::{LineVertical, PointsVertical};
+pub use vertical::Vertical;
 pub use where_dragged::WhereDragged;
 
 mod angle;

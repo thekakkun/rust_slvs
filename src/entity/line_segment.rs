@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{As2dProjectionTarget, AsEntityData, AsLineSegment, EntityHandle, Point, Workplane};
+use super::{AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
     element::AsHandle,
@@ -81,6 +81,3 @@ impl<T: AsTarget> AsEntityData for LineSegment<T> {
         Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
-
-impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
-impl<T: AsTarget> AsLineSegment for LineSegment<T> {}

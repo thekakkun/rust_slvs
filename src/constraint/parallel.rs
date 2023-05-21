@@ -2,33 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PARALLEL},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PARALLEL},
     element::AsHandle,
-    entity::{AsLineSegment, EntityHandle, Workplane},
+    entity::{EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Parallel<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
+pub struct Parallel {
     pub group: Group,
-    pub line_a: EntityHandle<LA>,
-    pub line_b: EntityHandle<LB>,
+    pub line_a: LineSegmentHandle,
+    pub line_b: LineSegmentHandle,
     pub workplane: Option<EntityHandle<Workplane>>,
 }
 
-impl<LA, LB> Parallel<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
+impl Parallel {
     pub fn new(
         group: Group,
-        line_a: EntityHandle<LA>,
-        line_b: EntityHandle<LB>,
+        line_a: LineSegmentHandle,
+        line_b: LineSegmentHandle,
         workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
@@ -40,11 +32,7 @@ where
     }
 }
 
-impl<LA, LB> AsConstraintData for Parallel<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
+impl AsConstraintData for Parallel {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PARALLEL as _
     }
@@ -62,20 +50,20 @@ where
     }
 }
 
-impl<LA, LB> From<Slvs_Constraint> for Parallel<LA, LB>
-where
-    LA: AsLineSegment,
-    LB: AsLineSegment,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            line_a: EntityHandle::new(value.entityA),
-            line_b: EntityHandle::new(value.entityB),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-        }
-    }
-}
+// impl<LA, LB> From<Slvs_Constraint> for Parallel<LA, LB>
+// where
+//     LA: AsLineSegment,
+//     LB: AsLineSegment,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             line_a: EntityHandle::new(value.entityA),
+//             line_b: EntityHandle::new(value.entityB),
+//             workplane: match value.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//         }
+//     }
+// }

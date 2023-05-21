@@ -2,99 +2,48 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
     element::AsHandle,
-    entity::{AsLineSegment, AsPoint, EntityHandle, Workplane},
+    entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// From two points
-////////////////////////////////////////////////////////////////////////////////
-
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
-pub struct PointsHorizontal<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    pub group: Group,
-    pub workplane: EntityHandle<Workplane>,
-    pub point_a: EntityHandle<PA>,
-    pub point_b: EntityHandle<PB>,
-}
-
-impl<PA, PB> PointsHorizontal<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    pub fn new(
+pub enum Horizontal {
+    Points {
         group: Group,
         workplane: EntityHandle<Workplane>,
-        point_a: EntityHandle<PA>,
-        point_b: EntityHandle<PB>,
+        point_a: PointHandle,
+        point_b: PointHandle,
+    },
+    Line {
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        line: LineSegmentHandle,
+    },
+}
+
+impl Horizontal {
+    pub fn new_points(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        point_a: PointHandle,
+        point_b: PointHandle,
     ) -> Self {
-        Self {
+        Horizontal::Points {
             group,
             workplane,
             point_a,
             point_b,
         }
     }
-}
 
-impl<PA, PB> AsConstraintData for PointsHorizontal<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn slvs_type(&self) -> i32 {
-        SLVS_C_HORIZONTAL as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.handle())
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
-    }
-}
-
-impl<PA, PB> From<Slvs_Constraint> for PointsHorizontal<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            point_a: EntityHandle::new(value.ptA),
-            point_b: EntityHandle::new(value.ptB),
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// From line segment
-////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
-pub struct LineHorizontal<L: AsLineSegment> {
-    pub group: Group,
-    pub workplane: EntityHandle<Workplane>,
-    pub line: EntityHandle<L>,
-}
-
-impl<L: AsLineSegment> LineHorizontal<L> {
-    pub fn new(group: Group, workplane: EntityHandle<Workplane>, line: EntityHandle<L>) -> Self {
-        Self {
+    pub fn new_line(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        line: LineSegmentHandle,
+    ) -> Self {
+        Horizontal::Line {
             group,
             workplane,
             line,
@@ -102,30 +51,38 @@ impl<L: AsLineSegment> LineHorizontal<L> {
     }
 }
 
-impl<L: AsLineSegment> AsConstraintData for LineHorizontal<L> {
+impl AsConstraintData for Horizontal {
     fn slvs_type(&self) -> i32 {
         SLVS_C_HORIZONTAL as _
     }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.handle())
+        match self {
+            Horizontal::Points { workplane, .. } => Some(workplane.handle()),
+            Horizontal::Line { workplane, .. } => Some(workplane.handle()),
+        }
     }
 
     fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+        match self {
+            Horizontal::Points { group, .. } => group.handle(),
+            Horizontal::Line { group, .. } => group.handle(),
+        }
+    }
+
+    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+        match self {
+            Horizontal::Points {
+                point_a, point_b, ..
+            } => Some(vec![point_a.handle(), point_b.handle()]),
+            Horizontal::Line { .. } => None,
+        }
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.line.handle()])
-    }
-}
-
-impl<L: AsLineSegment> From<Slvs_Constraint> for LineHorizontal<L> {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            line: EntityHandle::new(value.entityA),
+        match self {
+            Horizontal::Points { .. } => None,
+            Horizontal::Line { line, .. } => Some(vec![line.handle()]),
         }
     }
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsCubic, AsCurve, AsEntityData, EntityHandle, Point, Workplane};
+use super::{AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     element::AsHandle,
@@ -56,9 +56,6 @@ impl Cubic<In3d> {
         }
     }
 }
-
-impl<T: AsTarget> AsCubic for Cubic<T> {}
-impl<T: AsTarget> AsCurve for Cubic<T> {}
 
 impl<T: AsTarget> AsEntityData for Cubic<T> {
     fn from_system(

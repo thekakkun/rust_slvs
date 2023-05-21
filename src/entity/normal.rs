@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{As2dProjectionTarget, AsEntityData, EntityHandle, Workplane};
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::AsHandle,
@@ -32,8 +32,6 @@ impl Normal {
         Self::In3d { group, w, x, y, z }
     }
 }
-
-impl As2dProjectionTarget for Normal {}
 
 impl AsEntityData for Normal {
     fn from_system(

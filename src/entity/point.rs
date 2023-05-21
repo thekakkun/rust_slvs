@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, AsPoint, EntityHandle, Workplane};
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup},
     element::AsHandle,
@@ -34,8 +34,6 @@ impl Point<In3d> {
         }
     }
 }
-
-impl<T: AsTarget> AsPoint for Point<T> {}
 
 impl<T: AsTarget> AsEntityData for Point<T> {
     fn from_system(

@@ -2,29 +2,21 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
     element::AsHandle,
-    entity::{AsArc, EntityHandle},
+    entity::ArcHandle,
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
+pub struct EqualRadius {
     pub group: Group,
-    pub arc_a: EntityHandle<AA>,
-    pub arc_b: EntityHandle<AB>,
+    pub arc_a: ArcHandle,
+    pub arc_b: ArcHandle,
 }
 
-impl<AA, AB> EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    pub fn new(group: Group, arc_a: EntityHandle<AA>, arc_b: EntityHandle<AB>) -> Self {
+impl EqualRadius {
+    pub fn new(group: Group, arc_a: ArcHandle, arc_b: ArcHandle) -> Self {
         Self {
             group,
             arc_a,
@@ -33,11 +25,7 @@ where
     }
 }
 
-impl<AA, AB> AsConstraintData for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
+impl AsConstraintData for EqualRadius {
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
@@ -55,16 +43,16 @@ where
     }
 }
 
-impl<AA, AB> From<Slvs_Constraint> for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            arc_a: EntityHandle::new(value.entityA),
-            arc_b: EntityHandle::new(value.entityB),
-        }
-    }
-}
+// impl<AA, AB> From<Slvs_Constraint> for EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             arc_a: EntityHandle::new(value.entityA),
+//             arc_b: EntityHandle::new(value.entityB),
+//         }
+//     }
+// }

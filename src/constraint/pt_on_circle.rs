@@ -2,38 +2,26 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
     element::AsHandle,
-    entity::{AsArc, AsPoint, EntityHandle},
+    entity::{ArcHandle, PointHandle},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PtOnCircle<P, A>
-where
-    P: AsPoint,
-    A: AsArc,
-{
+pub struct PtOnCircle {
     pub group: Group,
-    pub point: EntityHandle<P>,
-    pub arc: EntityHandle<A>,
+    pub point: PointHandle,
+    pub arc: ArcHandle,
 }
 
-impl<P, A> PtOnCircle<P, A>
-where
-    P: AsPoint,
-    A: AsArc,
-{
-    pub fn new(group: Group, point: EntityHandle<P>, arc: EntityHandle<A>) -> Self {
+impl PtOnCircle {
+    pub fn new(group: Group, point: PointHandle, arc: ArcHandle) -> Self {
         Self { group, point, arc }
     }
 }
 
-impl<P, A> AsConstraintData for PtOnCircle<P, A>
-where
-    P: AsPoint,
-    A: AsArc,
-{
+impl AsConstraintData for PtOnCircle {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_CIRCLE as _
     }
@@ -55,16 +43,16 @@ where
     }
 }
 
-impl<P, A> From<Slvs_Constraint> for PtOnCircle<P, A>
-where
-    P: AsPoint,
-    A: AsArc,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            point: EntityHandle::new(value.ptA),
-            arc: EntityHandle::new(value.entityA),
-        }
-    }
-}
+// impl<P, A> From<Slvs_Constraint> for PtOnCircle<P, A>
+// where
+//     P: AsPoint,
+//     A: AsArc,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             point: EntityHandle::new(value.ptA),
+//             arc: EntityHandle::new(value.entityA),
+//         }
+//     }
+// }

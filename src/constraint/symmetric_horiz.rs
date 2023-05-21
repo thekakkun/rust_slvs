@@ -2,34 +2,26 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_HORIZ},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_HORIZ},
     element::AsHandle,
-    entity::{AsPoint, EntityHandle, Workplane},
+    entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct SymmetricHoriz<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+pub struct SymmetricHoriz {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,
-    pub point_a: EntityHandle<PA>,
-    pub point_b: EntityHandle<PB>,
+    pub point_a: PointHandle,
+    pub point_b: PointHandle,
 }
 
-impl<PA, PB> SymmetricHoriz<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+impl SymmetricHoriz {
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
-        point_a: EntityHandle<PA>,
-        point_b: EntityHandle<PB>,
+        point_a: PointHandle,
+        point_b: PointHandle,
     ) -> Self {
         Self {
             group,
@@ -40,11 +32,7 @@ where
     }
 }
 
-impl<PA, PB> AsConstraintData for SymmetricHoriz<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+impl AsConstraintData for SymmetricHoriz {
     fn slvs_type(&self) -> i32 {
         SLVS_C_SYMMETRIC_HORIZ as _
     }
@@ -62,17 +50,17 @@ where
     }
 }
 
-impl<PA, PB> From<Slvs_Constraint> for SymmetricHoriz<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            point_a: EntityHandle::new(value.ptA),
-            point_b: EntityHandle::new(value.ptB),
-        }
-    }
-}
+// impl<PA, PB> From<Slvs_Constraint> for SymmetricHoriz<PA, PB>
+// where
+//     PA: AsPoint,
+//     PB: AsPoint,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             workplane: EntityHandle::new(value.wrkpl),
+//             point_a: EntityHandle::new(value.ptA),
+//             point_b: EntityHandle::new(value.ptB),
+//         }
+//     }
+// }

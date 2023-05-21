@@ -185,8 +185,6 @@ impl From<ProjectionTargetHandle> for SomeEntityHandle {
 // Entity handle for some arc
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsArc: AsEntityData {}
-
 #[enum_dispatch(ArcHandle)]
 trait AsArcHandle {}
 impl AsArcHandle for EntityHandle<ArcOfCircle> {}
@@ -233,8 +231,6 @@ impl TryFrom<SomeEntityHandle> for ArcHandle {
 // Entity handle for some cubic
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsCubic: AsEntityData {}
-
 #[enum_dispatch(CubicHandle)]
 trait AsCubicHandle {}
 impl AsCubicHandle for EntityHandle<Cubic<OnWorkplane>> {}
@@ -276,8 +272,6 @@ impl TryFrom<SomeEntityHandle> for CubicHandle {
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some curve
 ////////////////////////////////////////////////////////////////////////////////
-
-pub trait AsCurve: AsEntityData {}
 
 #[enum_dispatch(CurveHandle)]
 trait AsCurveHandle {}
@@ -325,8 +319,6 @@ impl TryFrom<SomeEntityHandle> for CurveHandle {
 // Entity handle for some line
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsLineSegment: AsEntityData {}
-
 #[enum_dispatch(LineSegmentHandle)]
 trait AsLineSegmentHandle {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<OnWorkplane>> {}
@@ -369,8 +361,6 @@ impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
 // Entity handle for some point
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsPoint: AsEntityData {}
-
 #[enum_dispatch(PointHandle)]
 trait AsPointHandle {}
 impl AsPointHandle for EntityHandle<Point<OnWorkplane>> {}
@@ -410,8 +400,6 @@ impl TryFrom<SomeEntityHandle> for PointHandle {
 ////////////////////////////////////////////////////////////////////////////////
 // Entity handle for some 2d things that can be a projection target
 ////////////////////////////////////////////////////////////////////////////////
-
-pub trait As2dProjectionTarget: AsEntityData {}
 
 #[enum_dispatch(ProjectionTargetHandle)]
 trait AsProjectionTargetHandle {}

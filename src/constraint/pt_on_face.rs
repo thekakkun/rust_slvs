@@ -2,21 +2,21 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
     element::AsHandle,
-    entity::{AsPoint, EntityHandle, Workplane},
+    entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PtOnFace<P: AsPoint> {
+pub struct PtOnFace {
     pub group: Group,
-    pub point: EntityHandle<P>,
+    pub point: PointHandle,
     pub plane: EntityHandle<Workplane>,
 }
 
-impl<P: AsPoint> PtOnFace<P> {
-    pub fn new(group: Group, point: EntityHandle<P>, plane: EntityHandle<Workplane>) -> Self {
+impl PtOnFace {
+    pub fn new(group: Group, point: PointHandle, plane: EntityHandle<Workplane>) -> Self {
         Self {
             group,
             point,
@@ -25,7 +25,7 @@ impl<P: AsPoint> PtOnFace<P> {
     }
 }
 
-impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
+impl AsConstraintData for PtOnFace {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_FACE as _
     }
@@ -47,12 +47,12 @@ impl<P: AsPoint> AsConstraintData for PtOnFace<P> {
     }
 }
 
-impl<P: AsPoint> From<Slvs_Constraint> for PtOnFace<P> {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            point: EntityHandle::new(value.ptA),
-            plane: EntityHandle::new(value.entityA),
-        }
-    }
-}
+// impl<P: AsPoint> From<Slvs_Constraint> for PtOnFace<P> {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             point: EntityHandle::new(value.ptA),
+//             plane: EntityHandle::new(value.entityA),
+//         }
+//     }
+// }

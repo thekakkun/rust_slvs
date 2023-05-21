@@ -2,33 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_POINTS_COINCIDENT},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_POINTS_COINCIDENT},
     element::AsHandle,
-    entity::{AsPoint, EntityHandle, Workplane},
+    entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PointsCoincident<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+pub struct PointsCoincident {
     pub group: Group,
-    pub point_a: EntityHandle<PA>,
-    pub point_b: EntityHandle<PB>,
+    pub point_a: PointHandle,
+    pub point_b: PointHandle,
     pub workplane: Option<EntityHandle<Workplane>>,
 }
 
-impl<PA, PB> PointsCoincident<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+impl PointsCoincident {
     pub fn new(
         group: Group,
-        point_a: EntityHandle<PA>,
-        point_b: EntityHandle<PB>,
+        point_a: PointHandle,
+        point_b: PointHandle,
         workplane: Option<EntityHandle<Workplane>>,
     ) -> Self {
         Self {
@@ -40,11 +32,7 @@ where
     }
 }
 
-impl<PA, PB> AsConstraintData for PointsCoincident<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
+impl AsConstraintData for PointsCoincident {
     fn slvs_type(&self) -> i32 {
         SLVS_C_POINTS_COINCIDENT as _
     }
@@ -62,20 +50,20 @@ where
     }
 }
 
-impl<PA, PB> From<Slvs_Constraint> for PointsCoincident<PA, PB>
-where
-    PA: AsPoint,
-    PB: AsPoint,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            point_a: EntityHandle::new(value.ptA),
-            point_b: EntityHandle::new(value.ptB),
-            workplane: match value.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-        }
-    }
-}
+// impl<PA, PB> From<Slvs_Constraint> for PointsCoincident<PA, PB>
+// where
+//     PA: AsPoint,
+//     PB: AsPoint,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             point_a: EntityHandle::new(value.ptA),
+//             point_b: EntityHandle::new(value.ptB),
+//             workplane: match value.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//         }
+//     }
+// }

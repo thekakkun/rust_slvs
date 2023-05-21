@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::{AsArc, AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
+use super::{AsEntityData, Distance, EntityHandle, Normal, Point, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     element::AsHandle,
@@ -53,8 +53,6 @@ impl Circle<In3d> {
         }
     }
 }
-
-impl<T: AsTarget> AsArc for Circle<T> {}
 
 impl<T: AsTarget> AsEntityData for Circle<T> {
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {

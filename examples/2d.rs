@@ -1,5 +1,5 @@
 use slvs::{
-    constraint::{Diameter, EqualRadius, LineVertical, PtLineDistance, PtPtDistance},
+    constraint::{Diameter, EqualRadius, PtLineDistance, PtPtDistance, Vertical},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
     make_quaternion,
     solver::FailReason,
@@ -88,27 +88,45 @@ fn main() {
         .expect("circle created");
 
     // The length of our line segment is 30.0 units.
-    sys.constrain(PtPtDistance::new(g2, p1, p2, 30.0, Some(workplane)))
-        .expect("constrain line segment to 30.0 units");
+    sys.constrain(PtPtDistance::new(
+        g2,
+        p1.into(),
+        p2.into(),
+        30.0,
+        Some(workplane),
+    ))
+    .expect("constrain line segment to 30.0 units");
     // And the distance from our line segment to the origin is 10.0 units.
-    sys.constrain(PtLineDistance::new(g2, origin, line, 10.0, Some(workplane)))
-        .expect("distance from line to origin is 10.0");
+    sys.constrain(PtLineDistance::new(
+        g2,
+        origin.into(),
+        line.into(),
+        10.0,
+        Some(workplane),
+    ))
+    .expect("distance from line to origin is 10.0");
     // And the line segment is vertical.
-    sys.constrain(LineVertical::new(g2, workplane, line))
+    sys.constrain(Vertical::new_line(g2, workplane, line.into()))
         .expect("line segment is vertical");
     // And the distance from one endpoint to the origin is 15.0 units.
-    sys.constrain(PtPtDistance::new(g2, p1, origin, 15.0, Some(workplane)))
-        .expect("distance from p1 to origin is 15.0 units");
+    sys.constrain(PtPtDistance::new(
+        g2,
+        p1.into(),
+        origin.into(),
+        15.0,
+        Some(workplane),
+    ))
+    .expect("distance from p1 to origin is 15.0 units");
     // And same for the other endpoint; so if you add this constraint then
     // the sketch is overconstrained and will signal an error.
     // sys.constrain(PtPtDistance::new(g2, p2, origin, 18.0, Some(workplane)))
     //     .expect("distance from p2 to origin is 18.0 units");
 
     // The arc and the circle have equal radius.
-    sys.constrain(EqualRadius::new(g2, arc, circle))
+    sys.constrain(EqualRadius::new(g2, arc.into(), circle.into()))
         .expect("arc and circle have equal radius");
     // The arc has radius 17.0 units.
-    sys.constrain(Diameter::new(g2, arc, 17.0 * 2.0))
+    sys.constrain(Diameter::new(g2, arc.into(), 17.0 * 2.0))
         .expect("arc has diameter of 17.0 units");
 
     // And solve.

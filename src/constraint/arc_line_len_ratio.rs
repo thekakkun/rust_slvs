@@ -2,25 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_LEN_RATIO},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_LEN_RATIO},
     element::AsHandle,
-    entity::{ArcOfCircle, AsLineSegment, EntityHandle},
+    entity::{ArcOfCircle, EntityHandle, LineSegmentHandle},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct ArcLineLenRatio<L: AsLineSegment> {
+pub struct ArcLineLenRatio {
     pub group: Group,
     pub arc: EntityHandle<ArcOfCircle>,
-    pub line: EntityHandle<L>,
+    pub line: LineSegmentHandle,
     pub ratio: f64,
 }
 
-impl<L: AsLineSegment> ArcLineLenRatio<L> {
+impl ArcLineLenRatio {
     pub fn new(
         group: Group,
         arc: EntityHandle<ArcOfCircle>,
-        line: EntityHandle<L>,
+        line: LineSegmentHandle,
         ratio: f64,
     ) -> Self {
         Self {
@@ -32,7 +32,7 @@ impl<L: AsLineSegment> ArcLineLenRatio<L> {
     }
 }
 
-impl<L: AsLineSegment> AsConstraintData for ArcLineLenRatio<L> {
+impl AsConstraintData for ArcLineLenRatio {
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_LEN_RATIO as _
     }
@@ -54,13 +54,13 @@ impl<L: AsLineSegment> AsConstraintData for ArcLineLenRatio<L> {
     }
 }
 
-impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineLenRatio<L> {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            arc: EntityHandle::new(value.entityA),
-            line: EntityHandle::new(value.entityB),
-            ratio: value.valA,
-        }
-    }
-}
+// impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineLenRatio<L> {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             arc: EntityHandle::new(value.entityA),
+//             line: EntityHandle::new(value.entityB),
+//             ratio: value.valA,
+//         }
+//     }
+// }

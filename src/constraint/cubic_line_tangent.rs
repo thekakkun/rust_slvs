@@ -2,52 +2,40 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_CUBIC_LINE_TANGENT},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_CUBIC_LINE_TANGENT},
     element::AsHandle,
-    entity::{AsCubic, AsLineSegment, EntityHandle, Workplane},
+    entity::{CubicHandle, EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CubicLineTangent<C, L>
-where
-    C: AsCubic,
-    L: AsLineSegment,
-{
+pub struct CubicLineTangent {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,
-    pub cubic: EntityHandle<C>,
-    pub line: EntityHandle<L>,
+    pub cubic: CubicHandle,
+    pub line: LineSegmentHandle,
     pub to_start: bool,
 }
 
-impl<C, L> CubicLineTangent<C, L>
-where
-    C: AsCubic,
-    L: AsLineSegment,
-{
+impl CubicLineTangent {
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
-        arc: EntityHandle<C>,
-        line: EntityHandle<L>,
+        cubic: CubicHandle,
+        line: LineSegmentHandle,
         to_start: bool,
     ) -> Self {
         Self {
             group,
             workplane,
-            cubic: arc,
+            cubic,
             line,
             to_start,
         }
     }
 }
 
-impl<C, L> AsConstraintData for CubicLineTangent<C, L>
-where
-    C: AsCubic,
-    L: AsLineSegment,
-{
+impl AsConstraintData for CubicLineTangent {
     fn slvs_type(&self) -> i32 {
         SLVS_C_CUBIC_LINE_TANGENT as _
     }
@@ -69,18 +57,18 @@ where
     }
 }
 
-impl<C, L> From<Slvs_Constraint> for CubicLineTangent<C, L>
-where
-    C: AsCubic,
-    L: AsLineSegment,
-{
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            workplane: EntityHandle::new(value.wrkpl),
-            cubic: EntityHandle::new(value.entityA),
-            line: EntityHandle::new(value.entityB),
-            to_start: value.other != 0,
-        }
-    }
-}
+// impl<C, L> From<Slvs_Constraint> for CubicLineTangent<C, L>
+// where
+//     C: AsCubic,
+//     L: AsLineSegment,
+// {
+//     fn from(value: Slvs_Constraint) -> Self {
+//         Self {
+//             group: Group(value.group),
+//             workplane: EntityHandle::new(value.wrkpl),
+//             cubic: EntityHandle::new(value.entityA),
+//             line: EntityHandle::new(value.entityB),
+//             to_start: value.other != 0,
+//         }
+//     }
+// }
