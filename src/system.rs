@@ -76,7 +76,7 @@ impl System {
         self.groups.list.last().cloned().unwrap()
     }
 
-    pub fn sketch<E: AsEntityData + 'static>(
+    pub fn sketch<E: AsEntityData>(
         &mut self,
         entity_data: E,
     ) -> Result<EntityHandle<E>, &'static str> {
@@ -116,7 +116,7 @@ impl System {
         Ok(entity_handle)
     }
 
-    pub fn constrain<C: AsConstraintData + 'static>(
+    pub fn constrain<C: AsConstraintData>(
         &mut self,
         constraint_data: C,
     ) -> Result<ConstraintHandle<C>, &'static str> {

@@ -152,7 +152,7 @@ impl<C: AsConstraintData> From<Slvs_Constraint> for ConstraintHandle<C> {
 }
 
 #[enum_dispatch(SomeConstraintHandle)]
-pub trait AsConstraintHandle {}
+pub trait AsConstraintHandle: AsHandle {}
 impl<C: AsConstraintData> AsConstraintHandle for ConstraintHandle<C> {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]

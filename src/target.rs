@@ -3,14 +3,9 @@ use serde::{Deserialize, Serialize};
 use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
-pub enum Target {
-    OnWorkplane,
-    In3d,
-}
-
-pub trait AsTarget: Copy + Debug + From<Vec<f64>> + Into<Vec<f64>> {
+pub trait AsTarget: Copy + Debug + TryFrom<Vec<f64>, Error = &'static str> {
     fn slvs_type() -> i32;
-    fn target_type() -> Target;
+    fn into_vec(self) -> Vec<f64>;
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -21,20 +16,19 @@ impl AsTarget for OnWorkplane {
         SLVS_E_POINT_IN_2D as _
     }
 
-    fn target_type() -> Target {
-        Target::OnWorkplane
+    fn into_vec(self) -> Vec<f64> {
+        vec![self.0, self.1]
     }
 }
 
-impl From<Vec<f64>> for OnWorkplane {
-    fn from(value: Vec<f64>) -> Self {
-        Self(value[0], value[1])
-    }
-}
+impl TryFrom<Vec<f64>> for OnWorkplane {
+    type Error = &'static str;
 
-impl From<OnWorkplane> for Vec<f64> {
-    fn from(value: OnWorkplane) -> Self {
-        vec![value.0, value.1]
+    fn try_from(value: Vec<f64>) -> Result<Self, Self::Error> {
+        match <[f64; 2]>::try_from(value) {
+            Ok(vals) => Ok(Self(vals[0], vals[1])),
+            Err(_) => Err("OnWorkplane requires exactly 2 values"),
+        }
     }
 }
 
@@ -46,19 +40,18 @@ impl AsTarget for In3d {
         SLVS_E_POINT_IN_3D as _
     }
 
-    fn target_type() -> Target {
-        Target::In3d
+    fn into_vec(self) -> Vec<f64> {
+        vec![self.0, self.1, self.2]
     }
 }
 
-impl From<Vec<f64>> for In3d {
-    fn from(value: Vec<f64>) -> Self {
-        Self(value[0], value[1], value[2])
-    }
-}
+impl TryFrom<Vec<f64>> for In3d {
+    type Error = &'static str;
 
-impl From<In3d> for Vec<f64> {
-    fn from(value: In3d) -> Self {
-        vec![value.0, value.1, value.2]
+    fn try_from(value: Vec<f64>) -> Result<Self, Self::Error> {
+        match <[f64; 3]>::try_from(value) {
+            Ok(vals) => Ok(Self(vals[0], vals[1], vals[2])),
+            Err(_) => Err("In3d requires exactly 3 values"),
+        }
     }
 }
