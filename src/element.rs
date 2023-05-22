@@ -1,6 +1,9 @@
-use crate::entity::{
-    ArcHandle, CubicHandle, CurveHandle, LineSegmentHandle, PointHandle, ProjectionTargetHandle,
-    SomeEntityHandle,
+use crate::{
+    constraint::SomeConstraintHandle,
+    entity::{
+        ArcHandle, CubicHandle, CurveHandle, LineSegmentHandle, PointHandle,
+        ProjectionTargetHandle, SomeEntityHandle,
+    },
 };
 
 use enum_dispatch::enum_dispatch;
@@ -12,7 +15,8 @@ use enum_dispatch::enum_dispatch;
     LineSegmentHandle,
     PointHandle,
     ProjectionTargetHandle,
-    SomeEntityHandle
+    SomeEntityHandle,
+    SomeConstraintHandle
 )]
 pub trait AsHandle {
     fn handle(&self) -> u32;

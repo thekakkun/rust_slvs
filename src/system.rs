@@ -8,7 +8,7 @@ use crate::{
     },
     constraint::{AsConstraintData, ConstraintHandle, SomeConstraintHandle},
     element::AsHandle,
-    entity::{AsEntityData, EntityHandle, SomeEntityHandle},
+    entity::{AsEntityData, AsEntityHandle, EntityHandle, SomeEntityHandle},
     group::Group,
     solver::{FailReason, SolveFail, SolveOkay},
 };
@@ -175,13 +175,8 @@ impl System {
         self.entities
             .list
             .iter()
-            .filter_map(|&slvs_entity| {
-                if let Some(group) = group {
-                    (slvs_entity.group == group.handle()).then_some(slvs_entity.into())
-                } else {
-                    Some(slvs_entity.into())
-                }
-            })
+            .filter(|&slvs_entity| group.map_or(true, |group| slvs_entity.group == group.handle()))
+            .map(|&slvs_entity| slvs_entity.into())
             .collect()
     }
 
@@ -192,9 +187,24 @@ impl System {
         E::from_system(self, entity_handle)
     }
 
-    pub fn constraint_handles(&self, group: Option<&Group>) -> Vec<SomeConstraintHandle> {
-        // need to return SomeConstraintHandle
-        todo!();
+    pub fn constraint_handles(
+        &self,
+        group: Option<&Group>,
+        entity_handle: Option<&dyn AsEntityHandle>,
+    ) -> Vec<SomeConstraintHandle> {
+        self.constraints
+            .list
+            .iter()
+            .filter(|&slvs_constraint| {
+                group.map_or(true, |group| slvs_constraint.group == group.handle())
+            })
+            .filter(|&slvs_constraint| {
+                entity_handle.map_or(true, |entity_handle| {
+                    [slvs_constraint.ptA, slvs_constraint.ptB].contains(&entity_handle.handle())
+                })
+            })
+            .map(|&slvs_constraint| slvs_constraint.into())
+            .collect()
     }
 
     pub fn constraint_data<C: AsConstraintData>(

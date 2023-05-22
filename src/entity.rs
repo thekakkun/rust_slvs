@@ -74,7 +74,7 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
 }
 
 #[enum_dispatch(SomeEntityHandle)]
-pub trait AsEntityHandle {}
+pub trait AsEntityHandle: AsHandle {}
 impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -186,7 +186,7 @@ impl From<ProjectionTargetHandle> for SomeEntityHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(ArcHandle)]
-trait AsArcHandle {}
+trait AsArcHandle: AsEntityHandle {}
 impl AsArcHandle for EntityHandle<ArcOfCircle> {}
 impl AsArcHandle for EntityHandle<Circle<OnWorkplane>> {}
 impl AsArcHandle for EntityHandle<Circle<In3d>> {}
@@ -198,6 +198,8 @@ pub enum ArcHandle {
     CircleOnWorkplane(EntityHandle<Circle<OnWorkplane>>),
     CircleIn3d(EntityHandle<Circle<In3d>>),
 }
+
+impl AsEntityHandle for ArcHandle {}
 
 impl TryFrom<Slvs_Entity> for ArcHandle {
     type Error = &'static str;
@@ -232,7 +234,7 @@ impl TryFrom<SomeEntityHandle> for ArcHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(CubicHandle)]
-trait AsCubicHandle {}
+trait AsCubicHandle: AsEntityHandle {}
 impl AsCubicHandle for EntityHandle<Cubic<OnWorkplane>> {}
 impl AsCubicHandle for EntityHandle<Cubic<In3d>> {}
 
@@ -242,6 +244,8 @@ pub enum CubicHandle {
     OnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
     In3d(EntityHandle<Cubic<In3d>>),
 }
+
+impl AsEntityHandle for CubicHandle {}
 
 impl TryFrom<Slvs_Entity> for CubicHandle {
     type Error = &'static str;
@@ -274,7 +278,7 @@ impl TryFrom<SomeEntityHandle> for CubicHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(CurveHandle)]
-trait AsCurveHandle {}
+trait AsCurveHandle: AsEntityHandle {}
 impl AsCurveHandle for EntityHandle<ArcOfCircle> {}
 impl AsCurveHandle for EntityHandle<Cubic<OnWorkplane>> {}
 impl AsCurveHandle for EntityHandle<Cubic<In3d>> {}
@@ -286,6 +290,8 @@ pub enum CurveHandle {
     CubicOnWorkplane(EntityHandle<Cubic<OnWorkplane>>),
     CubicIn3d(EntityHandle<Cubic<In3d>>),
 }
+
+impl AsEntityHandle for CurveHandle {}
 
 impl TryFrom<Slvs_Entity> for CurveHandle {
     type Error = &'static str;
@@ -320,7 +326,7 @@ impl TryFrom<SomeEntityHandle> for CurveHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(LineSegmentHandle)]
-trait AsLineSegmentHandle {}
+trait AsLineSegmentHandle: AsEntityHandle {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<OnWorkplane>> {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<In3d>> {}
 
@@ -330,6 +336,8 @@ pub enum LineSegmentHandle {
     OnWorkplane(EntityHandle<LineSegment<OnWorkplane>>),
     In3d(EntityHandle<LineSegment<In3d>>),
 }
+
+impl AsEntityHandle for LineSegmentHandle {}
 
 impl TryFrom<Slvs_Entity> for LineSegmentHandle {
     type Error = &'static str;
@@ -362,7 +370,7 @@ impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(PointHandle)]
-trait AsPointHandle {}
+trait AsPointHandle: AsEntityHandle {}
 impl AsPointHandle for EntityHandle<Point<OnWorkplane>> {}
 impl AsPointHandle for EntityHandle<Point<In3d>> {}
 
@@ -372,6 +380,8 @@ pub enum PointHandle {
     OnWorkplane(EntityHandle<Point<OnWorkplane>>),
     In3d(EntityHandle<Point<In3d>>),
 }
+
+impl AsEntityHandle for PointHandle {}
 
 impl TryFrom<Slvs_Entity> for PointHandle {
     type Error = &'static str;
@@ -402,7 +412,7 @@ impl TryFrom<SomeEntityHandle> for PointHandle {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[enum_dispatch(ProjectionTargetHandle)]
-trait AsProjectionTargetHandle {}
+trait AsProjectionTargetHandle: AsEntityHandle {}
 impl AsProjectionTargetHandle for EntityHandle<LineSegment<OnWorkplane>> {}
 impl AsProjectionTargetHandle for EntityHandle<LineSegment<In3d>> {}
 impl AsProjectionTargetHandle for EntityHandle<Normal> {}
@@ -414,6 +424,8 @@ pub enum ProjectionTargetHandle {
     LineSegmentIn3d(EntityHandle<LineSegment<In3d>>),
     Normal(EntityHandle<Normal>),
 }
+
+impl AsEntityHandle for ProjectionTargetHandle {}
 
 impl TryFrom<Slvs_Entity> for ProjectionTargetHandle {
     type Error = &'static str;
