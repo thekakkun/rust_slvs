@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_LEN_PT_LINE_D},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -36,6 +37,27 @@ impl EqLenPtLineD {
 }
 
 impl AsConstraintData for EqLenPtLineD {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let line_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            line_a,
+            point,
+            line_b,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQ_LEN_PT_LINE_D as _
     }
@@ -56,23 +78,3 @@ impl AsConstraintData for EqLenPtLineD {
         Some(vec![self.point.handle()])
     }
 }
-
-// impl<LA, P, LB> From<Slvs_Constraint> for EqLenPtLineD<LA, P, LB>
-// where
-//     LA: AsLineSegment,
-//     P: AsPoint,
-//     LB: AsLineSegment,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             line_a: EntityHandle::new(value.entityA),
-//             point: EntityHandle::new(value.ptA),
-//             line_b: EntityHandle::new(value.entityB),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

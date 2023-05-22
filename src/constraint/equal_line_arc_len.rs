@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_LINE_ARC_LEN},
     element::AsHandle,
     entity::{ArcOfCircle, EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,24 @@ impl EqualLineArcLen {
 }
 
 impl AsConstraintData for EqualLineArcLen {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            line,
+            arc: EntityHandle::new(slvs_constraint.entityB),
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_LINE_ARC_LEN as _
     }
@@ -49,18 +68,3 @@ impl AsConstraintData for EqualLineArcLen {
         Some(vec![self.line.handle(), self.arc.handle()])
     }
 }
-
-// impl<L: AsLineSegment> From<Slvs_Constraint> for EqualLineArcLen<L> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             line: EntityHandle::new(value.entityA),
-//             arc: EntityHandle::new(value.entityB),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }
-//

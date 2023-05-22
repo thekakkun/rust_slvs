@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
-    bindings::{Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_LEN_RATIO},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_LEN_RATIO},
     element::AsHandle,
     entity::{ArcOfCircle, EntityHandle},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,20 @@ impl ArcArcLenRatio {
 }
 
 impl AsConstraintData for ArcArcLenRatio {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            arc_a: EntityHandle::new(slvs_constraint.entityA),
+            arc_b: EntityHandle::new(slvs_constraint.entityB),
+            ratio: slvs_constraint.valA,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_ARC_LEN_RATIO as _
     }
@@ -51,16 +66,5 @@ impl AsConstraintData for ArcArcLenRatio {
 
     fn val(&self) -> Option<f64> {
         Some(self.ratio)
-    }
-}
-
-impl From<Slvs_Constraint> for ArcArcLenRatio {
-    fn from(value: Slvs_Constraint) -> Self {
-        Self {
-            group: Group(value.group),
-            arc_a: EntityHandle::new(value.entityA),
-            arc_b: EntityHandle::new(value.entityB),
-            ratio: value.valA,
-        }
     }
 }

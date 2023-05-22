@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_WHERE_DRAGGED},
     element::AsHandle,
     entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -30,6 +31,23 @@ impl WhereDragged {
 }
 
 impl AsConstraintData for WhereDragged {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            point,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_WHERE_DRAGGED as _
     }
@@ -46,16 +64,3 @@ impl AsConstraintData for WhereDragged {
         Some(vec![self.point.handle()])
     }
 }
-
-// impl<P: AsPoint> From<Slvs_Constraint> for WhereDragged<P> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             point: EntityHandle::new(value.ptA),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

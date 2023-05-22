@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_TANGENT},
     element::AsHandle,
     entity::{ArcOfCircle, EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -36,6 +37,22 @@ impl ArcLineTangent {
 }
 
 impl AsConstraintData for ArcLineTangent {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            workplane: EntityHandle::new(slvs_constraint.wrkpl),
+            arc: EntityHandle::new(slvs_constraint.entityA),
+            line,
+            to_start: slvs_constraint.other != 0,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_TANGENT as _
     }
@@ -56,15 +73,3 @@ impl AsConstraintData for ArcLineTangent {
         [self.to_start, false]
     }
 }
-
-// impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineTangent<L> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             workplane: EntityHandle::new(value.wrkpl),
-//             arc: EntityHandle::new(value.entityA),
-//             line: EntityHandle::new(value.entityB),
-//             to_start: value.other != 0,
-//         }
-//     }
-// }

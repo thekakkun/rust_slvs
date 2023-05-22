@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_LINE},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -36,6 +37,24 @@ impl SymmetricLine {
 }
 
 impl AsConstraintData for SymmetricLine {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point_a = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let point_b = (*sys.slvs_entity(slvs_constraint.ptB)?).try_into()?;
+        let line = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            workplane: EntityHandle::new(slvs_constraint.wrkpl),
+            point_a,
+            point_b,
+            line,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_SYMMETRIC_LINE as _
     }
@@ -56,20 +75,3 @@ impl AsConstraintData for SymmetricLine {
         Some(vec![self.line.handle()])
     }
 }
-
-// impl<PA, PB, L> From<Slvs_Constraint> for SymmetricLine<PA, PB, L>
-// where
-//     PA: AsPoint,
-//     PB: AsPoint,
-//     L: AsLineSegment,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             workplane: EntityHandle::new(value.wrkpl),
-//             point_a: EntityHandle::new(value.ptA),
-//             point_b: EntityHandle::new(value.ptB),
-//             line: EntityHandle::new(value.entityA),
-//         }
-//     }
-// }

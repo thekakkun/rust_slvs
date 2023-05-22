@@ -5,6 +5,7 @@ use crate::{
     bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
     element::AsHandle,
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -34,10 +35,7 @@ impl Normal {
 }
 
 impl AsEntityData for Normal {
-    fn from_system(
-        sys: &crate::System,
-        entity_handle: &EntityHandle<Self>,
-    ) -> Result<Self, &'static str> {
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
 
         Ok(match slvs_entity.wrkpl {

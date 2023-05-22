@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_DIFFERENCE},
     element::AsHandle,
     entity::{ArcOfCircle, EntityHandle, LineSegmentHandle},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,21 @@ impl ArcLineDifference {
 }
 
 impl AsConstraintData for ArcLineDifference {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            arc: EntityHandle::new(slvs_constraint.entityA),
+            line,
+            difference: slvs_constraint.valA,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_ARC_LINE_DIFFERENCE as _
     }
@@ -53,14 +69,3 @@ impl AsConstraintData for ArcLineDifference {
         Some(self.difference)
     }
 }
-
-// impl<L: AsLineSegment> From<Slvs_Constraint> for ArcLineDifference<L> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             arc: EntityHandle::new(value.entityA),
-//             line: EntityHandle::new(value.entityB),
-//             difference: value.valA,
-//         }
-//     }
-// }

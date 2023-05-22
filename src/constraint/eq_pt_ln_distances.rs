@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQ_PT_LN_DISTANCES},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -39,6 +40,29 @@ impl EqPtLnDistances {
 }
 
 impl AsConstraintData for EqPtLnDistances {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+        let point_a = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let line_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+        let point_b = (*sys.slvs_entity(slvs_constraint.ptB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            line_a,
+            point_a,
+            line_b,
+            point_b,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQ_PT_LN_DISTANCES as _
     }
@@ -59,25 +83,3 @@ impl AsConstraintData for EqPtLnDistances {
         Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
-
-// impl<LA, PA, LB, PB> From<Slvs_Constraint> for EqPtLnDistances<LA, PA, LB, PB>
-// where
-//     LA: AsLineSegment,
-//     PA: AsPoint,
-//     LB: AsLineSegment,
-//     PB: AsPoint,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             line_a: EntityHandle::new(value.entityA),
-//             point_a: EntityHandle::new(value.ptA),
-//             line_b: EntityHandle::new(value.entityB),
-//             point_b: EntityHandle::new(value.ptB),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_LINE},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,25 @@ impl PtOnLine {
 }
 
 impl AsConstraintData for PtOnLine {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let line = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            point,
+            line,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_LINE as _
     }
@@ -53,21 +73,3 @@ impl AsConstraintData for PtOnLine {
         Some(vec![self.line.handle()])
     }
 }
-
-// impl<P, L> From<Slvs_Constraint> for PtOnLine<P, L>
-// where
-//     P: AsPoint,
-//     L: AsLineSegment,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             point: EntityHandle::new(value.ptA),
-//             line: EntityHandle::new(value.entityA),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

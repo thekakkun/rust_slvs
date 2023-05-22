@@ -6,6 +6,7 @@ use crate::{
     element::AsHandle,
     group::Group,
     target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -48,10 +49,7 @@ impl LineSegment<In3d> {
 }
 
 impl<T: AsTarget> AsEntityData for LineSegment<T> {
-    fn from_system(
-        sys: &crate::System,
-        entity_handle: &EntityHandle<Self>,
-    ) -> Result<Self, &'static str> {
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
 
         Ok(Self {

@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_PLANE_DISTANCE},
     element::AsHandle,
     entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,21 @@ impl PtPlaneDistance {
 }
 
 impl AsConstraintData for PtPlaneDistance {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            point,
+            plane: EntityHandle::new(slvs_constraint.entityA),
+            distance: slvs_constraint.valA,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_PLANE_DISTANCE as _
     }
@@ -57,14 +73,3 @@ impl AsConstraintData for PtPlaneDistance {
         Some(self.distance)
     }
 }
-
-// impl<P: AsPoint> From<Slvs_Constraint> for PtPlaneDistance<P> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             point: EntityHandle::new(value.ptA),
-//             plane: EntityHandle::new(value.entityA),
-//             distance: value.valA,
-//         }
-//     }
-// }

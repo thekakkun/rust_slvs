@@ -14,11 +14,11 @@ fn inconsistent_constraints() {
 
     // distance between p1 and p2 is 10
     let c1 = sys
-        .constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
+        .constrain(PtPtDistance::new(g, p1.into(), p2.into(), 10.0, None))
         .expect("distance constraint added");
     // distance between p1 and p2 is 20
     let c2 = sys
-        .constrain(PtPtDistance::new(g, p1, p2, 20.0, None))
+        .constrain(PtPtDistance::new(g, p1.into(), p2.into(), 20.0, None))
         .expect("distance constraint added");
 
     let solve_result = sys.solve(&g);

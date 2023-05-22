@@ -201,12 +201,11 @@ impl System {
         todo!()
     }
 
-    pub fn constraint_data<C: AsConstraintData + From<Slvs_Constraint>>(
+    pub fn constraint_data<C: AsConstraintData>(
         &self,
-        constraint: &ConstraintHandle<C>,
+        constraint_handle: &ConstraintHandle<C>,
     ) -> Result<C, &'static str> {
-        let slvs_constraint = self.slvs_constraint(constraint.handle())?;
-        Ok((*slvs_constraint).into())
+        C::from_system(self, constraint_handle)
     }
 }
 
@@ -274,7 +273,7 @@ impl System {
         f: F,
     ) -> Result<C, &'static str>
     where
-        C: AsConstraintData + From<Slvs_Constraint>,
+        C: AsConstraintData,
         F: FnOnce(&mut C),
     {
         let mut constraint_data = self.constraint_data(constraint_handle)?;
@@ -326,6 +325,7 @@ impl System {
         entity_handle: EntityHandle<E>,
     ) -> Result<E, &'static str> {
         let entity_data = self.entity_data(&entity_handle)?;
+        
         let ix = self.entity_ix(entity_handle.handle())?;
         let deleted_entity = self.entities.list.remove(ix);
 
@@ -336,13 +336,10 @@ impl System {
         Ok(entity_data)
     }
 
-    pub fn delete_constraint<C>(
+    pub fn delete_constraint<C: AsConstraintData>(
         &mut self,
         constraint_handle: ConstraintHandle<C>,
-    ) -> Result<C, &'static str>
-    where
-        C: AsConstraintData + From<Slvs_Constraint>,
-    {
+    ) -> Result<C, &'static str> {
         let constraint_data = self.constraint_data(&constraint_handle)?;
 
         let ix = self.constraint_ix(constraint_handle.handle())?;

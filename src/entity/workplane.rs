@@ -6,6 +6,7 @@ use crate::{
     element::AsHandle,
     group::Group,
     target::In3d,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -30,10 +31,7 @@ impl Workplane {
 }
 
 impl AsEntityData for Workplane {
-    fn from_system(
-        sys: &crate::System,
-        entity_handle: &EntityHandle<Self>,
-    ) -> Result<Self, &'static str> {
+    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
 
         Ok(Self {

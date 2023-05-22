@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PARALLEL},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,25 @@ impl Parallel {
 }
 
 impl AsConstraintData for Parallel {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+        let line_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            line_a,
+            line_b,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_PARALLEL as _
     }
@@ -49,21 +69,3 @@ impl AsConstraintData for Parallel {
         Some(vec![self.line_a.handle(), self.line_b.handle()])
     }
 }
-
-// impl<LA, LB> From<Slvs_Constraint> for Parallel<LA, LB>
-// where
-//     LA: AsLineSegment,
-//     LB: AsLineSegment,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             line_a: EntityHandle::new(value.entityA),
-//             line_b: EntityHandle::new(value.entityB),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

@@ -92,6 +92,7 @@ use std::{any::type_name, fmt::Debug, marker::PhantomData};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup},
     element::AsHandle,
+    System,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,11 @@ impl<T: AsConstraintData> AsHandle for ConstraintHandle<T> {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait AsConstraintData: Copy + Debug {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str>;
+
     fn slvs_type(&self) -> i32;
     fn workplane(&self) -> Option<Slvs_hEntity>;
     fn group(&self) -> Slvs_hGroup;

@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_HORIZ},
     element::AsHandle,
     entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,6 +34,22 @@ impl SymmetricHoriz {
 }
 
 impl AsConstraintData for SymmetricHoriz {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point_a = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let point_b = (*sys.slvs_entity(slvs_constraint.ptB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            workplane: EntityHandle::new(slvs_constraint.wrkpl),
+            point_a,
+            point_b,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_SYMMETRIC_HORIZ as _
     }
@@ -49,18 +66,3 @@ impl AsConstraintData for SymmetricHoriz {
         Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
-
-// impl<PA, PB> From<Slvs_Constraint> for SymmetricHoriz<PA, PB>
-// where
-//     PA: AsPoint,
-//     PB: AsPoint,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             workplane: EntityHandle::new(value.wrkpl),
-//             point_a: EntityHandle::new(value.ptA),
-//             point_b: EntityHandle::new(value.ptB),
-//         }
-//     }
-// }

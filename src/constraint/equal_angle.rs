@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_ANGLE},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -39,6 +40,29 @@ impl EqualAngle {
 }
 
 impl AsConstraintData for EqualAngle {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let line_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+        let line_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+        let line_c = (*sys.slvs_entity(slvs_constraint.entityC)?).try_into()?;
+        let line_d = (*sys.slvs_entity(slvs_constraint.entityD)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            line_a,
+            line_b,
+            line_c,
+            line_d,
+            workplane: match slvs_constraint.wrkpl {
+                0 => None,
+                h => Some(EntityHandle::new(h)),
+            },
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_ANGLE as _
     }
@@ -60,25 +84,3 @@ impl AsConstraintData for EqualAngle {
         ])
     }
 }
-
-// impl<LA, LB, LC, LD> From<Slvs_Constraint> for EqualAngle<LA, LB, LC, LD>
-// where
-//     LA: AsLineSegment,
-//     LB: AsLineSegment,
-//     LC: AsLineSegment,
-//     LD: AsLineSegment,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             line_a: EntityHandle::new(value.entityA),
-//             line_b: EntityHandle::new(value.entityB),
-//             line_c: EntityHandle::new(value.entityC),
-//             line_d: EntityHandle::new(value.entityD),
-//             workplane: match value.wrkpl {
-//                 0 => None,
-//                 h => Some(EntityHandle::new(h)),
-//             },
-//         }
-//     }
-// }

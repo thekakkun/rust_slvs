@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
     element::AsHandle,
     entity::ArcHandle,
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -26,6 +27,21 @@ impl EqualRadius {
 }
 
 impl AsConstraintData for EqualRadius {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let arc_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+        let arc_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            arc_a,
+            arc_b,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
@@ -42,17 +58,3 @@ impl AsConstraintData for EqualRadius {
         Some(vec![self.arc_a.handle(), self.arc_b.handle()])
     }
 }
-
-// impl<AA, AB> From<Slvs_Constraint> for EqualRadius<AA, AB>
-// where
-//     AA: AsArc,
-//     AB: AsArc,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             arc_a: EntityHandle::new(value.entityA),
-//             arc_b: EntityHandle::new(value.entityB),
-//         }
-//     }
-// }

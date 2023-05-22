@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_FACE},
     element::AsHandle,
     entity::{EntityHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -26,6 +27,20 @@ impl PtOnFace {
 }
 
 impl AsConstraintData for PtOnFace {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            point,
+            plane: EntityHandle::new(slvs_constraint.entityA),
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_FACE as _
     }
@@ -46,13 +61,3 @@ impl AsConstraintData for PtOnFace {
         Some(vec![self.plane.handle()])
     }
 }
-
-// impl<P: AsPoint> From<Slvs_Constraint> for PtOnFace<P> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             point: EntityHandle::new(value.ptA),
-//             plane: EntityHandle::new(value.entityA),
-//         }
-//     }
-// }

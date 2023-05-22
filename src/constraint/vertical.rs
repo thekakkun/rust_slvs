@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_VERTICAL},
     element::AsHandle,
     entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -52,6 +53,33 @@ impl Vertical {
 }
 
 impl AsConstraintData for Vertical {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+
+        if let (Ok(point_a), Ok(point_b)) = (
+            (*sys.slvs_entity(slvs_constraint.ptA)?).try_into(),
+            (*sys.slvs_entity(slvs_constraint.ptB)?).try_into(),
+        ) {
+            Ok(Self::Points {
+                group: Group(slvs_constraint.group),
+                workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                point_a,
+                point_b,
+            })
+        } else if let Ok(line) = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into() {
+            Ok(Self::Line {
+                group: Group(slvs_constraint.group),
+                workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                line,
+            })
+        } else {
+            Err("Constraint should be of type Vertical")
+        }
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_VERTICAL as _
     }

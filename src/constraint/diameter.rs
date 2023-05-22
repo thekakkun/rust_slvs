@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
     element::AsHandle,
     entity::ArcHandle,
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -26,6 +27,20 @@ impl Diameter {
 }
 
 impl AsConstraintData for Diameter {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let arc = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            arc,
+            diameter: slvs_constraint.valA,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_DIAMETER as _
     }
@@ -46,13 +61,3 @@ impl AsConstraintData for Diameter {
         Some(self.diameter)
     }
 }
-
-// impl From<Slvs_Constraint> for Diameter<A> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             arc: EntityHandle::new(value.entityA),
-//             diameter: value.valA,
-//         }
-//     }
-// }

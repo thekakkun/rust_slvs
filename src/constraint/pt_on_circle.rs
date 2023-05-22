@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, ConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
     element::AsHandle,
     entity::{ArcHandle, PointHandle},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -22,6 +23,21 @@ impl PtOnCircle {
 }
 
 impl AsConstraintData for PtOnCircle {
+    fn from_system(
+        sys: &System,
+        constraint_handle: &ConstraintHandle<Self>,
+    ) -> Result<Self, &'static str> {
+        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+        let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
+        let arc = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+
+        Ok(Self {
+            group: Group(slvs_constraint.group),
+            point,
+            arc,
+        })
+    }
+
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_CIRCLE as _
     }
@@ -42,17 +58,3 @@ impl AsConstraintData for PtOnCircle {
         Some(vec![self.point.handle()])
     }
 }
-
-// impl<P, A> From<Slvs_Constraint> for PtOnCircle<P, A>
-// where
-//     P: AsPoint,
-//     A: AsArc,
-// {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         Self {
-//             group: Group(value.group),
-//             point: EntityHandle::new(value.ptA),
-//             arc: EntityHandle::new(value.entityA),
-//         }
-//     }
-// }
