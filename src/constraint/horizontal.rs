@@ -9,7 +9,7 @@ use crate::{
     System,
 };
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Horizontal {
     Points {
         group: Group,

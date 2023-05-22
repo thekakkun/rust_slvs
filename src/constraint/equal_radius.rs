@@ -9,7 +9,7 @@ use crate::{
     System,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EqualRadius {
     pub group: Group,
     pub arc_a: ArcHandle,

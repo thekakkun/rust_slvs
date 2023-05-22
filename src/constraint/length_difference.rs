@@ -9,7 +9,7 @@ use crate::{
     System,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LengthDifference {
     pub group: Group,
     pub line_a: LineSegmentHandle,

@@ -9,7 +9,7 @@ use crate::{
     System,
 };
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PtPtDistance {
     pub group: Group,
     pub point_a: PointHandle,

@@ -98,27 +98,27 @@ pub enum SomeEntityHandle {
 impl From<Slvs_Entity> for SomeEntityHandle {
     fn from(value: Slvs_Entity) -> Self {
         match value.type_ as _ {
-            SLVS_E_ARC_OF_CIRCLE => SomeEntityHandle::ArcOfCircle(value.into()),
+            SLVS_E_ARC_OF_CIRCLE => Self::ArcOfCircle(value.into()),
             SLVS_E_CIRCLE => match value.wrkpl {
-                0 => SomeEntityHandle::CircleIn3d(value.try_into().unwrap()),
-                _ => SomeEntityHandle::CircleOnWorkplane(value.try_into().unwrap()),
+                0 => Self::CircleIn3d(value.try_into().unwrap()),
+                _ => Self::CircleOnWorkplane(value.try_into().unwrap()),
             },
             SLVS_E_CUBIC => match value.wrkpl {
-                0 => SomeEntityHandle::CubicIn3d(value.try_into().unwrap()),
-                _ => SomeEntityHandle::CubicOnWorkplane(value.try_into().unwrap()),
+                0 => Self::CubicIn3d(value.try_into().unwrap()),
+                _ => Self::CubicOnWorkplane(value.try_into().unwrap()),
             },
             SLVS_E_DISTANCE => match value.wrkpl {
-                0 => SomeEntityHandle::DistanceIn3d(value.try_into().unwrap()),
-                _ => SomeEntityHandle::DistanceOnWorkplane(value.try_into().unwrap()),
+                0 => Self::DistanceIn3d(value.try_into().unwrap()),
+                _ => Self::DistanceOnWorkplane(value.try_into().unwrap()),
             },
             SLVS_E_LINE_SEGMENT => match value.wrkpl {
-                0 => SomeEntityHandle::LineSegmentIn3d(value.try_into().unwrap()),
-                _ => SomeEntityHandle::LineSegmentOnWorkplane(value.try_into().unwrap()),
+                0 => Self::LineSegmentIn3d(value.try_into().unwrap()),
+                _ => Self::LineSegmentOnWorkplane(value.try_into().unwrap()),
             },
-            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => SomeEntityHandle::Normal(value.into()),
-            SLVS_E_POINT_IN_2D => SomeEntityHandle::PointOnWorkplane(value.try_into().unwrap()),
-            SLVS_E_POINT_IN_3D => SomeEntityHandle::PointIn3d(value.try_into().unwrap()),
-            SLVS_E_WORKPLANE => SomeEntityHandle::Workplane(value.into()),
+            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => Self::Normal(value.into()),
+            SLVS_E_POINT_IN_2D => Self::PointOnWorkplane(value.try_into().unwrap()),
+            SLVS_E_POINT_IN_3D => Self::PointIn3d(value.try_into().unwrap()),
+            SLVS_E_WORKPLANE => Self::Workplane(value.into()),
             _ => panic!("Unknown Slvs_Entity type value {}", value.type_),
         }
     }

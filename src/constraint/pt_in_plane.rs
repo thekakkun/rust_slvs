@@ -9,7 +9,7 @@ use crate::{
     System,
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PtInPlane {
     pub group: Group,
     pub point: PointHandle,

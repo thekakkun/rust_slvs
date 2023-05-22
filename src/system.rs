@@ -6,7 +6,7 @@ use crate::{
         Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_Solve, Slvs_System, Slvs_hConstraint,
         Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_E_NORMAL_IN_3D,
     },
-    constraint::{AsConstraintData, ConstraintHandle},
+    constraint::{AsConstraintData, ConstraintHandle, SomeConstraintHandle},
     element::AsHandle,
     entity::{AsEntityData, EntityHandle, SomeEntityHandle},
     group::Group,
@@ -192,13 +192,9 @@ impl System {
         E::from_system(self, entity_handle)
     }
 
-    pub fn constraint_handles(&self, group: Option<&Group>) -> Vec<SomeEntityHandle> {
+    pub fn constraint_handles(&self, group: Option<&Group>) -> Vec<SomeConstraintHandle> {
         // need to return SomeConstraintHandle
         todo!();
-    }
-
-    pub fn constraints_for_entity(&self) {
-        todo!()
     }
 
     pub fn constraint_data<C: AsConstraintData>(
@@ -325,7 +321,7 @@ impl System {
         entity_handle: EntityHandle<E>,
     ) -> Result<E, &'static str> {
         let entity_data = self.entity_data(&entity_handle)?;
-        
+
         let ix = self.entity_ix(entity_handle.handle())?;
         let deleted_entity = self.entities.list.remove(ix);
 
