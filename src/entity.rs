@@ -1,15 +1,13 @@
 /*!
 An entity is a geometric thing, like a point or a line segment or a circle.
 
-Entities are sketched [OnWorkplane][`crate::target::OnWorkplane`] or [OnWorkplane][`crate::target::In3d`].
-The [`EntityHandle`], stores information about the type of entity and where it was sketched,
+Entities are sketched [OnWorkplane][crate::target::OnWorkplane] or [OnWorkplane][crate::target::In3d].
+The [EntityHandle], stores information about the type of entity and where it was sketched,
 which are used to ensure that other entities and constraints receive a handle for the expected type of entity.
 
-They are defined and added to the using structs that implement [`AsEntityData`],
-and can be retrieved with the [`EntityHandle`] struct, which is a wrapper for the
+They are defined and added to the using structs that implement [AsEntityData],
+and can be retrieved with the [EntityHandle] struct, which is a wrapper for the
 entity handle.
-
-
 */
 
 pub use arc_of_circle::ArcOfCircle;
@@ -45,10 +43,10 @@ use crate::{
     System,
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity Handle
-////////////////////////////////////////////////////////////////////////////////
-
+/// Wrapper for an entity handle.
+///
+/// The type argument holds information about what type of entity it references,
+/// which is used to check that entity definitions receive the correct type of entity handle.
 #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityHandle<T: AsEntityData> {
     pub handle: u32,
@@ -56,7 +54,7 @@ pub struct EntityHandle<T: AsEntityData> {
 }
 
 impl<E: AsEntityData> EntityHandle<E> {
-    pub fn new(handle: u32) -> Self {
+    pub(crate) fn new(handle: u32) -> Self {
         Self {
             handle,
             phantom: PhantomData,
@@ -87,10 +85,14 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
+/// A thing that wraps a handle for an entity.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 #[enum_dispatch(SomeEntityHandle)]
 pub trait AsEntityHandle: AsHandle {}
 impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
 
+/// Wrapper enum for the possible types of [`EntityHandle`].
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum SomeEntityHandle {
@@ -195,16 +197,18 @@ impl From<ProjectionTargetHandle> for SomeEntityHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some arc
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(ArcHandle)]
 trait AsArcHandle: AsEntityHandle {}
 impl AsArcHandle for EntityHandle<ArcOfCircle> {}
 impl AsArcHandle for EntityHandle<Circle<OnWorkplane>> {}
 impl AsArcHandle for EntityHandle<Circle<In3d>> {}
 
+/// Wraps handles for some sort of arc entity.
+///
+/// Used when defining
+/// [Diameter][crate::constraint::Diameter],
+/// [EqualRadius][crate::constraint::EqualRadius], and
+/// [PtOnCircle][crate::constraint::PtOnCircle] constraints.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum ArcHandle {
@@ -243,15 +247,13 @@ impl TryFrom<SomeEntityHandle> for ArcHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some cubic
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(CubicHandle)]
 trait AsCubicHandle: AsEntityHandle {}
 impl AsCubicHandle for EntityHandle<Cubic<OnWorkplane>> {}
 impl AsCubicHandle for EntityHandle<Cubic<In3d>> {}
 
+/// Handles that can be passed when defining
+/// [CubicLineTangent][crate::constraint::CubicLineTangent].
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum CubicHandle {
@@ -287,16 +289,16 @@ impl TryFrom<SomeEntityHandle> for CubicHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some curve
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(CurveHandle)]
 trait AsCurveHandle: AsEntityHandle {}
 impl AsCurveHandle for EntityHandle<ArcOfCircle> {}
 impl AsCurveHandle for EntityHandle<Cubic<OnWorkplane>> {}
 impl AsCurveHandle for EntityHandle<Cubic<In3d>> {}
 
+/// Wraps handles for some sort of curve entity.
+///
+/// Used when defining
+/// [CurveCurveTangent][crate::constraint::CurveCurveTangent].
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum CurveHandle {
@@ -335,15 +337,14 @@ impl TryFrom<SomeEntityHandle> for CurveHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some line
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(LineSegmentHandle)]
 trait AsLineSegmentHandle: AsEntityHandle {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<OnWorkplane>> {}
 impl AsLineSegmentHandle for EntityHandle<LineSegment<In3d>> {}
 
+/// Wraps handles for some sort of line segment entity.
+///
+/// Used when defining a variety of constraints that constrain a line segment.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum LineSegmentHandle {
@@ -379,15 +380,14 @@ impl TryFrom<SomeEntityHandle> for LineSegmentHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some point
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(PointHandle)]
 trait AsPointHandle: AsEntityHandle {}
 impl AsPointHandle for EntityHandle<Point<OnWorkplane>> {}
 impl AsPointHandle for EntityHandle<Point<In3d>> {}
 
+/// Wraps handles for some sort of point entity.
+///
+/// Used when defining a variety of constraints that constrain a point.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum PointHandle {
@@ -421,16 +421,13 @@ impl TryFrom<SomeEntityHandle> for PointHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity handle for some 2d things that can be a projection target
-////////////////////////////////////////////////////////////////////////////////
-
 #[enum_dispatch(ProjectionTargetHandle)]
 trait AsProjectionTargetHandle: AsEntityHandle {}
 impl AsProjectionTargetHandle for EntityHandle<LineSegment<OnWorkplane>> {}
 impl AsProjectionTargetHandle for EntityHandle<LineSegment<In3d>> {}
 impl AsProjectionTargetHandle for EntityHandle<Normal> {}
 
+/// Handles that can be passed when defining [ProjPtDistance][crate::constraint::ProjPtDistance].
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum ProjectionTargetHandle {
@@ -473,26 +470,32 @@ impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Entity Data
-////////////////////////////////////////////////////////////////////////////////
-
+/// An object that holds information about an entity.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsEntityData: private::Sealed + Copy + Debug {
+    #[doc(hidden)]
+    fn slvs_type(&self) -> i32;
+    #[doc(hidden)]
+    fn workplane(&self) -> Option<Slvs_hEntity>;
+    #[doc(hidden)]
+    fn group(&self) -> Slvs_hGroup;
+    #[doc(hidden)]
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str>;
 
-    fn slvs_type(&self) -> i32;
-    fn workplane(&self) -> Option<Slvs_hEntity>;
-    fn group(&self) -> Slvs_hGroup;
-
+    #[doc(hidden)]
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         None
     }
+    #[doc(hidden)]
     fn normal(&self) -> Option<Slvs_hEntity> {
         None
     }
+    #[doc(hidden)]
     fn distance(&self) -> Option<Slvs_hEntity> {
         None
     }
+    #[doc(hidden)]
     fn param_vals(&self) -> Option<Vec<f64>> {
         None
     }
