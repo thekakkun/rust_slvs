@@ -18,6 +18,13 @@ use enum_dispatch::enum_dispatch;
     SomeEntityHandle,
     SomeConstraintHandle
 )]
-pub trait AsHandle {
+pub trait AsHandle: private::Sealed {
     fn handle(&self) -> u32;
+}
+
+mod private {
+    use super::AsHandle;
+
+    pub trait Sealed {}
+    impl<H: AsHandle> Sealed for H {}
 }

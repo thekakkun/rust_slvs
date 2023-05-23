@@ -477,7 +477,7 @@ impl TryFrom<SomeEntityHandle> for ProjectionTargetHandle {
 // Entity Data
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsEntityData: Copy + Debug {
+pub trait AsEntityData: private::Sealed + Copy + Debug {
     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str>;
 
     fn slvs_type(&self) -> i32;
@@ -496,4 +496,11 @@ pub trait AsEntityData: Copy + Debug {
     fn param_vals(&self) -> Option<Vec<f64>> {
         None
     }
+}
+
+mod private {
+    use super::AsEntityData;
+
+    pub trait Sealed {}
+    impl<E: AsEntityData> Sealed for E {}
 }

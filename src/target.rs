@@ -8,10 +8,7 @@ points sketched within the same dimensionality.
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
-    private,
-};
+use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
 /// Things that can be used as a sketch target.
@@ -25,7 +22,7 @@ pub trait AsTarget:
 }
 
 /// Indicates that an entity is sketched on a workplane.
-/// 
+///
 /// This struct is also used to store coordinate data for [`crate::entity::Point`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct OnWorkplane(pub f64, pub f64);
@@ -54,7 +51,7 @@ impl TryFrom<Vec<f64>> for OnWorkplane {
 }
 
 /// Indicates that an entity is sketched in 3D space.
-/// 
+///
 /// This struct is also used to store coordinate data for [`crate::entity::Point`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct In3d(pub f64, pub f64, pub f64);
@@ -80,4 +77,11 @@ impl TryFrom<Vec<f64>> for In3d {
             Err(_) => Err("In3d requires exactly 3 values"),
         }
     }
+}
+
+mod private {
+    use super::AsTarget;
+
+    pub trait Sealed {}
+    impl<T: AsTarget> Sealed for T {}
 }

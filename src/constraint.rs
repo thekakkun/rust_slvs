@@ -248,7 +248,7 @@ impl From<Slvs_Constraint> for SomeConstraintHandle {
 // Entity Data
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsConstraintData: Copy + Debug {
+pub trait AsConstraintData: private::Sealed + Copy + Debug {
     fn from_system(
         sys: &System,
         constraint_handle: &ConstraintHandle<Self>,
@@ -270,4 +270,11 @@ pub trait AsConstraintData: Copy + Debug {
     fn others(&self) -> [bool; 2] {
         [false, false]
     }
+}
+
+mod private {
+    use super::AsConstraintData;
+
+    pub trait Sealed {}
+    impl<C: AsConstraintData> Sealed for C {}
 }
