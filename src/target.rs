@@ -1,14 +1,32 @@
+/*!
+Defines where an [entity][`crate::entity`] was sketched.
+
+[`OnWorkplane`] and [`In3d`] also hold coordinate data for points in 2D space and 3D space,
+respectively. This is used to ensure that entities in a sketch target ultimately depend on
+points sketched within the same dimensionality.
+*/
+
 use serde::{Deserialize, Serialize};
 
-use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
+use crate::{
+    bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    private,
+};
 use std::fmt::Debug;
 
+/// Things that can be used as a sketch target.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsTarget:
-    Copy + Debug + TryFrom<Vec<f64>, Error = &'static str> + Into<Vec<f64>>
+    private::Sealed + Copy + Debug + TryFrom<Vec<f64>, Error = &'static str> + Into<Vec<f64>>
 {
+    #[doc(hidden)]
     fn slvs_type() -> i32;
 }
 
+/// Indicates that an entity is sketched on a workplane.
+/// 
+/// This struct is also used to store coordinate data for [`crate::entity::Point`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct OnWorkplane(pub f64, pub f64);
 
@@ -35,6 +53,9 @@ impl TryFrom<Vec<f64>> for OnWorkplane {
     }
 }
 
+/// Indicates that an entity is sketched in 3D space.
+/// 
+/// This struct is also used to store coordinate data for [`crate::entity::Point`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct In3d(pub f64, pub f64, pub f64);
 

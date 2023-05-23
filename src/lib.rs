@@ -214,3 +214,12 @@ pub use system::System;
 mod bindings;
 mod element;
 mod system;
+
+mod private {
+    use crate::target::{In3d, OnWorkplane};
+
+    pub trait Sealed {}
+
+    impl Sealed for OnWorkplane {}
+    impl Sealed for In3d {}
+}

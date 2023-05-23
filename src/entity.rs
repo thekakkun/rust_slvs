@@ -1,9 +1,15 @@
 /*!
 An entity is a geometric thing, like a point or a line segment or a circle.
 
+Entities are sketched [OnWorkplane][`crate::target::OnWorkplane`] or [OnWorkplane][`crate::target::In3d`].
+The [`EntityHandle`], stores information about the type of entity and where it was sketched,
+which are used to ensure that other entities and constraints receive a handle for the expected type of entity.
+
 They are defined and added to the using structs that implement [`AsEntityData`],
 and can be retrieved with the [`EntityHandle`] struct, which is a wrapper for the
 entity handle.
+
+
 */
 
 pub use arc_of_circle::ArcOfCircle;
