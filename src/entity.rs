@@ -1,3 +1,11 @@
+/*!
+An entity is a geometric thing, like a point or a line segment or a circle.
+
+They are defined and added to the using structs that implement [`AsEntityData`],
+and can be retrieved with the [`EntityHandle`] struct, which is a wrapper for the
+entity handle.
+*/
+
 pub use arc_of_circle::ArcOfCircle;
 pub use circle::Circle;
 pub use cubic::Cubic;

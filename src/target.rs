@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use crate::bindings::{SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D};
 use std::fmt::Debug;
 
-pub trait AsTarget: Copy + Debug + TryFrom<Vec<f64>, Error = &'static str> {
+pub trait AsTarget:
+    Copy + Debug + TryFrom<Vec<f64>, Error = &'static str> + Into<Vec<f64>>
+{
     fn slvs_type() -> i32;
-    fn into_vec(self) -> Vec<f64>;
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -15,9 +16,11 @@ impl AsTarget for OnWorkplane {
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_2D as _
     }
+}
 
-    fn into_vec(self) -> Vec<f64> {
-        vec![self.0, self.1]
+impl From<OnWorkplane> for Vec<f64> {
+    fn from(value: OnWorkplane) -> Self {
+        vec![value.0, value.1]
     }
 }
 
@@ -39,9 +42,11 @@ impl AsTarget for In3d {
     fn slvs_type() -> i32 {
         SLVS_E_POINT_IN_3D as _
     }
+}
 
-    fn into_vec(self) -> Vec<f64> {
-        vec![self.0, self.1, self.2]
+impl From<In3d> for Vec<f64> {
+    fn from(value: In3d) -> Self {
+        vec![value.0, value.1, value.2]
     }
 }
 

@@ -80,6 +80,6 @@ impl<T: AsTarget> AsEntityData for Point<T> {
     }
 
     fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(self.coords.into_vec())
+        Some(self.coords.into())
     }
 }
