@@ -1,60 +1,83 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsConstraintData, ConstraintHandle};
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
-    element::AsHandle,
-    entity::ArcHandle,
+    element::{AsGroup, AsHandle, AsSlvsType},
+    entity::{AsRadiused, EntityHandle},
     group::Group,
-    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct EqualRadius {
+pub struct EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
     pub group: Group,
-    pub arc_a: ArcHandle,
-    pub arc_b: ArcHandle,
+    pub radius_a: EntityHandle<RA>,
+    pub radius_b: EntityHandle<RB>,
 }
 
-impl EqualRadius {
-    pub fn new(group: Group, arc_a: ArcHandle, arc_b: ArcHandle) -> Self {
+impl<RA, RB> EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
+    fn new(group: Group, radius_a: EntityHandle<RA>, radius_b: EntityHandle<RB>) -> Self {
         Self {
             group,
-            arc_a,
-            arc_b,
+            radius_a,
+            radius_b,
         }
     }
 }
 
-impl AsConstraintData for EqualRadius {
-    fn from_system(
-        sys: &System,
-        constraint_handle: &ConstraintHandle<Self>,
-    ) -> Result<Self, &'static str> {
-        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-        let arc_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
-        let arc_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
-
-        Ok(Self {
-            group: Group(slvs_constraint.group),
-            arc_a,
-            arc_b,
-        })
+impl<RA, RB> AsGroup for EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
+    fn group(&self) -> Slvs_hGroup {
+        self.group.handle()
     }
+}
 
+impl<RA, RB> AsSlvsType for EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
+}
+
+impl<RA, RB> AsConstraintData for EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
+    // fn from_system(
+    //     sys: &
+    //     constraint_handle: &ConstraintHandle<Self>,
+    // ) -> Result<Self, &'static str> {
+    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+    //     let arc_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
+    //     let arc_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
+
+    //     Ok(Self {
+    //         group: Group(slvs_constraint.group),
+    //         radius_a: arc_a,
+    //         radius_b: arc_b,
+    //     })
+    // }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc_a.handle(), self.arc_b.handle()])
+        Some(vec![self.radius_a.handle(), self.radius_b.handle()])
     }
 }

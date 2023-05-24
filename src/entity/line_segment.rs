@@ -1,84 +1,97 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Point, Workplane};
+use super::{AsEntityData, EntityHandle, Point};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
-    element::AsHandle,
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
-    System,
 };
 
-/// A line segment.
-///
-/// See the [module-level documentation][crate] for usage examples.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct LineSegment<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<EntityHandle<Workplane>>,
-    pub point_a: EntityHandle<Point<T>>,
-    pub point_b: EntityHandle<Point<T>>,
-}
-
-impl LineSegment<OnWorkplane> {
-    pub fn new(
-        group: Group,
-        workplane: EntityHandle<Workplane>,
-        point_a: EntityHandle<Point<OnWorkplane>>,
-        point_b: EntityHandle<Point<OnWorkplane>>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: Some(workplane),
-            point_a,
-            point_b,
-        }
+define_element!(
+    SLVS_E_LINE_SEGMENT,
+    struct LineSegment {
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
     }
-}
+);
 
-impl LineSegment<In3d> {
-    pub fn new(
-        group: Group,
-        point_a: EntityHandle<Point<In3d>>,
-        point_b: EntityHandle<Point<In3d>>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: None,
-            point_a,
-            point_b,
-        }
-    }
-}
-
-impl<T: AsTarget> AsEntityData for LineSegment<T> {
-    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
-        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
-
-        Ok(Self {
-            group: Group(slvs_entity.group),
-            workplane: match slvs_entity.wrkpl {
-                0 => None,
-                h => Some(EntityHandle::new(h)),
-            },
-            point_a: EntityHandle::new(slvs_entity.point[0]),
-            point_b: EntityHandle::new(slvs_entity.point[1]),
-        })
-    }
-
-    fn slvs_type(&self) -> i32 {
-        SLVS_E_LINE_SEGMENT as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.handle())
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
+impl AsEntityData for LineSegment {
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point_a.handle(), self.point_b.handle()])
     }
 }
+
+// /// A line segment.
+// ///
+// /// See the [module-level documentation][crate] for usage examples.
+// #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// pub struct LineSegment<T: AsTarget> {
+//     pub group: Group,
+//     pub workplane: Option<EntityHandle<Workplane>>,
+//     pub point_a: EntityHandle<Point<T>>,
+//     pub point_b: EntityHandle<Point<T>>,
+// }
+
+// impl LineSegment<OnWorkplane> {
+//     pub fn new(
+//         group: Group,
+//         workplane: EntityHandle<Workplane>,
+//         point_a: EntityHandle<Point<OnWorkplane>>,
+//         point_b: EntityHandle<Point<OnWorkplane>>,
+//     ) -> Self {
+//         Self {
+//             group,
+//             workplane: Some(workplane),
+//             point_a,
+//             point_b,
+//         }
+//     }
+// }
+
+// impl LineSegment<In3d> {
+//     pub fn new(
+//         group: Group,
+//         point_a: EntityHandle<Point<In3d>>,
+//         point_b: EntityHandle<Point<In3d>>,
+//     ) -> Self {
+//         Self {
+//             group,
+//             workplane: None,
+//             point_a,
+//             point_b,
+//         }
+//     }
+// }
+
+// impl<T: AsTarget> AsEntityData for LineSegment<T> {
+//     fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
+//         let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
+
+//         Ok(Self {
+//             group: Group(slvs_entity.group),
+//             workplane: match slvs_entity.wrkpl {
+//                 0 => None,
+//                 h => Some(EntityHandle::new(h)),
+//             },
+//             point_a: EntityHandle::new(slvs_entity.point[0]),
+//             point_b: EntityHandle::new(slvs_entity.point[1]),
+//         })
+//     }
+
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_E_LINE_SEGMENT as _
+//     }
+
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         self.workplane.map(|workplane| workplane.handle())
+//     }
+
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+
+//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//         Some(vec![self.point_a.handle(), self.point_b.handle()])
+//     }
+// }

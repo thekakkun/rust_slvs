@@ -1,12 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsConstraintData, ConstraintHandle};
+use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
-    element::AsHandle,
-    entity::{EntityHandle, LineSegmentHandle, PointHandle, Workplane},
+    element::{AsGroup, AsHandle, AsSlvsType},
+    entity::{EntityHandle, LineSegment, Point, Workplane},
     group::Group,
-    System,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -14,22 +13,22 @@ pub enum Horizontal {
     Points {
         group: Group,
         workplane: EntityHandle<Workplane>,
-        point_a: PointHandle,
-        point_b: PointHandle,
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
     },
     Line {
         group: Group,
         workplane: EntityHandle<Workplane>,
-        line: LineSegmentHandle,
+        line: EntityHandle<LineSegment>,
     },
 }
 
 impl Horizontal {
-    pub fn new_points(
+    fn new_points(
         group: Group,
         workplane: EntityHandle<Workplane>,
-        point_a: PointHandle,
-        point_b: PointHandle,
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
     ) -> Self {
         Horizontal::Points {
             group,
@@ -39,10 +38,10 @@ impl Horizontal {
         }
     }
 
-    pub fn new_line(
+    fn new_line(
         group: Group,
         workplane: EntityHandle<Workplane>,
-        line: LineSegmentHandle,
+        line: EntityHandle<LineSegment>,
     ) -> Self {
         Horizontal::Line {
             group,
@@ -52,49 +51,53 @@ impl Horizontal {
     }
 }
 
-impl AsConstraintData for Horizontal {
-    fn from_system(
-        sys: &System,
-        constraint_handle: &ConstraintHandle<Self>,
-    ) -> Result<Self, &'static str> {
-        let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-
-        if let (Ok(point_a), Ok(point_b)) = (
-            (*sys.slvs_entity(slvs_constraint.ptA)?).try_into(),
-            (*sys.slvs_entity(slvs_constraint.ptB)?).try_into(),
-        ) {
-            Ok(Self::Points {
-                group: Group(slvs_constraint.group),
-                workplane: EntityHandle::new(slvs_constraint.wrkpl),
-                point_a,
-                point_b,
-            })
-        } else if let Ok(line) = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into() {
-            Ok(Self::Line {
-                group: Group(slvs_constraint.group),
-                workplane: EntityHandle::new(slvs_constraint.wrkpl),
-                line,
-            })
-        } else {
-            Err("Constraint should be of type Horizontal")
+impl AsGroup for Horizontal {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            Horizontal::Points { group, .. } => group.handle(),
+            Horizontal::Line { group, .. } => group.handle(),
         }
     }
+}
 
+impl AsSlvsType for Horizontal {
     fn slvs_type(&self) -> i32 {
         SLVS_C_HORIZONTAL as _
     }
+}
+
+impl AsConstraintData for Horizontal {
+    // fn from_system(
+    //     sys: &
+    //     constraint_handle: &ConstraintHandle<Self>,
+    // ) -> Result<Self, &'static str> {
+    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
+
+    //     if let (Ok(point_a), Ok(point_b)) = (
+    //         (*sys.slvs_entity(slvs_constraint.ptA)?).try_into(),
+    //         (*sys.slvs_entity(slvs_constraint.ptB)?).try_into(),
+    //     ) {
+    //         Ok(Self::Points {
+    //             group: Group(slvs_constraint.group),
+    //             workplane: EntityHandle::new(slvs_constraint.wrkpl),
+    //             point_a,
+    //             point_b,
+    //         })
+    //     } else if let Ok(line) = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into() {
+    //         Ok(Self::Line {
+    //             group: Group(slvs_constraint.group),
+    //             workplane: EntityHandle::new(slvs_constraint.wrkpl),
+    //             line,
+    //         })
+    //     } else {
+    //         Err("Constraint should be of type Horizontal")
+    //     }
+    // }
 
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Horizontal::Points { workplane, .. } => Some(workplane.handle()),
             Horizontal::Line { workplane, .. } => Some(workplane.handle()),
-        }
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        match self {
-            Horizontal::Points { group, .. } => group.handle(),
-            Horizontal::Line { group, .. } => group.handle(),
         }
     }
 

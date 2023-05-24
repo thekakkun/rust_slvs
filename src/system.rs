@@ -6,9 +6,9 @@ use crate::{
         Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_Solve, Slvs_System, Slvs_hConstraint,
         Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_E_NORMAL_IN_3D,
     },
-    constraint::{AsConstraintData, ConstraintHandle, SomeConstraintHandle},
+    constraint::{AsConstraintData, ConstraintHandle},
     element::AsHandle,
-    entity::{AsEntityData, AsEntityHandle, EntityHandle, SomeEntityHandle},
+    entity::{AsEntityData, AsEntityHandle, EntityHandle},
     group::Group,
     solver::{FailReason, SolveFail, SolveOkay},
 };

@@ -2,10 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::AsHandle,
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
+    element::{AsGroup, AsHandle, AsSlvsType},
     group::Group,
-    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -23,46 +22,25 @@ pub enum Normal {
     },
 }
 
-impl Normal {
-    pub fn new_on_workplane(group: Group, workplane: EntityHandle<Workplane>) -> Self {
-        Self::OnWorkplane { group, workplane }
-    }
-
-    pub fn new_in_3d(group: Group, quaternion: [f64; 4]) -> Self {
-        let [w, x, y, z] = quaternion;
-        Self::In3d { group, w, x, y, z }
+impl AsGroup for Normal {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            Self::OnWorkplane { group, .. } => group.handle(),
+            Self::In3d { group, .. } => group.handle(),
+        }
     }
 }
 
-impl AsEntityData for Normal {
-    fn from_system(sys: &System, entity_handle: &EntityHandle<Self>) -> Result<Self, &'static str> {
-        let slvs_entity = sys.slvs_entity(entity_handle.handle())?;
-
-        Ok(match slvs_entity.wrkpl {
-            0 => {
-                let [w, x, y, z] = slvs_entity.param;
-                Self::In3d {
-                    group: Group(slvs_entity.group),
-                    w: sys.slvs_param(w)?.val,
-                    x: sys.slvs_param(x)?.val,
-                    y: sys.slvs_param(y)?.val,
-                    z: sys.slvs_param(z)?.val,
-                }
-            }
-            h => Self::OnWorkplane {
-                group: Group(slvs_entity.group),
-                workplane: EntityHandle::new(h),
-            },
-        })
-    }
-
+impl AsSlvsType for Normal {
     fn slvs_type(&self) -> i32 {
         match self {
             Self::OnWorkplane { .. } => SLVS_E_NORMAL_IN_2D as _,
             Self::In3d { .. } => SLVS_E_NORMAL_IN_3D as _,
         }
     }
+}
 
+impl AsEntityData for Normal {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Self::OnWorkplane { workplane, .. } => Some(workplane.handle()),
@@ -70,35 +48,10 @@ impl AsEntityData for Normal {
         }
     }
 
-    fn group(&self) -> Slvs_hGroup {
-        match self {
-            Self::OnWorkplane { group, .. } => group.handle(),
-            Self::In3d { group, .. } => group.handle(),
-        }
-    }
-
     fn param_vals(&self) -> Option<Vec<f64>> {
         match self {
             Self::OnWorkplane { .. } => None,
             Self::In3d { w, x, y, z, .. } => Some(vec![*w, *x, *y, *z]),
-        }
-    }
-}
-
-impl From<Slvs_Entity> for Normal {
-    fn from(value: Slvs_Entity) -> Self {
-        match value.wrkpl {
-            0 => Self::In3d {
-                group: Group(value.group),
-                w: 0.0,
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            h => Self::OnWorkplane {
-                group: Group(value.group),
-                workplane: EntityHandle::new(h),
-            },
         }
     }
 }
