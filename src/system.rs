@@ -360,6 +360,7 @@ impl System {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl System {
+    // Check generate.cpp. Has info on mapping from entity to paramater
     pub fn set_dragged(&mut self, entity_handle: &EntityHandle<impl AsEntityData>) {
         if let Ok(slvs_entity) = self.slvs_entity(entity_handle.handle()) {
             self.dragged = slvs_entity.param;

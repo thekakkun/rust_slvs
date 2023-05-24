@@ -9,6 +9,7 @@ use crate::{
     System,
 };
 
+/// A non-rational cubic Bezier segment.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cubic<T: AsTarget> {
     pub group: Group,
@@ -20,6 +21,7 @@ pub struct Cubic<T: AsTarget> {
 }
 
 impl Cubic<OnWorkplane> {
+    /// Constructs a new `Cubic` on a workplane.
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
@@ -40,6 +42,7 @@ impl Cubic<OnWorkplane> {
 }
 
 impl Cubic<In3d> {
+    /// Constructs a new `Cubic` in 3d space.
     pub fn new(
         group: Group,
         start_point: EntityHandle<Point<In3d>>,

@@ -10,15 +10,22 @@ use crate::{
     System,
 };
 
+/// An entity used to define the radius of [Circle][crate::entity::Circle]
+///
+/// See the [module-level documentation][crate] for usage examples.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Distance<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
+    /// The value for the circle radius.
     pub val: f64,
+    /// Holds information on the sketch target to ensure that
+    /// Circle and Distance have the same dimensionality.
     phantom: PhantomData<T>,
 }
 
 impl Distance<OnWorkplane> {
+    /// Constructs a new `Distance` on a workplane.
     pub fn new(group: Group, workplane: EntityHandle<Workplane>, val: f64) -> Self {
         Self {
             group,
@@ -30,6 +37,7 @@ impl Distance<OnWorkplane> {
 }
 
 impl Distance<In3d> {
+    /// Constructs a new `Distance` in 3d space.
     pub fn new(group: Group, val: f64) -> Self {
         Self {
             group,

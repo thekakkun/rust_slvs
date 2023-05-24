@@ -9,17 +9,36 @@ use crate::{
     System,
 };
 
+/// A circular arc.
+///
+/// An arc must always lie within a workplane; it cannot be free in 3d.
+/// So it is specified with a workplane.
+///
+/// An extra constraint is generated automatically to ensure that
+/// `distance(center, beginning) = distance(center, end)`.
+///
+/// See the [module-level documentation][crate] for usage examples.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ArcOfCircle {
     pub group: Group,
     pub workplane: EntityHandle<Workplane>,
+
+    /// The center of the arc.
     pub center: EntityHandle<Point<OnWorkplane>>,
+
+    /// The start point for the arc. The arc runs counter-clockwise from this point.
     pub arc_start: EntityHandle<Point<OnWorkplane>>,
+
+    /// The end point for the arc. If `arc_start` and `arc_end` are coincident,
+    /// the arc is considered to represent a full circle.
     pub arc_end: EntityHandle<Point<OnWorkplane>>,
+
+    /// Identical to the normal of the workplane.
     pub normal: EntityHandle<Normal>,
 }
 
 impl ArcOfCircle {
+    /// Constructs a new `ArcOfCircle`.
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,

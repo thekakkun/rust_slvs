@@ -9,6 +9,9 @@ use crate::{
     System,
 };
 
+/// A line segment.
+///
+/// See the [module-level documentation][crate] for usage examples.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LineSegment<T: AsTarget> {
     pub group: Group,

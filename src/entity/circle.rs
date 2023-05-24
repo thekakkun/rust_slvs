@@ -10,16 +10,26 @@ use crate::{
     System,
 };
 
+/// A circle.
+///
+/// See the [module-level documentation][crate] for usage examples.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Circle<T: AsTarget> {
     pub group: Group,
     pub workplane: Option<EntityHandle<Workplane>>,
+
+    /// The center of the circle.
     pub center: EntityHandle<Point<T>>,
+
+    /// The radius of the circle is defined by a handle to the [Distance] entity.
     pub radius: EntityHandle<Distance<T>>,
+    /// The normal for the circle. This should be the normal for the workplane
+    /// if the circle lies on a workplane.
     pub normal: EntityHandle<Normal>,
 }
 
 impl Circle<OnWorkplane> {
+    /// Constructs a new `Circle` on a workplane.
     pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
@@ -38,6 +48,7 @@ impl Circle<OnWorkplane> {
 }
 
 impl Circle<In3d> {
+    /// Constructs a new `Circle` in 3d space.
     pub fn new(
         group: Group,
         center: EntityHandle<Point<In3d>>,
