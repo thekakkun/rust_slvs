@@ -6,6 +6,7 @@ use crate::{
     define_element,
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
+    System,
 };
 
 define_element!(
@@ -23,7 +24,7 @@ impl AsEntityData for LineSegment {
 }
 
 impl FromSystem for LineSegment {
-    fn from_system(sys: &crate::System, element: &impl AsHandle) -> Result<Self, &'static str>
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
     {
@@ -36,7 +37,7 @@ impl FromSystem for LineSegment {
                 point_b: EntityHandle::new(slvs_entity.point[1]),
             })
         } else {
-            Err("Expected entity to have type SLVS_E_LINE_SEGMENT")
+            Err("Expected entity to have type SLVS_E_LINE_SEGMENT.")
         }
     }
 }

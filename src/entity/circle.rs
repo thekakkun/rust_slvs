@@ -7,6 +7,7 @@ use crate::{
     define_element,
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
+    System,
 };
 
 define_element!(
@@ -33,7 +34,7 @@ impl AsEntityData for Circle {
 }
 
 impl FromSystem for Circle {
-    fn from_system(sys: &crate::System, element: &impl AsHandle) -> Result<Self, &'static str>
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
     {
@@ -47,7 +48,7 @@ impl FromSystem for Circle {
                 radius: EntityHandle::new(slvs_entity.distance),
             })
         } else {
-            Err("Expected entity to have type SLVS_E_CIRCLE")
+            Err("Expected entity to have type SLVS_E_CIRCLE.")
         }
     }
 }

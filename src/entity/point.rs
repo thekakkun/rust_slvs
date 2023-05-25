@@ -5,6 +5,7 @@ use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -57,7 +58,7 @@ impl AsEntityData for Point {
 }
 
 impl FromSystem for Point {
-    fn from_system(sys: &crate::System, element: &impl AsHandle) -> Result<Self, &'static str>
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
     {
@@ -94,7 +95,7 @@ impl FromSystem for Point {
                     coords,
                 })
             }
-            _ => Err("Expected entity to have type SLVS_E_POINT_IN_2D or SLVS_E_POINT_IN_3D"),
+            _ => Err("Expected entity to have type SLVS_E_POINT_IN_2D or SLVS_E_POINT_IN_3D."),
         }
     }
 }

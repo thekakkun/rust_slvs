@@ -6,6 +6,7 @@ use crate::{
     define_element,
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
+    System,
 };
 
 define_element!(
@@ -22,7 +23,7 @@ impl AsEntityData for Distance {
 }
 
 impl FromSystem for Distance {
-    fn from_system(sys: &crate::System, element: &impl AsHandle) -> Result<Self, &'static str>
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
     {
@@ -35,7 +36,7 @@ impl FromSystem for Distance {
                 val: distance_val,
             })
         } else {
-            Err("Expected entity to have type SLVS_E_DISTANCE")
+            Err("Expected entity to have type SLVS_E_DISTANCE.")
         }
     }
 }
