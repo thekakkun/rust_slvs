@@ -86,27 +86,23 @@ mod symmetric_vert;
 mod vertical;
 mod where_dragged;
 
-use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
-use std::{any::type_name, fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{
-        Slvs_Constraint, Slvs_hEntity, Slvs_hGroup, SLVS_C_ANGLE, SLVS_C_ARC_ARC_DIFFERENCE,
+        Slvs_Constraint, Slvs_hEntity, SLVS_C_ANGLE, SLVS_C_ARC_ARC_DIFFERENCE,
         SLVS_C_ARC_ARC_LEN_RATIO, SLVS_C_ARC_LINE_DIFFERENCE, SLVS_C_ARC_LINE_LEN_RATIO,
-        SLVS_C_ARC_LINE_TANGENT, SLVS_C_AT_MIDPOINT, SLVS_C_CUBIC_LINE_TANGENT,
-        SLVS_C_CURVE_CURVE_TANGENT, SLVS_C_DIAMETER, SLVS_C_EQUAL_ANGLE, SLVS_C_EQUAL_LENGTH_LINES,
-        SLVS_C_EQUAL_LINE_ARC_LEN, SLVS_C_EQUAL_RADIUS, SLVS_C_EQ_LEN_PT_LINE_D,
+        SLVS_C_ARC_LINE_TANGENT, SLVS_C_AT_MIDPOINT, SLVS_C_CUBIC_LINE_TANGENT, SLVS_C_EQUAL_ANGLE,
+        SLVS_C_EQUAL_LENGTH_LINES, SLVS_C_EQUAL_LINE_ARC_LEN, SLVS_C_EQ_LEN_PT_LINE_D,
         SLVS_C_EQ_PT_LN_DISTANCES, SLVS_C_HORIZONTAL, SLVS_C_LENGTH_DIFFERENCE,
         SLVS_C_LENGTH_RATIO, SLVS_C_PARALLEL, SLVS_C_PERPENDICULAR, SLVS_C_POINTS_COINCIDENT,
-        SLVS_C_PROJ_PT_DISTANCE, SLVS_C_PT_FACE_DISTANCE, SLVS_C_PT_IN_PLANE,
-        SLVS_C_PT_LINE_DISTANCE, SLVS_C_PT_ON_CIRCLE, SLVS_C_PT_ON_FACE, SLVS_C_PT_ON_LINE,
-        SLVS_C_PT_PLANE_DISTANCE, SLVS_C_PT_PT_DISTANCE, SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC,
-        SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE, SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL,
-        SLVS_C_WHERE_DRAGGED,
+        SLVS_C_PT_FACE_DISTANCE, SLVS_C_PT_IN_PLANE, SLVS_C_PT_LINE_DISTANCE, SLVS_C_PT_ON_FACE,
+        SLVS_C_PT_ON_LINE, SLVS_C_PT_PLANE_DISTANCE, SLVS_C_PT_PT_DISTANCE,
+        SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
+        SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
     },
-    element::{AsGroup, AsHandle, AsSlvsType},
-    System,
+    element::{AsAny, AsGroup, AsHandle, AsSlvsType},
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +110,116 @@ use crate::{
 ////////////////////////////////////////////////////////////////////////////////
 
 pub(crate) trait AsConstraintHandle: AsHandle {}
+
+impl AsAny for Box<dyn AsConstraintHandle> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+impl AsConstraintHandle for Box<dyn AsConstraintHandle> {}
+impl AsHandle for Box<dyn AsConstraintHandle> {
+    fn handle(&self) -> u32 {
+        self.as_ref().handle()
+    }
+}
+
+impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
+    fn from(value: Slvs_Constraint) -> Self {
+        match value.type_ as _ {
+            SLVS_C_POINTS_COINCIDENT => {
+                Box::new(ConstraintHandle::<PointsCoincident>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PT_PT_DISTANCE => Box::new(ConstraintHandle::<PtPtDistance>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_PT_PLANE_DISTANCE => Box::new(ConstraintHandle::<PtPlaneDistance>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_PT_LINE_DISTANCE => Box::new(ConstraintHandle::<PtLineDistance>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_PT_FACE_DISTANCE => Box::new(ConstraintHandle::<PtFaceDistance>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_PT_IN_PLANE => {
+                Box::new(ConstraintHandle::<PtInPlane>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PT_ON_LINE => {
+                Box::new(ConstraintHandle::<PtOnLine>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PT_ON_FACE => {
+                Box::new(ConstraintHandle::<PtOnFace>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_EQUAL_LENGTH_LINES => {
+                Box::new(ConstraintHandle::<EqualLengthLines>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_LENGTH_RATIO => Box::new(ConstraintHandle::<LengthRatio>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_EQ_LEN_PT_LINE_D => Box::new(ConstraintHandle::<EqLenPtLineD>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_EQ_PT_LN_DISTANCES => Box::new(ConstraintHandle::<PtLineDistance>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_EQUAL_ANGLE => Box::new(ConstraintHandle::<EqualAngle>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_EQUAL_LINE_ARC_LEN => {
+                Box::new(ConstraintHandle::<EqualLineArcLen>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_SYMMETRIC => {
+                Box::new(ConstraintHandle::<Symmetric>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_SYMMETRIC_HORIZ => Box::new(ConstraintHandle::<SymmetricHoriz>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_SYMMETRIC_VERT => Box::new(ConstraintHandle::<SymmetricVert>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_SYMMETRIC_LINE => Box::new(ConstraintHandle::<SymmetricLine>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_AT_MIDPOINT => Box::new(ConstraintHandle::<AtMidpoint>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_HORIZONTAL => Box::new(ConstraintHandle::<Horizontal>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_VERTICAL => {
+                Box::new(ConstraintHandle::<Vertical>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_SAME_ORIENTATION => Box::new(ConstraintHandle::<SameOrientation>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_ANGLE => {
+                Box::new(ConstraintHandle::<Angle>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PARALLEL => {
+                Box::new(ConstraintHandle::<Parallel>::new(value.h)) as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PERPENDICULAR => Box::new(ConstraintHandle::<Perpendicular>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_ARC_LINE_TANGENT => Box::new(ConstraintHandle::<ArcLineTangent>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_CUBIC_LINE_TANGENT => {
+                Box::new(ConstraintHandle::<CubicLineTangent>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_WHERE_DRAGGED => Box::new(ConstraintHandle::<WhereDragged>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_LENGTH_DIFFERENCE => {
+                Box::new(ConstraintHandle::<LengthDifference>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_ARC_ARC_LEN_RATIO => Box::new(ConstraintHandle::<ArcArcLenRatio>::new(value.h))
+                as Box<dyn AsConstraintHandle>,
+            SLVS_C_ARC_LINE_LEN_RATIO => {
+                Box::new(ConstraintHandle::<ArcLineLenRatio>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_ARC_ARC_DIFFERENCE => {
+                Box::new(ConstraintHandle::<ArcArcDifference>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_ARC_LINE_DIFFERENCE => {
+                Box::new(ConstraintHandle::<ArcLineDifference>::new(value.h))
+                    as Box<dyn AsConstraintHandle>
+            }
+            _ => panic!("Unknown Slvs_Constraint type value {}", value.type_),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConstraintHandle<C: AsConstraintData> {
@@ -166,100 +272,3 @@ mod private {
     pub trait Sealed {}
     impl<C: AsConstraintData> Sealed for C {}
 }
-
-// #[enum_dispatch(SomeConstraintHandle)]
-// pub trait AsConstraintHandle: AsHandle {}
-// impl<C: AsConstraintData> AsConstraintHandle for ConstraintHandle<C> {}
-
-// #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-// #[enum_dispatch]
-// pub enum SomeConstraintHandle {
-//     Angle(ConstraintHandle<Angle>),
-//     ArcArcDifference(ConstraintHandle<ArcArcDifference>),
-//     ArcArcLenRatio(ConstraintHandle<ArcArcLenRatio>),
-//     ArcLineDifference(ConstraintHandle<ArcLineDifference>),
-//     ArcLineLenRatio(ConstraintHandle<ArcLineLenRatio>),
-//     ArcLineTangent(ConstraintHandle<ArcLineTangent>),
-//     AtMidpoint(ConstraintHandle<AtMidpoint>),
-//     CubicLineTangent(ConstraintHandle<CubicLineTangent>),
-//     CurveCurveTangent(ConstraintHandle<CurveCurveTangent>),
-//     Diameter(ConstraintHandle<Diameter>),
-//     EqLenPtLineD(ConstraintHandle<EqLenPtLineD>),
-//     EqPtLnDistances(ConstraintHandle<EqPtLnDistances>),
-//     EqualAngle(ConstraintHandle<EqualAngle>),
-//     EqualLengthLines(ConstraintHandle<EqualLengthLines>),
-//     EqualLineArcLen(ConstraintHandle<EqualLineArcLen>),
-//     EqualRadius(ConstraintHandle<EqualRadius>),
-//     Horizontal(ConstraintHandle<Horizontal>),
-//     LengthDifference(ConstraintHandle<LengthDifference>),
-//     LengthRatio(ConstraintHandle<LengthRatio>),
-//     Parallel(ConstraintHandle<Parallel>),
-//     Perpendicular(ConstraintHandle<Perpendicular>),
-//     PointsCoincident(ConstraintHandle<PointsCoincident>),
-//     ProjPtDistance(ConstraintHandle<ProjPtDistance>),
-//     PtFaceDistance(ConstraintHandle<PtFaceDistance>),
-//     PtInPlane(ConstraintHandle<PtInPlane>),
-//     PtLineDistance(ConstraintHandle<PtLineDistance>),
-//     PtOnCircle(ConstraintHandle<PtOnCircle>),
-//     PtOnFace(ConstraintHandle<PtOnFace>),
-//     PtOnLine(ConstraintHandle<PtOnLine>),
-//     PtPlaneDistance(ConstraintHandle<PtPlaneDistance>),
-//     PtPtDistance(ConstraintHandle<PtPtDistance>),
-//     SameOrientation(ConstraintHandle<SameOrientation>),
-//     Symmetric(ConstraintHandle<Symmetric>),
-//     SymmetricHoriz(ConstraintHandle<SymmetricHoriz>),
-//     SymmetricLine(ConstraintHandle<SymmetricLine>),
-//     SymmetricVert(ConstraintHandle<SymmetricVert>),
-//     Vertical(ConstraintHandle<Vertical>),
-//     WhereDragged(ConstraintHandle<WhereDragged>),
-// }
-
-// impl From<Slvs_Constraint> for SomeConstraintHandle {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         match value.type_ as _ {
-//             SLVS_C_POINTS_COINCIDENT => Self::PointsCoincident(value.into()),
-//             SLVS_C_PT_PT_DISTANCE => Self::PtPtDistance(value.into()),
-//             SLVS_C_PT_PLANE_DISTANCE => Self::PtPlaneDistance(value.into()),
-//             SLVS_C_PT_LINE_DISTANCE => Self::PtLineDistance(value.into()),
-//             SLVS_C_PT_FACE_DISTANCE => Self::PtFaceDistance(value.into()),
-//             SLVS_C_PT_IN_PLANE => Self::PtInPlane(value.into()),
-//             SLVS_C_PT_ON_LINE => Self::PtOnLine(value.into()),
-//             SLVS_C_PT_ON_FACE => Self::PtOnFace(value.into()),
-//             SLVS_C_EQUAL_LENGTH_LINES => Self::EqualLengthLines(value.into()),
-//             SLVS_C_LENGTH_RATIO => Self::LengthRatio(value.into()),
-//             SLVS_C_EQ_LEN_PT_LINE_D => Self::EqLenPtLineD(value.into()),
-//             SLVS_C_EQ_PT_LN_DISTANCES => Self::EqPtLnDistances(value.into()),
-//             SLVS_C_EQUAL_ANGLE => Self::EqualAngle(value.into()),
-//             SLVS_C_EQUAL_LINE_ARC_LEN => Self::EqualLineArcLen(value.into()),
-//             SLVS_C_SYMMETRIC => Self::Symmetric(value.into()),
-//             SLVS_C_SYMMETRIC_HORIZ => Self::SymmetricHoriz(value.into()),
-//             SLVS_C_SYMMETRIC_VERT => Self::SymmetricVert(value.into()),
-//             SLVS_C_SYMMETRIC_LINE => Self::SymmetricLine(value.into()),
-//             SLVS_C_AT_MIDPOINT => Self::AtMidpoint(value.into()),
-//             SLVS_C_HORIZONTAL => Self::Horizontal(value.into()),
-//             SLVS_C_VERTICAL => Self::Vertical(value.into()),
-//             SLVS_C_DIAMETER => Self::Diameter(value.into()),
-//             SLVS_C_PT_ON_CIRCLE => Self::PtOnCircle(value.into()),
-//             SLVS_C_SAME_ORIENTATION => Self::SameOrientation(value.into()),
-//             SLVS_C_ANGLE => Self::Angle(value.into()),
-//             SLVS_C_PARALLEL => Self::Parallel(value.into()),
-//             SLVS_C_PERPENDICULAR => Self::Perpendicular(value.into()),
-//             SLVS_C_ARC_LINE_TANGENT => Self::ArcLineTangent(value.into()),
-//             SLVS_C_CUBIC_LINE_TANGENT => Self::CubicLineTangent(value.into()),
-//             SLVS_C_EQUAL_RADIUS => Self::EqualRadius(value.into()),
-//             SLVS_C_PROJ_PT_DISTANCE => Self::ProjPtDistance(value.into()),
-//             SLVS_C_WHERE_DRAGGED => Self::WhereDragged(value.into()),
-//             SLVS_C_CURVE_CURVE_TANGENT => Self::CurveCurveTangent(value.into()),
-//             SLVS_C_LENGTH_DIFFERENCE => Self::LengthDifference(value.into()),
-//             SLVS_C_ARC_ARC_LEN_RATIO => Self::ArcArcLenRatio(value.into()),
-//             SLVS_C_ARC_LINE_LEN_RATIO => Self::ArcLineLenRatio(value.into()),
-//             SLVS_C_ARC_ARC_DIFFERENCE => Self::ArcArcDifference(value.into()),
-//             SLVS_C_ARC_LINE_DIFFERENCE => Self::ArcLineDifference(value.into()),
-//             _ => panic!("Unknown Slvs_Constraint type value {}", value.type_),
-//         }
-//     }
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////
-// // Entity Data
-// ////////////////////////////////////////////////////////////////////////////////
