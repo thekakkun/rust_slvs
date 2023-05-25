@@ -19,8 +19,8 @@ define_element!(
 );
 
 impl AsEntityData for Circle {
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.center.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.center.handle(), 0, 0, 0])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
@@ -115,7 +115,7 @@ impl AsEntityData for Circle {
 //         self.group.handle()
 //     }
 
-//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
 //         Some(vec![self.center.handle()])
 //     }
 

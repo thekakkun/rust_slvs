@@ -17,8 +17,8 @@ define_element!(
 );
 
 impl AsEntityData for Workplane {
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.origin.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.origin.handle(), 0, 0, 0])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
@@ -69,7 +69,7 @@ impl AsEntityData for Workplane {
 //     self.group.handle()
 // }
 
-// fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+// fn points(&self) -> Option<[Slvs_hEntity; 4]> {
 //     Some(vec![self.origin.handle()])
 // }
 

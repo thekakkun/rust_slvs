@@ -48,10 +48,10 @@ impl AsEntityData for Normal {
         }
     }
 
-    fn param_vals(&self) -> Option<Vec<f64>> {
+    fn param_vals(&self) -> [Option<f64>; 4] {
         match self {
-            Self::OnWorkplane { .. } => None,
-            Self::In3d { w, x, y, z, .. } => Some(vec![*w, *x, *y, *z]),
+            Self::OnWorkplane { .. } => [None, None, None, None],
+            Self::In3d { w, x, y, z, .. } => [Some(*w), Some(*x), Some(*y), Some(*z)],
         }
     }
 }

@@ -32,11 +32,12 @@ impl AsEntityData for ArcOfCircle {
         Some(self.workplane.handle())
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([
             self.center.handle(),
             self.arc_start.handle(),
             self.arc_end.handle(),
+            0,
         ])
     }
 }
@@ -88,7 +89,7 @@ impl AsEntityData for ArcOfCircle {
 //         self.group.handle()
 //     }
 
-//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
 //         Some(vec![
 //             self.center.handle(),
 //             self.arc_start.handle(),

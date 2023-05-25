@@ -15,8 +15,8 @@ define_element!(
     }
 );
 impl AsEntityData for Distance {
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(vec![self.val])
+    fn param_vals(&self) -> [Option<f64>; 4] {
+        [Some(self.val), None, None, None]
     }
 }
 

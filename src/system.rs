@@ -4,7 +4,8 @@ use std::iter::zip;
 use crate::{
     bindings::{
         Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_Solve, Slvs_System, Slvs_hConstraint,
-        Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_E_NORMAL_IN_3D,
+        Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_E_ARC_OF_CIRCLE, SLVS_E_NORMAL_IN_3D,
+        SLVS_FREE_IN_3D,
     },
     constraint::{AsConstraintData, ConstraintHandle},
     element::AsHandle,
@@ -80,38 +81,35 @@ impl System {
         &mut self,
         entity_data: E,
     ) -> Result<EntityHandle<E>, &'static str> {
-        self.validate_entity_data(&entity_data)?;
+        let workplane_h = self.sketch_target(&entity_data)?;
 
-        let mut new_slvs_entity = Slvs_Entity::new(
-            self.entities.get_next_h(),
-            entity_data.group(),
-            entity_data.slvs_type(),
-        );
+        // ArcOfCircle requires a Normal, which is identical to its workplane's normal
+        let normal_h = if SLVS_E_ARC_OF_CIRCLE == entity_data.slvs_type() as _ {
+            let slvs_workplane = self.slvs_entity(entity_data.workplane().unwrap())?;
+            (*slvs_workplane).normal
+        } else {
+            entity_data.normal().unwrap_or(0)
+        };
 
-        if let Some(workplane) = entity_data.workplane() {
-            new_slvs_entity.set_workplane(workplane);
-        }
-        if let Some(points) = entity_data.points() {
-            new_slvs_entity.set_point(points);
-        }
-        if let Some(normal) = entity_data.normal() {
-            new_slvs_entity.set_normal(normal);
-        }
-        if let Some(distance) = entity_data.distance() {
-            new_slvs_entity.set_distance(distance);
-        }
-        if let Some(param_vals) = entity_data.param_vals() {
-            new_slvs_entity.set_param(
-                param_vals
-                    .into_iter()
-                    .map(|val| self.add_param(entity_data.group(), val))
-                    .collect(),
-            );
-        }
+        let param_h = entity_data.param_vals().map(|val| match val {
+            Some(val) => self.add_param(entity_data.group(), val),
+            None => 0,
+        });
 
-        self.entities.list.push(new_slvs_entity);
+        let slvs_entity = Slvs_Entity {
+            h: self.entities.get_next_h(),
+            group: entity_data.group(),
+            type_: entity_data.slvs_type(),
+            wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
+            point: entity_data.points().unwrap_or([0, 0, 0, 0]),
+            normal: normal_h,
+            distance: entity_data.distance().unwrap_or(0),
+            param: param_h,
+        };
 
-        let entity_handle = EntityHandle::new(new_slvs_entity.h);
+        self.entities.list.push(slvs_entity);
+
+        let entity_handle = EntityHandle::new(slvs_entity.h);
 
         Ok(entity_handle)
     }
@@ -463,47 +461,81 @@ impl System {
         Ok(&mut self.entities.list[ix])
     }
 
-    // Checks that all elements referenced within entity_data exist and are on the expected workplane
-    pub(crate) fn validate_entity_data(
+    pub(crate) fn sketch_target<E: AsEntityData>(
         &self,
-        entity_data: &impl AsEntityData,
-    ) -> Result<(), &'static str> {
-        if let Some(points) = entity_data.points() {
-            let all_points_valid: Result<Vec<_>, _> = points
-                .into_iter()
-                .map(|point| {
-                    if let Some(workplane_h) = entity_data.workplane() {
-                        self.entity_on_workplane(point, workplane_h)
-                            .map_err(|_| "Point not on expected workplane.")
-                    } else {
-                        self.slvs_entity(point).map(|_| ())
-                    }
-                })
-                .collect();
-            all_points_valid?;
+        entity_data: &E,
+    ) -> Result<Option<Slvs_hEntity>, &'static str> {
+        let slvs_workplane = entity_data
+            .workplane()
+            .map(|h| self.slvs_entity(h))
+            .transpose()?;
+
+        let mut referenced_workplanes = Vec::new();
+
+        let slvs_points = entity_data
+            .points()
+            .map(|points| {
+                points
+                    .iter()
+                    .filter_map(|h| match h {
+                        0 => None,
+                        _ => Some(self.slvs_entity(*h)),
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()?;
+
+        if let Some(points) = slvs_points {
+            let point_workplanes: Vec<_> = points.iter().map(|point| point.h).collect();
+
+            if let Some(workplane) = slvs_workplane {
+                if !point_workplanes
+                    .iter()
+                    .all(|point_workplane| *point_workplane == workplane.h)
+                {
+                    return Err("Referenced points should all lie on workplane");
+                }
+            }
+
+            referenced_workplanes.extend(point_workplanes)
         }
 
-        if let Some(normal) = entity_data.normal() {
-            let normal_valid = if let Some(workplane_h) = entity_data.workplane() {
-                self.entity_on_workplane(normal, workplane_h)
-                    .map_err(|_| "Normal not on expected workplane.")
-            } else {
-                self.slvs_entity(normal).map(|_| ())
-            };
-            normal_valid?;
+        let slvs_normal = entity_data
+            .normal()
+            .map(|h| self.slvs_entity(h))
+            .transpose()?;
+        if let Some(normal) = slvs_normal {
+            if let Some(workplane) = slvs_workplane {
+                if normal.h != workplane.h {
+                    return Err("Referenced normal should lie on workplane");
+                }
+            }
+
+            referenced_workplanes.push(normal.h);
         }
 
-        if let Some(distance) = entity_data.distance() {
-            let distance_valid = if let Some(workplane_h) = entity_data.workplane() {
-                self.entity_on_workplane(distance, workplane_h)
-                    .map_err(|_| "Distance not on expected workplane.")
-            } else {
-                self.slvs_entity(distance).map(|_| ())
-            };
-            distance_valid?;
+        let slvs_distance = entity_data
+            .distance()
+            .map(|h| self.slvs_entity(h))
+            .transpose()?;
+
+        if let Some(distance) = slvs_distance {
+            if let Some(workplane) = slvs_workplane {
+                if distance.h != workplane.h {
+                    return Err("Referenced distance should lie on workplane");
+                }
+            }
+
+            referenced_workplanes.push(distance.h);
         }
 
-        Ok(())
+        match referenced_workplanes
+            .iter()
+            .all(|workplane| *workplane == referenced_workplanes[0])
+        {
+            true => Ok(Some(referenced_workplanes[0])),
+            false => Ok(None),
+        }
     }
 
     pub(crate) fn constraint_ix(&self, h: Slvs_hConstraint) -> Result<usize, &'static str> {

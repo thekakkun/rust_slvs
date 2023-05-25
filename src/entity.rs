@@ -101,7 +101,7 @@ pub trait AsEntityData: private::Sealed + AsGroup + AsSlvsType {
         None
     }
     #[doc(hidden)]
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
         None
     }
     #[doc(hidden)]
@@ -113,8 +113,8 @@ pub trait AsEntityData: private::Sealed + AsGroup + AsSlvsType {
         None
     }
     #[doc(hidden)]
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        None
+    fn param_vals(&self) -> [Option<f64>; 4] {
+        [None, None, None, None]
     }
 }
 

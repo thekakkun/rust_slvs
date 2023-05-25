@@ -46,10 +46,12 @@ impl AsEntityData for Point {
         }
     }
 
-    fn param_vals(&self) -> Option<Vec<f64>> {
+    fn param_vals(&self) -> [Option<f64>; 4] {
         match self {
-            Point::OnWorkplane { coords, .. } => Some((*coords).into()),
-            Point::In3d { coords, .. } => Some((*coords).into()),
+            Point::OnWorkplane { coords: [u, v], .. } => [Some(*u), Some(*v), None, None],
+            Point::In3d {
+                coords: [x, y, z], ..
+            } => [Some(*x), Some(*y), Some(*z), None],
         }
     }
 }

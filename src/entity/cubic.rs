@@ -19,8 +19,8 @@ define_element!(
 );
 
 impl AsEntityData for Cubic {
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([
             self.start_point.handle(),
             self.start_control.handle(),
             self.end_control.handle(),
@@ -110,7 +110,7 @@ impl AsEntityData for Cubic {
 //         self.group.handle()
 //     }
 
-//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
 //         Some(vec![
 //             self.start_point.handle(),
 //             self.start_control.handle(),

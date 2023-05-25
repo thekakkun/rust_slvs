@@ -17,8 +17,8 @@ define_element!(
 );
 
 impl AsEntityData for LineSegment {
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.point_a.handle(), self.point_b.handle(), 0, 0])
     }
 }
 
@@ -91,7 +91,7 @@ impl AsEntityData for LineSegment {
 //         self.group.handle()
 //     }
 
-//     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+//     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
 //         Some(vec![self.point_a.handle(), self.point_b.handle()])
 //     }
 // }
