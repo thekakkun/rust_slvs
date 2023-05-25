@@ -169,7 +169,7 @@ impl System {
         self.groups.list.clone()
     }
 
-    pub fn entity_handles(&self, group: Option<&Group>) -> Vec<SomeEntityHandle> {
+    pub fn entity_handles(&self, group: Option<&Group>) -> Vec<Box<dyn AsEntityHandle>> {
         self.entities
             .list
             .iter()

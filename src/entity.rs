@@ -28,25 +28,63 @@ mod normal;
 mod point;
 mod workplane;
 
-use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
-use std::{
-    any::{type_name, TypeId},
-    fmt::Debug,
-    marker::PhantomData,
-};
+use std::{any::Any, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{
-        Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC,
+        Slvs_Entity, Slvs_hEntity, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE, SLVS_E_CUBIC,
         SLVS_E_DISTANCE, SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D,
         SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
     },
-    element::{AsGroup, AsHandle, AsSlvsType},
-    System,
+    element::{AsAny, AsGroup, AsHandle, AsSlvsType},
 };
 
 pub(crate) trait AsEntityHandle: AsHandle {}
+
+impl AsAny for Box<dyn AsEntityHandle> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+impl AsEntityHandle for Box<dyn AsEntityHandle> {}
+impl AsHandle for Box<dyn AsEntityHandle> {
+    fn handle(&self) -> u32 {
+        self.as_ref().handle()
+    }
+}
+
+impl From<Slvs_Entity> for Box<dyn AsEntityHandle> {
+    fn from(value: Slvs_Entity) -> Self {
+        match value.type_ as _ {
+            SLVS_E_ARC_OF_CIRCLE => {
+                Box::new(EntityHandle::<ArcOfCircle>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_CIRCLE => {
+                Box::new(EntityHandle::<Circle>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_CUBIC => {
+                Box::new(EntityHandle::<Cubic>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_DISTANCE => {
+                Box::new(EntityHandle::<Distance>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_LINE_SEGMENT => {
+                Box::new(EntityHandle::<LineSegment>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
+                Box::new(EntityHandle::<Normal>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_POINT_IN_2D | SLVS_E_POINT_IN_3D => {
+                Box::new(EntityHandle::<Point>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            SLVS_E_WORKPLANE => {
+                Box::new(EntityHandle::<Workplane>::new(value.h)) as Box<dyn AsEntityHandle>
+            }
+            _ => panic!("Unknown Slvs_Entity type value {}", value.type_),
+        }
+    }
+}
 
 /// Wrapper for an entity handle.
 ///
@@ -71,6 +109,17 @@ impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
 impl<E: AsEntityData> AsHandle for EntityHandle<E> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+impl<E: AsEntityData> TryFrom<Box<dyn AsEntityHandle>> for EntityHandle<E> {
+    type Error = &'static str;
+    fn try_from(value: Box<dyn AsEntityHandle>) -> Result<Self, Self::Error> {
+        if let Some(&entity_handle) = value.as_any().downcast_ref::<EntityHandle<E>>() {
+            Ok(entity_handle)
+        } else {
+            Err("Can only downcast boxed value into same type")
+        }
     }
 }
 

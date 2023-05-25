@@ -1,16 +1,7 @@
+use std::any::Any;
+
 use crate::bindings::Slvs_hGroup;
 
-use enum_dispatch::enum_dispatch;
-
-#[enum_dispatch(
-    ArcHandle,
-    CurveHandle,
-    LineSegmentHandle,
-    PointHandle,
-    ProjectionTargetHandle,
-    SomeEntityHandle,
-    SomeConstraintHandle
-)]
 pub trait AsHandle: private::Sealed {
     fn handle(&self) -> u32;
 }
@@ -21,6 +12,10 @@ pub trait AsGroup {
 
 pub trait AsSlvsType {
     fn slvs_type(&self) -> i32;
+}
+
+pub trait AsAny {
+    fn as_any(&self) -> &dyn Any;
 }
 
 #[macro_export]
