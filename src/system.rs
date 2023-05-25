@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::iter::zip;
 
 use crate::{
     bindings::{
@@ -240,34 +239,35 @@ impl System {
         E: AsEntityData,
         F: FnOnce(&mut E),
     {
+        let slvs_entity = self.mut_slvs_entity(entity_handle.handle())?;
+
         let mut entity_data = self.entity_data(entity_handle)?;
-
         f(&mut entity_data);
-        self.validate_entity_data(&entity_data)?;
 
-        let param_h = {
-            let slvs_entity = self.mut_slvs_entity(entity_handle.handle()).unwrap();
+        let workplane_h = self.sketch_target(&entity_data)?;
+        slvs_entity.wrkpl = workplane_h.unwrap_or(SLVS_FREE_IN_3D);
 
-            slvs_entity.set_group(entity_data.group());
+        slvs_entity.point = entity_data.points().unwrap_or([0, 0, 0, 0]);
 
-            if let Some(points) = entity_data.points() {
-                slvs_entity.set_point(points);
-            }
-            if let Some(normal) = entity_data.normal() {
-                slvs_entity.set_normal(normal);
-            }
-            if let Some(distance) = entity_data.distance() {
-                slvs_entity.set_distance(distance);
-            }
-
-            slvs_entity.param
+        // ArcOfCircle requires a Normal, which is identical to its workplane's normal
+        let normal_h = if SLVS_E_ARC_OF_CIRCLE == entity_data.slvs_type() as _ {
+            let slvs_workplane = self.slvs_entity(entity_data.workplane().unwrap())?;
+            (*slvs_workplane).normal
+        } else {
+            entity_data.normal().unwrap_or(0)
         };
+        slvs_entity.normal = normal_h;
 
-        if let Some(param_vals) = entity_data.param_vals() {
-            for (h, val) in zip(param_h, param_vals) {
-                self.update_param(h, entity_data.group(), val)?;
-            }
-        }
+        slvs_entity.distance = entity_data.distance().unwrap_or(0);
+
+        entity_data
+            .param_vals()
+            .iter()
+            .enumerate()
+            .for_each(|(i, Some(val))| {
+                self.update_param(slvs_entity.param[i], entity_data.group(), *val);
+            });
+
         Ok(entity_data)
     }
 
