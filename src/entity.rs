@@ -37,7 +37,7 @@ use crate::{
         SLVS_E_DISTANCE, SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D,
         SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
     },
-    element::{AsAny, AsGroup, AsHandle, AsSlvsType},
+    element::{AsAny, AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
 
 pub(crate) trait AsEntityHandle: AsHandle {}
@@ -144,7 +144,7 @@ impl AsProjectionTarget for Normal {}
 /// An object that holds information about an entity.
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
-pub trait AsEntityData: private::Sealed + AsGroup + AsSlvsType {
+pub trait AsEntityData: private::Sealed + AsGroup + AsSlvsType + FromSystem {
     #[doc(hidden)]
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None

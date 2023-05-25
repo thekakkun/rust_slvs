@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
 };
 
@@ -52,6 +52,33 @@ impl AsEntityData for Normal {
         match self {
             Self::OnWorkplane { .. } => [None, None, None, None],
             Self::In3d { w, x, y, z, .. } => [Some(*w), Some(*x), Some(*y), Some(*z)],
+        }
+    }
+}
+
+impl FromSystem for Normal {
+    fn from_system(sys: &crate::System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
+
+        match slvs_entity.type_ as _ {
+            SLVS_E_NORMAL_IN_2D => Ok(Self::OnWorkplane {
+                group: Group(slvs_entity.group),
+                workplane: EntityHandle::new(slvs_entity.wrkpl),
+            }),
+            SLVS_E_NORMAL_IN_3D => {
+                let [w, x, y, z] = slvs_entity.param.map(|param_h| sys.slvs_param(param_h));
+                Ok(Self::In3d {
+                    group: Group(slvs_entity.group),
+                    w: w?.val,
+                    x: x?.val,
+                    y: y?.val,
+                    z: z?.val,
+                })
+            }
+            _ => Err("Expected entity to have type SLVS_E_NORMAL_IN_2D or SLVS_E_NORMAL_IN_3D"),
         }
     }
 }
