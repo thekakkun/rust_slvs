@@ -31,5 +31,4 @@ cc = "1.0.79"
 dunce = "1.0.3"
 
 [dependencies]
-enum_dispatch = "0.3.11"
 serde = { version = "1.0", features = ["derive"] }
