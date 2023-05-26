@@ -25,12 +25,12 @@ impl AsConstraintData for EqLenPtLineD {
         self.workplane.map(|workplane| workplane.handle())
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.line_a.handle(), self.line_b.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.line_a.handle(), self.line_b.handle(), 0, 0])
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point.handle(), 0])
     }
 }
 

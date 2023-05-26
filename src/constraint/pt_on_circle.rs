@@ -43,12 +43,12 @@ impl<R: AsRadiused> AsConstraintData for PtOnCircle<R> {
         None
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.circle.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.circle.handle(), 0, 0, 0])
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point.handle(), 0])
     }
 }
 

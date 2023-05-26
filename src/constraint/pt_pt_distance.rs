@@ -29,8 +29,8 @@ impl AsConstraintData for PtPtDistance {
         Some(self.distance)
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point_a.handle(), self.point_b.handle()])
     }
 }
 

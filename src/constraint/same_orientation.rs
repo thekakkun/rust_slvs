@@ -23,8 +23,8 @@ impl AsConstraintData for SameOrientation {
         None
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.normal_a.handle(), self.normal_b.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.normal_a.handle(), self.normal_b.handle(), 0, 0])
     }
 }
 

@@ -63,8 +63,8 @@ where
         None
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.radius_a.handle(), self.radius_b.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.radius_a.handle(), self.radius_b.handle(), 0, 0])
     }
 }
 

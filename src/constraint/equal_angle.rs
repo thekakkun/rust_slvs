@@ -26,8 +26,8 @@ impl AsConstraintData for EqualAngle {
         self.workplane.map(|workplane| workplane.handle())
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([
             self.line_a.handle(),
             self.line_b.handle(),
             self.line_c.handle(),

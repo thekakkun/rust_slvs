@@ -25,8 +25,8 @@ impl AsConstraintData for CubicLineTangent {
         Some(self.workplane.handle())
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.cubic.handle(), self.line.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.cubic.handle(), self.line.handle(), 0, 0])
     }
 
     fn others(&self) -> [bool; 2] {

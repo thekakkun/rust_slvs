@@ -43,8 +43,8 @@ impl<R: AsRadiused> AsConstraintData for Diameter<R> {
         None
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.radius.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.radius.handle(), 0, 0, 0])
     }
 
     fn val(&self) -> Option<f64> {

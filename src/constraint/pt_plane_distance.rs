@@ -23,12 +23,12 @@ impl AsConstraintData for PtPlaneDistance {
         None
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point.handle(), 0])
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.plane.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.plane.handle(), 0, 0, 0])
     }
 
     fn val(&self) -> Option<f64> {

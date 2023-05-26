@@ -24,8 +24,8 @@ impl AsConstraintData for ArcArcLenRatio {
         None
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.arc_a.handle(), self.arc_b.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.arc_a.handle(), self.arc_b.handle(), 0, 0])
     }
 
     fn val(&self) -> Option<f64> {

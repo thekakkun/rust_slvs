@@ -75,19 +75,19 @@ impl AsConstraintData for Vertical {
         }
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
         match self {
             Vertical::Points {
                 point_a, point_b, ..
-            } => Some(vec![point_a.handle(), point_b.handle()]),
+            } => Some([point_a.handle(), point_b.handle()]),
             Vertical::Line { .. } => None,
         }
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
         match self {
             Vertical::Points { .. } => None,
-            Vertical::Line { line, .. } => Some(vec![line.handle()]),
+            Vertical::Line { line, .. } => Some([line.handle(), 0, 0, 0]),
         }
     }
 }

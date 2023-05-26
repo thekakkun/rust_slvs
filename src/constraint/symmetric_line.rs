@@ -25,12 +25,12 @@ impl AsConstraintData for SymmetricLine {
         Some(self.workplane.handle())
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point_a.handle(), self.point_b.handle()])
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.line.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.line.handle(), 0, 0, 0])
     }
 }
 

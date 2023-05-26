@@ -126,29 +126,30 @@ impl System {
     ) -> Result<ConstraintHandle<C>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
-        let mut new_slvs_constraint = Slvs_Constraint::new(
-            self.constraints.get_next_h(),
-            constraint_data.group(),
-            constraint_data.slvs_type(),
-        );
+        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0, 0]);
+        let [entity_a, entity_b, entity_c, entity_d] =
+            constraint_data.entities().unwrap_or([0, 0, 0, 0]);
+        let [other, other2] = constraint_data.others();
 
-        if let Some(workplane) = constraint_data.workplane() {
-            new_slvs_constraint.set_workplane(workplane)
-        }
-        if let Some(val) = constraint_data.val() {
-            new_slvs_constraint.set_val(val);
-        }
-        if let Some(points) = constraint_data.points() {
-            new_slvs_constraint.set_points(points);
-        }
-        if let Some(entities) = constraint_data.entities() {
-            new_slvs_constraint.set_entities(entities)
-        }
-        new_slvs_constraint.set_others(constraint_data.others());
+        let slvs_constraint = Slvs_Constraint {
+            h: self.constraints.get_next_h(),
+            group: constraint_data.group(),
+            type_: constraint_data.slvs_type(),
+            wrkpl: constraint_data.workplane().unwrap_or(SLVS_FREE_IN_3D),
+            valA: constraint_data.val().unwrap_or(0.0),
+            ptA: pt_a,
+            ptB: pt_b,
+            entityA: entity_a,
+            entityB: entity_b,
+            entityC: entity_c,
+            entityD: entity_d,
+            other: other as _,
+            other2: other2 as _,
+        };
 
-        self.constraints.list.push(new_slvs_constraint);
+        self.constraints.list.push(slvs_constraint);
 
-        let constraint_handle = ConstraintHandle::new(new_slvs_constraint.h);
+        let constraint_handle = ConstraintHandle::new(slvs_constraint.h);
 
         Ok(constraint_handle)
     }
@@ -371,6 +372,7 @@ impl System {
         let param_h = {
             let slvs_entity = self.mut_slvs_entity(entity_handle.handle())?;
 
+            slvs_entity.group = entity_data.group();
             slvs_entity.wrkpl = workplane_h.unwrap_or(SLVS_FREE_IN_3D);
             slvs_entity.point = entity_data.points().unwrap_or([0, 0, 0, 0]);
             slvs_entity.normal = normal_h;
@@ -400,25 +402,28 @@ impl System {
         F: FnOnce(&mut C),
     {
         let mut constraint_data = self.constraint_data(constraint_handle)?;
-
         f(&mut constraint_data);
         self.validate_constraint_data(&constraint_data)?;
 
-        let slvs_constraint = self
-            .mut_slvs_constraint(constraint_handle.handle())
-            .unwrap();
-        slvs_constraint.set_group(constraint_data.group());
+        let slvs_constraint = self.mut_slvs_constraint(constraint_handle.handle())?;
+        slvs_constraint.group = constraint_data.group();
+        slvs_constraint.valA = constraint_data.val().unwrap_or(0.0);
 
-        if let Some(val) = constraint_data.val() {
-            slvs_constraint.set_val(val);
-        }
-        if let Some(points) = constraint_data.points() {
-            slvs_constraint.set_points(points);
-        }
-        if let Some(entities) = constraint_data.entities() {
-            slvs_constraint.set_entities(entities);
-        }
-        slvs_constraint.set_others(constraint_data.others());
+        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0, 0]);
+        slvs_constraint.ptA = pt_a;
+        slvs_constraint.ptB = pt_b;
+
+        let [entity_a, entity_b, entity_c, entity_d] =
+            constraint_data.entities().unwrap_or([0, 0, 0, 0]);
+
+        slvs_constraint.entityA = entity_a;
+        slvs_constraint.entityB = entity_b;
+        slvs_constraint.entityC = entity_c;
+        slvs_constraint.entityD = entity_d;
+
+        let [other, other2] = constraint_data.others();
+        slvs_constraint.other = other as _;
+        slvs_constraint.other2 = other2 as _;
 
         Ok(constraint_data)
     }
@@ -628,18 +633,24 @@ impl System {
         &self,
         constraint_data: &impl AsConstraintData,
     ) -> Result<(), &'static str> {
-        if let Some(points) = constraint_data.points() {
-            let all_points_valid: Result<Vec<_>, _> = points
+        if let Some(points_h) = constraint_data.points() {
+            let all_points_valid: Result<Vec<_>, _> = points_h
                 .into_iter()
-                .map(|point| self.slvs_entity(point).map(|_| ()))
+                .filter_map(|point_h| match point_h {
+                    0 => None,
+                    _ => Some(self.slvs_entity(point_h).map(|_| ())),
+                })
                 .collect();
             all_points_valid?;
         }
 
-        if let Some(entities) = constraint_data.entities() {
-            let all_entities_valid: Result<Vec<_>, _> = entities
+        if let Some(entities_h) = constraint_data.entities() {
+            let all_entities_valid: Result<Vec<_>, _> = entities_h
                 .into_iter()
-                .map(|entity| self.slvs_entity(entity).map(|_| ()))
+                .filter_map(|entity_h| match entity_h {
+                    0 => None,
+                    _ => Some(self.slvs_entity(entity_h).map(|_| ())),
+                })
                 .collect();
             all_entities_valid?;
         }

@@ -22,8 +22,8 @@ impl AsConstraintData for WhereDragged {
         self.workplane.map(|workplane| workplane.handle())
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point.handle()])
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+        Some([self.point.handle(), 0])
     }
 }
 

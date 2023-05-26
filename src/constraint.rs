@@ -87,7 +87,7 @@ mod vertical;
 mod where_dragged;
 
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug, marker::PhantomData};
+use std::{any::type_name, fmt::Debug, marker::PhantomData};
 
 use crate::{
     bindings::{
@@ -109,18 +109,34 @@ use crate::{
 // Constraint Handle
 ////////////////////////////////////////////////////////////////////////////////
 
-pub trait AsConstraintHandle: AsHandle {}
+pub trait AsConstraintHandle: AsAny + AsHandle {
+    fn type_name(&self) -> &'static str;
+}
 
 impl AsAny for Box<dyn AsConstraintHandle> {
     fn as_any(&self) -> &dyn std::any::Any {
-        self
+        self.as_ref().as_any()
     }
 }
 
-impl AsConstraintHandle for Box<dyn AsConstraintHandle> {}
 impl AsHandle for Box<dyn AsConstraintHandle> {
     fn handle(&self) -> u32 {
         self.as_ref().handle()
+    }
+}
+
+impl AsConstraintHandle for Box<dyn AsConstraintHandle> {
+    fn type_name(&self) -> &'static str {
+        self.as_ref().type_name()
+    }
+}
+
+impl Debug for Box<dyn AsConstraintHandle> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstraintHandle")
+            .field("handle", &self.handle())
+            .field("type", &self.type_name())
+            .finish()
     }
 }
 
@@ -236,10 +252,35 @@ impl<C: AsConstraintData> ConstraintHandle<C> {
     }
 }
 
-impl<C: AsConstraintData> AsConstraintHandle for ConstraintHandle<C> {}
+impl<C: AsConstraintData + 'static> AsAny for ConstraintHandle<C> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
 impl<C: AsConstraintData> AsHandle for ConstraintHandle<C> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+impl<C: AsConstraintData + 'static> AsConstraintHandle for ConstraintHandle<C> {
+    fn type_name(&self) -> &'static str {
+        type_name::<C>()
+    }
+}
+
+impl<C: AsConstraintData + Copy + 'static> TryFrom<&Box<dyn AsConstraintHandle>>
+    for ConstraintHandle<C>
+{
+    type Error = &'static str;
+
+    fn try_from(value: &Box<dyn AsConstraintHandle>) -> Result<Self, Self::Error> {
+        if let Some(constraint_handle) = value.as_any().downcast_ref::<ConstraintHandle<C>>() {
+            Ok(*constraint_handle)
+        } else {
+            Err("Can only downcast boxed value into same type")
+        }
     }
 }
 
@@ -255,10 +296,10 @@ pub trait AsConstraintData: private::Sealed + AsGroup + AsSlvsType + FromSystem 
     fn val(&self) -> Option<f64> {
         None
     }
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
         None
     }
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
         None
     }
     fn others(&self) -> [bool; 2] {

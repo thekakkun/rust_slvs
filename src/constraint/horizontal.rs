@@ -75,19 +75,19 @@ impl AsConstraintData for Horizontal {
         }
     }
 
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn points(&self) -> Option<[Slvs_hEntity; 2]> {
         match self {
             Horizontal::Points {
                 point_a, point_b, ..
-            } => Some(vec![point_a.handle(), point_b.handle()]),
+            } => Some([point_a.handle(), point_b.handle()]),
             Horizontal::Line { .. } => None,
         }
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
         match self {
             Horizontal::Points { .. } => None,
-            Horizontal::Line { line, .. } => Some(vec![line.handle()]),
+            Horizontal::Line { line, .. } => Some([line.handle(), 0, 0, 0]),
         }
     }
 }

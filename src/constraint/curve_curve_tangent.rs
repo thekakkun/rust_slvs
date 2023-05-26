@@ -76,8 +76,8 @@ where
         Some(self.workplane.handle())
     }
 
-    fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.curve_a.handle(), self.curve_b.handle()])
+    fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.curve_a.handle(), self.curve_b.handle(), 0, 0])
     }
 
     fn others(&self) -> [bool; 2] {
