@@ -205,119 +205,18 @@ impl System {
             })
             .filter(|&slvs_constraint| {
                 entity_handle.map_or(true, |entity_handle| {
-                    [slvs_constraint.ptA, slvs_constraint.ptB].contains(&entity_handle.handle())
+                    [
+                        slvs_constraint.ptA,
+                        slvs_constraint.ptB,
+                        slvs_constraint.entityA,
+                        slvs_constraint.entityB,
+                        slvs_constraint.entityC,
+                        slvs_constraint.entityD,
+                    ]
+                    .contains(&entity_handle.handle())
                 })
             })
-            .map(|&slvs_constraint| match slvs_constraint.type_ as _ {
-                SLVS_C_CURVE_CURVE_TANGENT => {
-                    let slvs_curve_a = self.slvs_entity(slvs_constraint.entityA).unwrap();
-                    let slvs_curve_b = self.slvs_entity(slvs_constraint.entityB).unwrap();
-
-                    match (slvs_curve_a.type_ as _, slvs_curve_b.type_ as _) {
-                        (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => {
-                            Box::new(ConstraintHandle::<
-                                CurveCurveTangent<ArcOfCircle, ArcOfCircle>,
-                            >::new(slvs_constraint.h))
-                                as Box<dyn AsConstraintHandle>
-                        }
-                        (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CUBIC) => Box::new(ConstraintHandle::<
-                            CurveCurveTangent<ArcOfCircle, Cubic>,
-                        >::new(
-                            slvs_constraint.h
-                        ))
-                            as Box<dyn AsConstraintHandle>,
-                        (SLVS_E_CUBIC, SLVS_E_ARC_OF_CIRCLE) => Box::new(ConstraintHandle::<
-                            CurveCurveTangent<Cubic, ArcOfCircle>,
-                        >::new(
-                            slvs_constraint.h
-                        ))
-                            as Box<dyn AsConstraintHandle>,
-                        (SLVS_E_CUBIC, SLVS_E_CUBIC) => {
-                            Box::new(ConstraintHandle::<CurveCurveTangent<Cubic, Cubic>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-                        _ => panic!("SLVS_C_CURVE_CURVE_TANGENT should reference two curves."),
-                    }
-                }
-                SLVS_C_DIAMETER => {
-                    let slvs_radius = self.slvs_entity(slvs_constraint.entityA).unwrap();
-
-                    match slvs_radius.type_ as _ {
-                        SLVS_E_ARC_OF_CIRCLE => Box::new(
-                            ConstraintHandle::<Diameter<ArcOfCircle>>::new(slvs_constraint.h),
-                        )
-                            as Box<dyn AsConstraintHandle>,
-                        SLVS_E_CIRCLE => {
-                            Box::new(ConstraintHandle::<Diameter<Circle>>::new(slvs_constraint.h))
-                                as Box<dyn AsConstraintHandle>
-                        }
-                        _ => panic!("SLVS_C_DIAMETER should reference arcs."),
-                    }
-                }
-                SLVS_C_EQUAL_RADIUS => {
-                    let slvs_radius_a = self.slvs_entity(slvs_constraint.entityA).unwrap();
-                    let slvs_radius_b = self.slvs_entity(slvs_constraint.entityB).unwrap();
-
-                    match (slvs_radius_a.type_ as _, slvs_radius_b.type_ as _) {
-                        (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => Box::new(
-                            ConstraintHandle::<EqualRadius<ArcOfCircle, ArcOfCircle>>::new(
-                                slvs_constraint.h,
-                            ),
-                        )
-                            as Box<dyn AsConstraintHandle>,
-                        (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE) => {
-                            Box::new(ConstraintHandle::<EqualRadius<ArcOfCircle, Circle>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-                        (SLVS_E_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => {
-                            Box::new(ConstraintHandle::<EqualRadius<Circle, ArcOfCircle>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-                        (SLVS_E_CIRCLE, SLVS_E_CIRCLE) => {
-                            Box::new(ConstraintHandle::<EqualRadius<Circle, Circle>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference two curves."),
-                    }
-                }
-                SLVS_C_PROJ_PT_DISTANCE => {
-                    let slvs_line = self.slvs_entity(slvs_constraint.entityA).unwrap();
-
-                    match slvs_line.type_ as _ {
-                        SLVS_E_LINE_SEGMENT => {
-                            Box::new(ConstraintHandle::<ProjPtDistance<LineSegment>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-
-                        SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
-                            Box::new(ConstraintHandle::<ProjPtDistance<Normal>>::new(
-                                slvs_constraint.h,
-                            )) as Box<dyn AsConstraintHandle>
-                        }
-                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference a line or normal."),
-                    }
-                }
-                SLVS_C_PT_ON_CIRCLE => {
-                    let slvs_radius = self.slvs_entity(slvs_constraint.entityA).unwrap();
-
-                    match slvs_radius.type_ as _ {
-                        SLVS_E_ARC_OF_CIRCLE => Box::new(
-                            ConstraintHandle::<PtOnCircle<ArcOfCircle>>::new(slvs_constraint.h),
-                        )
-                            as Box<dyn AsConstraintHandle>,
-                        SLVS_E_CIRCLE => Box::new(ConstraintHandle::<PtOnCircle<Circle>>::new(
-                            slvs_constraint.h,
-                        )) as Box<dyn AsConstraintHandle>,
-                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference an arc or circle."),
-                    }
-                }
-                _ => slvs_constraint.into(),
-            })
+            .map(|&slvs_constraint| self.boxed_constraint_handle(slvs_constraint))
             .collect()
     }
 
@@ -505,7 +404,13 @@ impl System {
             Ok(fail_reason) => Err(SolveFail {
                 dof: slvs_system.dof,
                 reason: fail_reason,
-                failed_constraints: failed_handles.into_iter().filter(|&h| h != 0).collect(),
+                failed_constraints: failed_handles
+                    .into_iter()
+                    .filter_map(|h| match h {
+                        0 => None,
+                        _ => Some(self.boxed_constraint_handle(*self.slvs_constraint(h).unwrap())),
+                    })
+                    .collect(),
             }),
             Err(_) => Ok(SolveOkay {
                 dof: slvs_system.dof,
@@ -656,6 +561,118 @@ impl System {
         }
 
         Ok(())
+    }
+
+    pub(crate) fn boxed_constraint_handle(
+        &self,
+        slvs_constraint: Slvs_Constraint,
+    ) -> Box<dyn AsConstraintHandle> {
+        match slvs_constraint.type_ as _ {
+            SLVS_C_CURVE_CURVE_TANGENT => {
+                let slvs_curve_a = self.slvs_entity(slvs_constraint.entityA).unwrap();
+                let slvs_curve_b = self.slvs_entity(slvs_constraint.entityB).unwrap();
+
+                match (slvs_curve_a.type_ as _, slvs_curve_b.type_ as _) {
+                    (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => {
+                        Box::new(ConstraintHandle::<
+                            CurveCurveTangent<ArcOfCircle, ArcOfCircle>,
+                        >::new(slvs_constraint.h))
+                            as Box<dyn AsConstraintHandle>
+                    }
+                    (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CUBIC) => Box::new(ConstraintHandle::<
+                        CurveCurveTangent<ArcOfCircle, Cubic>,
+                    >::new(
+                        slvs_constraint.h
+                    ))
+                        as Box<dyn AsConstraintHandle>,
+                    (SLVS_E_CUBIC, SLVS_E_ARC_OF_CIRCLE) => Box::new(ConstraintHandle::<
+                        CurveCurveTangent<Cubic, ArcOfCircle>,
+                    >::new(
+                        slvs_constraint.h
+                    ))
+                        as Box<dyn AsConstraintHandle>,
+                    (SLVS_E_CUBIC, SLVS_E_CUBIC) => {
+                        Box::new(ConstraintHandle::<CurveCurveTangent<Cubic, Cubic>>::new(
+                            slvs_constraint.h,
+                        )) as Box<dyn AsConstraintHandle>
+                    }
+                    _ => panic!("SLVS_C_CURVE_CURVE_TANGENT should reference two curves."),
+                }
+            }
+            SLVS_C_DIAMETER => {
+                let slvs_radius = self.slvs_entity(slvs_constraint.entityA).unwrap();
+
+                match slvs_radius.type_ as _ {
+                    SLVS_E_ARC_OF_CIRCLE => Box::new(
+                        ConstraintHandle::<Diameter<ArcOfCircle>>::new(slvs_constraint.h),
+                    ) as Box<dyn AsConstraintHandle>,
+                    SLVS_E_CIRCLE => {
+                        Box::new(ConstraintHandle::<Diameter<Circle>>::new(slvs_constraint.h))
+                            as Box<dyn AsConstraintHandle>
+                    }
+                    _ => panic!("SLVS_C_DIAMETER should reference arcs."),
+                }
+            }
+            SLVS_C_EQUAL_RADIUS => {
+                let slvs_radius_a = self.slvs_entity(slvs_constraint.entityA).unwrap();
+                let slvs_radius_b = self.slvs_entity(slvs_constraint.entityB).unwrap();
+
+                match (slvs_radius_a.type_ as _, slvs_radius_b.type_ as _) {
+                    (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => Box::new(ConstraintHandle::<
+                        EqualRadius<ArcOfCircle, ArcOfCircle>,
+                    >::new(
+                        slvs_constraint.h
+                    ))
+                        as Box<dyn AsConstraintHandle>,
+                    (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE) => {
+                        Box::new(ConstraintHandle::<EqualRadius<ArcOfCircle, Circle>>::new(
+                            slvs_constraint.h,
+                        )) as Box<dyn AsConstraintHandle>
+                    }
+                    (SLVS_E_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => {
+                        Box::new(ConstraintHandle::<EqualRadius<Circle, ArcOfCircle>>::new(
+                            slvs_constraint.h,
+                        )) as Box<dyn AsConstraintHandle>
+                    }
+                    (SLVS_E_CIRCLE, SLVS_E_CIRCLE) => {
+                        Box::new(ConstraintHandle::<EqualRadius<Circle, Circle>>::new(
+                            slvs_constraint.h,
+                        )) as Box<dyn AsConstraintHandle>
+                    }
+                    _ => panic!("SLVS_C_EQUAL_RADIUS should reference two curves."),
+                }
+            }
+            SLVS_C_PROJ_PT_DISTANCE => {
+                let slvs_line = self.slvs_entity(slvs_constraint.entityA).unwrap();
+
+                match slvs_line.type_ as _ {
+                    SLVS_E_LINE_SEGMENT => Box::new(
+                        ConstraintHandle::<ProjPtDistance<LineSegment>>::new(slvs_constraint.h),
+                    ) as Box<dyn AsConstraintHandle>,
+
+                    SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => {
+                        Box::new(ConstraintHandle::<ProjPtDistance<Normal>>::new(
+                            slvs_constraint.h,
+                        )) as Box<dyn AsConstraintHandle>
+                    }
+                    _ => panic!("SLVS_C_EQUAL_RADIUS should reference a line or normal."),
+                }
+            }
+            SLVS_C_PT_ON_CIRCLE => {
+                let slvs_radius = self.slvs_entity(slvs_constraint.entityA).unwrap();
+
+                match slvs_radius.type_ as _ {
+                    SLVS_E_ARC_OF_CIRCLE => Box::new(
+                        ConstraintHandle::<PtOnCircle<ArcOfCircle>>::new(slvs_constraint.h),
+                    ) as Box<dyn AsConstraintHandle>,
+                    SLVS_E_CIRCLE => Box::new(ConstraintHandle::<PtOnCircle<Circle>>::new(
+                        slvs_constraint.h,
+                    )) as Box<dyn AsConstraintHandle>,
+                    _ => panic!("SLVS_C_EQUAL_RADIUS should reference an arc or circle."),
+                }
+            }
+            _ => slvs_constraint.into(),
+        }
     }
 }
 

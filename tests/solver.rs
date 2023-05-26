@@ -26,7 +26,7 @@ fn inconsistent_constraints() {
     if let Err(fail_result) = solve_result {
         assert_eq!(fail_result.reason, FailReason::Inconsistent);
         println!("{:?}", fail_result.failed_constraints);
-        assert!(fail_result.constraint_did_fail(&c1));
-        assert!(fail_result.constraint_did_fail(&c2));
+        assert!(fail_result.constraint_failed(c1));
+        assert!(fail_result.constraint_failed(c2));
     }
 }
