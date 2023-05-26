@@ -29,7 +29,11 @@ mod point;
 mod workplane;
 
 use serde::{Deserialize, Serialize};
-use std::{any::Any, fmt::Debug, marker::PhantomData};
+use std::{
+    any::{type_name, Any},
+    fmt::Debug,
+    marker::PhantomData,
+};
 
 use crate::{
     bindings::{
@@ -40,17 +44,33 @@ use crate::{
     element::{AsAny, AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
 
-pub(crate) trait AsEntityHandle: AsHandle {}
+pub trait AsEntityHandle: AsAny + AsHandle {
+    fn type_name(&self) -> &'static str;
+}
 
 impl AsAny for Box<dyn AsEntityHandle> {
     fn as_any(&self) -> &dyn Any {
-        self
+        self.as_ref().as_any()
     }
 }
-impl AsEntityHandle for Box<dyn AsEntityHandle> {}
+
 impl AsHandle for Box<dyn AsEntityHandle> {
     fn handle(&self) -> u32 {
         self.as_ref().handle()
+    }
+}
+impl AsEntityHandle for Box<dyn AsEntityHandle> {
+    fn type_name(&self) -> &'static str {
+        self.as_ref().type_name()
+    }
+}
+
+impl Debug for Box<dyn AsEntityHandle> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EntityHandle")
+            .field("handle", &self.handle())
+            .field("type", &self.type_name())
+            .finish()
     }
 }
 
@@ -91,9 +111,9 @@ impl From<Slvs_Entity> for Box<dyn AsEntityHandle> {
 /// The type argument holds information about what type of entity it references,
 /// which is used to check that entity definitions receive the correct type of entity handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EntityHandle<T: AsEntityData> {
+pub struct EntityHandle<E: AsEntityData> {
     pub handle: u32,
-    pub(super) phantom: PhantomData<T>,
+    pub(super) phantom: PhantomData<E>,
 }
 
 impl<E: AsEntityData> EntityHandle<E> {
@@ -105,17 +125,28 @@ impl<E: AsEntityData> EntityHandle<E> {
     }
 }
 
-impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
+impl<E: AsEntityData + 'static> AsAny for EntityHandle<E> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 impl<E: AsEntityData> AsHandle for EntityHandle<E> {
     fn handle(&self) -> u32 {
         self.handle
     }
 }
 
-impl<E: AsEntityData + Copy + 'static> TryFrom<Box<dyn AsEntityHandle>> for EntityHandle<E> {
+impl<E: AsEntityData + 'static> AsEntityHandle for EntityHandle<E> {
+    fn type_name(&self) -> &'static str {
+        type_name::<E>()
+    }
+}
+
+impl<E: AsEntityData + Copy + 'static> TryFrom<&Box<dyn AsEntityHandle>> for EntityHandle<E> {
     type Error = &'static str;
-    fn try_from(value: Box<dyn AsEntityHandle>) -> Result<Self, Self::Error> {
-        if let Some(&ref entity_handle) = value.as_any().downcast_ref::<EntityHandle<E>>() {
+    fn try_from(value: &Box<dyn AsEntityHandle>) -> Result<Self, Self::Error> {
+        if let Some(entity_handle) = value.as_any().downcast_ref::<EntityHandle<E>>() {
             Ok(*entity_handle)
         } else {
             Err("Can only downcast boxed value into same type")
