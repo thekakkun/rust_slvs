@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_VERTICAL},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{EntityHandle, LineSegment, Point, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -67,33 +68,6 @@ impl AsSlvsType for Vertical {
 }
 
 impl AsConstraintData for Vertical {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-
-    //     if let (Ok(point_a), Ok(point_b)) = (
-    //         (*sys.slvs_entity(slvs_constraint.ptA)?).try_into(),
-    //         (*sys.slvs_entity(slvs_constraint.ptB)?).try_into(),
-    //     ) {
-    //         Ok(Self::Points {
-    //             group: Group(slvs_constraint.group),
-    //             workplane: EntityHandle::new(slvs_constraint.wrkpl),
-    //             point_a,
-    //             point_b,
-    //         })
-    //     } else if let Ok(line) = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into() {
-    //         Ok(Self::Line {
-    //             group: Group(slvs_constraint.group),
-    //             workplane: EntityHandle::new(slvs_constraint.wrkpl),
-    //             line,
-    //         })
-    //     } else {
-    //         Err("Constraint should be of type Vertical")
-    //     }
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Vertical::Points { workplane, .. } => Some(workplane.handle()),
@@ -114,6 +88,36 @@ impl AsConstraintData for Vertical {
         match self {
             Vertical::Points { .. } => None,
             Vertical::Line { line, .. } => Some(vec![line.handle()]),
+        }
+    }
+}
+
+impl FromSystem for Vertical {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_VERTICAL == slvs_constraint.type_ as _ {
+            if slvs_constraint.ptA != 0 && slvs_constraint.ptB != 0 {
+                Ok(Self::Points {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    point_a: EntityHandle::new(slvs_constraint.ptA),
+                    point_b: EntityHandle::new(slvs_constraint.ptB),
+                })
+            } else if slvs_constraint.entityA != 0 {
+                Ok(Self::Line {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    line: EntityHandle::new(slvs_constraint.entityA),
+                })
+            } else {
+                Err("Vertical should have handle for line or two points.")
+            }
+        } else {
+            Err("Expected constraint to have type SLVS_C_VERTICAL.")
         }
     }
 }

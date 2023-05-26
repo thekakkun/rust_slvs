@@ -4,9 +4,10 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_LINE_LEN_RATIO},
     define_element,
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{ArcOfCircle, EntityHandle, LineSegment},
     group::Group,
+    System,
 };
 
 define_element!(
@@ -19,21 +20,6 @@ define_element!(
 );
 
 impl AsConstraintData for ArcLineLenRatio {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-    //     let line = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
-
-    //     Ok(Self {
-    //         group: Group(slvs_constraint.group),
-    //         arc: EntityHandle::new(slvs_constraint.entityA),
-    //         line,
-    //         ratio: slvs_constraint.valA,
-    //     })
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
@@ -44,5 +30,25 @@ impl AsConstraintData for ArcLineLenRatio {
 
     fn val(&self) -> Option<f64> {
         Some(self.ratio)
+    }
+}
+
+impl FromSystem for ArcLineLenRatio {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_ARC_LINE_LEN_RATIO == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                arc: EntityHandle::new(slvs_constraint.entityA),
+                line: EntityHandle::new(slvs_constraint.entityB),
+                ratio: slvs_constraint.valA,
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_ARC_LINE_LEN_RATIO.")
+        }
     }
 }

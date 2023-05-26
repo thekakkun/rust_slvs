@@ -4,9 +4,10 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_LINE},
     define_element,
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{EntityHandle, LineSegment, Point, Workplane},
     group::Group,
+    System,
 };
 
 define_element!(
@@ -20,24 +21,6 @@ define_element!(
 );
 
 impl AsConstraintData for SymmetricLine {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-    //     let point_a = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
-    //     let point_b = (*sys.slvs_entity(slvs_constraint.ptB)?).try_into()?;
-    //     let line = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
-
-    //     Ok(Self {
-    //         group: Group(slvs_constraint.group),
-    //         workplane: EntityHandle::new(slvs_constraint.wrkpl),
-    //         point_a,
-    //         point_b,
-    //         line,
-    //     })
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
     }
@@ -48,5 +31,26 @@ impl AsConstraintData for SymmetricLine {
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.line.handle()])
+    }
+}
+
+impl FromSystem for SymmetricLine {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_SYMMETRIC_LINE == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                point_a: EntityHandle::new(slvs_constraint.ptA),
+                point_b: EntityHandle::new(slvs_constraint.ptB),
+                line: EntityHandle::new(slvs_constraint.entityA),
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_SYMMETRIC_LINE.")
+        }
     }
 }

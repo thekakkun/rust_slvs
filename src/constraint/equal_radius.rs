@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{AsRadiused, EntityHandle},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -58,26 +59,34 @@ where
     RA: AsRadiused,
     RB: AsRadiused,
 {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-    //     let arc_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
-    //     let arc_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
-
-    //     Ok(Self {
-    //         group: Group(slvs_constraint.group),
-    //         radius_a: arc_a,
-    //         radius_b: arc_b,
-    //     })
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.radius_a.handle(), self.radius_b.handle()])
+    }
+}
+
+impl<RA, RB> FromSystem for EqualRadius<RA, RB>
+where
+    RA: AsRadiused,
+    RB: AsRadiused,
+{
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_EQUAL_RADIUS == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                radius_a: EntityHandle::new(slvs_constraint.entityA),
+                radius_b: EntityHandle::new(slvs_constraint.entityB),
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_EQUAL_RADIUS.")
+        }
     }
 }

@@ -102,7 +102,7 @@ use crate::{
         SLVS_C_SAME_ORIENTATION, SLVS_C_SYMMETRIC, SLVS_C_SYMMETRIC_HORIZ, SLVS_C_SYMMETRIC_LINE,
         SLVS_C_SYMMETRIC_VERT, SLVS_C_VERTICAL, SLVS_C_WHERE_DRAGGED,
     },
-    element::{AsAny, AsGroup, AsHandle, AsSlvsType},
+    element::{AsAny, AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ impl<C: AsConstraintData> From<Slvs_Constraint> for ConstraintHandle<C> {
     }
 }
 
-pub trait AsConstraintData: private::Sealed + AsGroup + AsSlvsType {
+pub trait AsConstraintData: private::Sealed + AsGroup + AsSlvsType + FromSystem {
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
     fn val(&self) -> Option<f64> {

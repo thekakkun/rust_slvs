@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{AsRadiused, EntityHandle, Point},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -38,21 +39,6 @@ impl<R: AsRadiused> AsSlvsType for PtOnCircle<R> {
 }
 
 impl<R: AsRadiused> AsConstraintData for PtOnCircle<R> {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-    //     let point = (*sys.slvs_entity(slvs_constraint.ptA)?).try_into()?;
-    //     let arc = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
-
-    //     Ok(Self {
-    //         group: Group(slvs_constraint.group),
-    //         point,
-    //         circle: arc,
-    //     })
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
@@ -63,5 +49,24 @@ impl<R: AsRadiused> AsConstraintData for PtOnCircle<R> {
 
     fn points(&self) -> Option<Vec<Slvs_hEntity>> {
         Some(vec![self.point.handle()])
+    }
+}
+
+impl<R: AsRadiused> FromSystem for PtOnCircle<R> {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_PT_ON_CIRCLE == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                point: EntityHandle::new(slvs_constraint.ptA),
+                circle: EntityHandle::new(slvs_constraint.entityA),
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_PT_ON_CIRCLE.")
+        }
     }
 }

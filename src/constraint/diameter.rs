@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{AsRadiused, EntityHandle},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -48,5 +49,24 @@ impl<R: AsRadiused> AsConstraintData for Diameter<R> {
 
     fn val(&self) -> Option<f64> {
         Some(self.diameter)
+    }
+}
+
+impl<R: AsRadiused> FromSystem for Diameter<R> {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_DIAMETER == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                radius: EntityHandle::new(slvs_constraint.entityA),
+                diameter: slvs_constraint.valA,
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_DIAMETER.")
+        }
     }
 }

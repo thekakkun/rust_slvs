@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT},
-    element::{AsGroup, AsHandle, AsSlvsType},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{AsCurve, EntityHandle, Workplane},
     group::Group,
+    System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -71,24 +72,6 @@ where
     CA: AsCurve,
     CB: AsCurve,
 {
-    // fn from_system(
-    //     sys: &
-    //     constraint_handle: &ConstraintHandle<Self>,
-    // ) -> Result<Self, &'static str> {
-    //     let slvs_constraint = sys.slvs_constraint(constraint_handle.handle())?;
-    //     let curve_a = (*sys.slvs_entity(slvs_constraint.entityA)?).try_into()?;
-    //     let curve_b = (*sys.slvs_entity(slvs_constraint.entityB)?).try_into()?;
-
-    //     Ok(Self {
-    //         group: Group(slvs_constraint.group),
-    //         workplane: EntityHandle::new(slvs_constraint.wrkpl),
-    //         curve_a,
-    //         curve_b,
-    //         to_curve_a_start: slvs_constraint.other != 0,
-    //         to_curve_b_start: slvs_constraint.other2 != 0,
-    //     })
-    // }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
     }
@@ -99,5 +82,31 @@ where
 
     fn others(&self) -> [bool; 2] {
         [self.to_curve_a_start, self.to_curve_b_start]
+    }
+}
+
+impl<CA, CB> FromSystem for CurveCurveTangent<CA, CB>
+where
+    CA: AsCurve,
+    CB: AsCurve,
+{
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+        if SLVS_C_CURVE_CURVE_TANGENT == slvs_constraint.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_constraint.group),
+                workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                curve_a: EntityHandle::new(slvs_constraint.entityA),
+                curve_b: EntityHandle::new(slvs_constraint.entityB),
+                to_curve_a_start: slvs_constraint.other != 0,
+                to_curve_b_start: slvs_constraint.other2 != 0,
+            })
+        } else {
+            Err("Expected constraint to have type SLVS_C_CURVE_CURVE_TANGENT.")
+        }
     }
 }

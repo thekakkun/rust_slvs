@@ -112,11 +112,11 @@ impl<E: AsEntityData> AsHandle for EntityHandle<E> {
     }
 }
 
-impl<E: AsEntityData> TryFrom<Box<dyn AsEntityHandle>> for EntityHandle<E> {
+impl<E: AsEntityData + Copy + 'static> TryFrom<Box<dyn AsEntityHandle>> for EntityHandle<E> {
     type Error = &'static str;
     fn try_from(value: Box<dyn AsEntityHandle>) -> Result<Self, Self::Error> {
-        if let Some(&entity_handle) = value.as_any().downcast_ref::<EntityHandle<E>>() {
-            Ok(entity_handle)
+        if let Some(&ref entity_handle) = value.as_any().downcast_ref::<EntityHandle<E>>() {
+            Ok(*entity_handle)
         } else {
             Err("Can only downcast boxed value into same type")
         }
