@@ -92,7 +92,7 @@ impl System {
         // ArcOfCircle requires a Normal, which is identical to its workplane's normal
         let normal_h = if SLVS_E_ARC_OF_CIRCLE == entity_data.slvs_type() as _ {
             let slvs_workplane = self.slvs_entity(entity_data.workplane().unwrap())?;
-            (*slvs_workplane).normal
+            slvs_workplane.normal
         } else {
             entity_data.normal().unwrap_or(0)
         };
@@ -236,6 +236,7 @@ impl System {
                                 slvs_constraint.h,
                             )) as Box<dyn AsConstraintHandle>
                         }
+                        _ => panic!("SLVS_C_CURVE_CURVE_TANGENT should reference two curves."),
                     }
                 }
                 SLVS_C_DIAMETER => {
@@ -250,6 +251,7 @@ impl System {
                             Box::new(ConstraintHandle::<Diameter<Circle>>::new(slvs_constraint.h))
                                 as Box<dyn AsConstraintHandle>
                         }
+                        _ => panic!("SLVS_C_DIAMETER should reference arcs."),
                     }
                 }
                 SLVS_C_EQUAL_RADIUS => {
@@ -278,6 +280,7 @@ impl System {
                                 slvs_constraint.h,
                             )) as Box<dyn AsConstraintHandle>
                         }
+                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference two curves."),
                     }
                 }
                 SLVS_C_PROJ_PT_DISTANCE => {
@@ -295,6 +298,7 @@ impl System {
                                 slvs_constraint.h,
                             )) as Box<dyn AsConstraintHandle>
                         }
+                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference a line or normal."),
                     }
                 }
                 SLVS_C_PT_ON_CIRCLE => {
@@ -308,6 +312,7 @@ impl System {
                         SLVS_E_CIRCLE => Box::new(ConstraintHandle::<PtOnCircle<Circle>>::new(
                             slvs_constraint.h,
                         )) as Box<dyn AsConstraintHandle>,
+                        _ => panic!("SLVS_C_EQUAL_RADIUS should reference an arc or circle."),
                     }
                 }
                 _ => slvs_constraint.into(),
@@ -350,34 +355,37 @@ impl System {
         E: AsEntityData,
         F: FnOnce(&mut E),
     {
-        let slvs_entity = self.mut_slvs_entity(entity_handle.handle())?;
-
         let mut entity_data = self.entity_data(entity_handle)?;
         f(&mut entity_data);
 
         let workplane_h = self.sketch_target(&entity_data)?;
-        slvs_entity.wrkpl = workplane_h.unwrap_or(SLVS_FREE_IN_3D);
-
-        slvs_entity.point = entity_data.points().unwrap_or([0, 0, 0, 0]);
 
         // ArcOfCircle requires a Normal, which is identical to its workplane's normal
         let normal_h = if SLVS_E_ARC_OF_CIRCLE == entity_data.slvs_type() as _ {
             let slvs_workplane = self.slvs_entity(entity_data.workplane().unwrap())?;
-            (*slvs_workplane).normal
+            slvs_workplane.normal
         } else {
             entity_data.normal().unwrap_or(0)
         };
-        slvs_entity.normal = normal_h;
 
-        slvs_entity.distance = entity_data.distance().unwrap_or(0);
+        let param_h = {
+            let slvs_entity = self.mut_slvs_entity(entity_handle.handle())?;
+
+            slvs_entity.wrkpl = workplane_h.unwrap_or(SLVS_FREE_IN_3D);
+            slvs_entity.point = entity_data.points().unwrap_or([0, 0, 0, 0]);
+            slvs_entity.normal = normal_h;
+            slvs_entity.distance = entity_data.distance().unwrap_or(0);
+            slvs_entity.param
+        };
 
         entity_data
             .param_vals()
             .iter()
             .enumerate()
-            .for_each(|(i, Some(val))| {
-                self.update_param(slvs_entity.param[i], entity_data.group(), *val);
-            });
+            .filter_map(|(i, val)| {
+                val.map(|val| self.update_param(param_h[i], entity_data.group(), val))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         Ok(entity_data)
     }
@@ -545,25 +553,6 @@ impl System {
         Ok(&self.entities.list[ix])
     }
 
-    pub(crate) fn entity_on_workplane(
-        &self,
-        h: Slvs_hEntity,
-        workplane: Slvs_hEntity,
-    ) -> Result<(), &'static str> {
-        let slvs_entity = self.slvs_entity(h)?;
-
-        match slvs_entity.type_ as _ {
-            SLVS_E_NORMAL_IN_3D => match slvs_entity.h == self.slvs_entity(workplane)?.normal {
-                true => Ok(()),
-                false => Err("Normal in 3d does not match workplane's normal."),
-            },
-            _ => match slvs_entity.wrkpl == workplane {
-                true => Ok(()),
-                false => Err("Entity not on expected workplane."),
-            },
-        }
-    }
-
     pub(crate) fn mut_slvs_entity(
         &mut self,
         h: Slvs_hEntity,
@@ -576,76 +565,39 @@ impl System {
         &self,
         entity_data: &E,
     ) -> Result<Option<Slvs_hEntity>, &'static str> {
-        let slvs_workplane = entity_data
-            .workplane()
-            .map(|h| self.slvs_entity(h))
-            .transpose()?;
-
         let mut referenced_workplanes = Vec::new();
 
-        let slvs_points = entity_data
-            .points()
-            .map(|points| {
-                points
-                    .iter()
-                    .filter_map(|h| match h {
-                        0 => None,
-                        _ => Some(self.slvs_entity(*h)),
-                    })
-                    .collect::<Result<Vec<_>, _>>()
-            })
-            .transpose()?;
-
-        if let Some(points) = slvs_points {
-            let point_workplanes: Vec<_> = points.iter().map(|point| point.h).collect();
-
-            if let Some(workplane) = slvs_workplane {
-                if !point_workplanes
-                    .iter()
-                    .all(|point_workplane| *point_workplane == workplane.h)
-                {
-                    return Err("Referenced points should all lie on workplane");
-                }
-            }
-
-            referenced_workplanes.extend(point_workplanes)
+        if let Some(points_h) = entity_data.points() {
+            let slvs_points: Result<Vec<_>, _> = points_h
+                .iter()
+                .filter_map(|point_h| match point_h {
+                    0 => None,
+                    _ => Some(self.slvs_entity(*point_h)),
+                })
+                .collect();
+            referenced_workplanes.extend(slvs_points?.iter().map(|slvs_point| slvs_point.wrkpl));
         }
 
-        let slvs_normal = entity_data
-            .normal()
-            .map(|h| self.slvs_entity(h))
-            .transpose()?;
-        if let Some(normal) = slvs_normal {
-            if let Some(workplane) = slvs_workplane {
-                if normal.h != workplane.h {
-                    return Err("Referenced normal should lie on workplane");
-                }
-            }
-
-            referenced_workplanes.push(normal.h);
+        if let Some(normal_h) = entity_data.normal() {
+            let slvs_normal = self.slvs_entity(normal_h)?;
+            referenced_workplanes.push(slvs_normal.wrkpl);
         }
 
-        let slvs_distance = entity_data
-            .distance()
-            .map(|h| self.slvs_entity(h))
-            .transpose()?;
-
-        if let Some(distance) = slvs_distance {
-            if let Some(workplane) = slvs_workplane {
-                if distance.h != workplane.h {
-                    return Err("Referenced distance should lie on workplane");
-                }
+        if referenced_workplanes.is_empty() {
+            Ok(entity_data.workplane())
+        } else if let Some(workplane_h) = entity_data.workplane() {
+            if referenced_workplanes.iter().all(|x| *x == workplane_h) {
+                Ok(Some(workplane_h))
+            } else {
+                Err("Referenced points should all lie on workplane")
             }
-
-            referenced_workplanes.push(distance.h);
-        }
-
-        match referenced_workplanes
+        } else if referenced_workplanes
             .iter()
-            .all(|workplane| *workplane == referenced_workplanes[0])
+            .all(|x| *x == referenced_workplanes[0])
         {
-            true => Ok(Some(referenced_workplanes[0])),
-            false => Ok(None),
+            Ok(Some(referenced_workplanes[0]))
+        } else {
+            Ok(None)
         }
     }
 
