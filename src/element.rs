@@ -60,7 +60,6 @@ macro_rules! define_element {
 }
 
 mod private {
-
     use super::AsHandle;
 
     pub trait Sealed {}

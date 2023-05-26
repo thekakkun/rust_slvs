@@ -59,6 +59,7 @@ impl AsHandle for Box<dyn AsEntityHandle> {
         self.as_ref().handle()
     }
 }
+
 impl AsEntityHandle for Box<dyn AsEntityHandle> {
     fn type_name(&self) -> &'static str {
         self.as_ref().type_name()

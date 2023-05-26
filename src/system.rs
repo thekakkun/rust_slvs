@@ -5,7 +5,8 @@ use crate::{
         Slvs_Constraint, Slvs_Entity, Slvs_Param, Slvs_Solve, Slvs_System, Slvs_hConstraint,
         Slvs_hEntity, Slvs_hGroup, Slvs_hParam, SLVS_C_CURVE_CURVE_TANGENT, SLVS_C_DIAMETER,
         SLVS_C_EQUAL_RADIUS, SLVS_C_PROJ_PT_DISTANCE, SLVS_C_PT_ON_CIRCLE, SLVS_E_ARC_OF_CIRCLE,
-        SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D,
+        SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE, SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D,
+        SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
         SLVS_FREE_IN_3D,
     },
     constraint::{
@@ -107,7 +108,7 @@ impl System {
             group: entity_data.group(),
             type_: entity_data.slvs_type(),
             wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
-            point: entity_data.points().unwrap_or([0, 0, 0, 0]),
+            point: entity_data.points().unwrap_or([0; 4]),
             normal: normal_h,
             distance: entity_data.distance().unwrap_or(0),
             param: param_h,
@@ -126,9 +127,8 @@ impl System {
     ) -> Result<ConstraintHandle<C>, &'static str> {
         self.validate_constraint_data(&constraint_data)?;
 
-        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0, 0]);
-        let [entity_a, entity_b, entity_c, entity_d] =
-            constraint_data.entities().unwrap_or([0, 0, 0, 0]);
+        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0; 2]);
+        let [entity_a, entity_b, entity_c, entity_d] = constraint_data.entities().unwrap_or([0; 4]);
         let [other, other2] = constraint_data.others();
 
         let slvs_constraint = Slvs_Constraint {
@@ -273,7 +273,7 @@ impl System {
 
             slvs_entity.group = entity_data.group();
             slvs_entity.wrkpl = workplane_h.unwrap_or(SLVS_FREE_IN_3D);
-            slvs_entity.point = entity_data.points().unwrap_or([0, 0, 0, 0]);
+            slvs_entity.point = entity_data.points().unwrap_or([0; 4]);
             slvs_entity.normal = normal_h;
             slvs_entity.distance = entity_data.distance().unwrap_or(0);
             slvs_entity.param
@@ -308,12 +308,11 @@ impl System {
         slvs_constraint.group = constraint_data.group();
         slvs_constraint.valA = constraint_data.val().unwrap_or(0.0);
 
-        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0, 0]);
+        let [pt_a, pt_b] = constraint_data.points().unwrap_or([0; 2]);
         slvs_constraint.ptA = pt_a;
         slvs_constraint.ptB = pt_b;
 
-        let [entity_a, entity_b, entity_c, entity_d] =
-            constraint_data.entities().unwrap_or([0, 0, 0, 0]);
+        let [entity_a, entity_b, entity_c, entity_d] = constraint_data.entities().unwrap_or([0; 4]);
 
         slvs_constraint.entityA = entity_a;
         slvs_constraint.entityB = entity_b;
@@ -382,10 +381,29 @@ impl System {
 
 impl System {
     // Check generate.cpp. Has info on mapping from entity to paramater
-    pub fn set_dragged(&mut self, entity_handle: &EntityHandle<impl AsEntityData>) {
-        if let Ok(slvs_entity) = self.slvs_entity(entity_handle.handle()) {
-            self.dragged = slvs_entity.param;
-        }
+    pub fn set_dragged<E: AsEntityData>(
+        &mut self,
+        entity_handle: EntityHandle<E>,
+    ) -> Result<EntityHandle<E>, &'static str> {
+        let slvs_entity = self.slvs_entity(entity_handle.handle())?;
+
+        self.dragged = match slvs_entity.type_ as _ {
+            SLVS_E_ARC_OF_CIRCLE => self.slvs_entity(slvs_entity.point[0])?.param,
+            SLVS_E_CIRCLE => self.slvs_entity(slvs_entity.distance)?.param,
+            SLVS_E_CUBIC => self.slvs_entity(slvs_entity.point[0])?.param,
+            SLVS_E_DISTANCE => slvs_entity.param,
+            SLVS_E_LINE_SEGMENT => self.slvs_entity(slvs_entity.point[0])?.param,
+            SLVS_E_NORMAL_IN_2D => {
+                self.slvs_entity(self.slvs_entity(slvs_entity.wrkpl)?.normal)?
+                    .param
+            }
+            SLVS_E_NORMAL_IN_3D => slvs_entity.param,
+            SLVS_E_POINT_IN_2D | SLVS_E_POINT_IN_3D => slvs_entity.param,
+            SLVS_E_WORKPLANE => self.slvs_entity(slvs_entity.normal)?.param,
+            _ => panic!("Unknown Slvs_Entity type value {}", slvs_entity.type_),
+        };
+
+        Ok(entity_handle)
     }
 
     pub fn clear_dragged(&mut self) {
