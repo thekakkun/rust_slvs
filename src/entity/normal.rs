@@ -23,6 +23,17 @@ pub enum Normal {
     },
 }
 
+impl Normal {
+    pub fn new_on_workplane(group: Group, workplane: EntityHandle<Workplane>) -> Self {
+        Self::OnWorkplane { group, workplane }
+    }
+
+    pub fn new_in_3d(group: Group, quaternion: [f64; 4]) -> Self {
+        let [w, x, y, z] = quaternion;
+        Self::In3d { group, w, x, y, z }
+    }
+}
+
 impl AsGroup for Normal {
     fn group(&self) -> Slvs_hGroup {
         match self {

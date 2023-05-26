@@ -25,7 +25,7 @@ where
     RA: AsRadiused,
     RB: AsRadiused,
 {
-    fn new(group: Group, radius_a: EntityHandle<RA>, radius_b: EntityHandle<RB>) -> Self {
+    pub fn new(group: Group, radius_a: EntityHandle<RA>, radius_b: EntityHandle<RB>) -> Self {
         Self {
             group,
             radius_a,

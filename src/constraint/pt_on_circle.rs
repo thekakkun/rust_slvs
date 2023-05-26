@@ -17,7 +17,7 @@ pub struct PtOnCircle<R: AsRadiused> {
 }
 
 impl<R: AsRadiused> PtOnCircle<R> {
-    fn new(group: Group, point: EntityHandle<Point>, circle: EntityHandle<R>) -> Self {
+    pub fn new(group: Group, point: EntityHandle<Point>, circle: EntityHandle<R>) -> Self {
         Self {
             group,
             point,

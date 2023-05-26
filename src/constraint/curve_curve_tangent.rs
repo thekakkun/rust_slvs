@@ -28,7 +28,7 @@ where
     CA: AsCurve,
     CB: AsCurve,
 {
-    fn new(
+    pub fn new(
         group: Group,
         workplane: EntityHandle<Workplane>,
         curve_a: EntityHandle<CA>,

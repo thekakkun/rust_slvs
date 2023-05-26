@@ -109,7 +109,7 @@ use crate::{
 // Constraint Handle
 ////////////////////////////////////////////////////////////////////////////////
 
-pub(crate) trait AsConstraintHandle: AsHandle {}
+pub trait AsConstraintHandle: AsHandle {}
 
 impl AsAny for Box<dyn AsConstraintHandle> {
     fn as_any(&self) -> &dyn std::any::Any {

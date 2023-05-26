@@ -6,8 +6,8 @@ use crate::{
     define_element,
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{ArcOfCircle, EntityHandle},
-    group::Group, System,
-    
+    group::Group,
+    System,
 };
 
 define_element!(

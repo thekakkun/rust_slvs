@@ -19,7 +19,7 @@ pub struct ProjPtDistance<L: AsProjectionTarget> {
 }
 
 impl<L: AsProjectionTarget> ProjPtDistance<L> {
-    fn new(
+    pub fn new(
         group: Group,
         point_a: EntityHandle<Point>,
         point_b: EntityHandle<Point>,

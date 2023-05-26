@@ -6,7 +6,8 @@ use crate::{
     define_element,
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     entity::{EntityHandle, Point, Workplane},
-    group::Group, System,
+    group::Group,
+    System,
 };
 
 define_element!(
@@ -17,8 +18,6 @@ define_element!(
     }
 );
 impl AsConstraintData for PtInPlane {
-
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }

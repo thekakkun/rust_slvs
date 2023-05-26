@@ -21,6 +21,24 @@ pub enum Point {
     },
 }
 
+impl Point {
+    pub fn new_on_workplane(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        coords: [f64; 2],
+    ) -> Self {
+        Self::OnWorkplane {
+            group,
+            workplane,
+            coords,
+        }
+    }
+
+    pub fn new_in_3d(group: Group, coords: [f64; 3]) -> Self {
+        Self::In3d { group, coords }
+    }
+}
+
 impl AsGroup for Point {
     fn group(&self) -> Slvs_hGroup {
         match self {

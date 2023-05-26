@@ -17,7 +17,7 @@ pub struct Diameter<R: AsRadiused> {
 }
 
 impl<R: AsRadiused> Diameter<R> {
-    fn new(group: Group, radius: EntityHandle<R>, diameter: f64) -> Self {
+    pub fn new(group: Group, radius: EntityHandle<R>, diameter: f64) -> Self {
         Self {
             group,
             radius,

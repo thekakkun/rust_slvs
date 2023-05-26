@@ -43,34 +43,6 @@ impl Slvs_Entity {
             param: [0; 4],
         }
     }
-
-    pub(crate) fn set_group(&mut self, group: Slvs_hGroup) {
-        self.group = group;
-    }
-
-    pub(crate) fn set_workplane(&mut self, workplane: Slvs_hEntity) {
-        self.wrkpl = workplane;
-    }
-
-    pub(crate) fn set_point(&mut self, points: Vec<Slvs_hEntity>) {
-        for (i, point) in points.iter().enumerate() {
-            self.point[i] = *point;
-        }
-    }
-
-    pub(crate) fn set_normal(&mut self, normal: Slvs_hEntity) {
-        self.normal = normal;
-    }
-
-    pub(crate) fn set_distance(&mut self, distance: Slvs_hEntity) {
-        self.distance = distance;
-    }
-
-    pub(crate) fn set_param(&mut self, param: Vec<Slvs_hParam>) {
-        for (i, param_h) in param.iter().enumerate() {
-            self.param[i] = *param_h;
-        }
-    }
 }
 
 impl Serialize for Slvs_Entity {

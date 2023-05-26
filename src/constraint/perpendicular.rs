@@ -20,8 +20,6 @@ define_element!(
 );
 
 impl AsConstraintData for Perpendicular {
-
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
     }
