@@ -2,7 +2,7 @@ use slvs::{
     constraint::{Diameter, EqualRadius, PtLineDistance, PtPtDistance, Vertical},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
     make_quaternion,
-    solver::FailReason,
+    system::{FailReason, SolveResult},
     System,
 };
 
@@ -116,76 +116,89 @@ fn main() {
     // And solve.
     let result = sys.solve(&g2);
 
-    if let Ok(ok_result) = result {
-        println!("solved okay");
-        if let (
-            Point::OnWorkplane {
-                coords: [u1, v1], ..
-            },
-            Point::OnWorkplane {
-                coords: [u2, v2], ..
-            },
-        ) = (
-            sys.entity_data(&p1).expect("data for p1 found"),
-            sys.entity_data(&p2).expect("data for p1 found"),
-        ) {
-            println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
+    match result {
+        SolveResult::Ok { dof } => {
+            println!("solved okay");
+            if let (
+                Point::OnWorkplane {
+                    coords: [u1, v1], ..
+                },
+                Point::OnWorkplane {
+                    coords: [u2, v2], ..
+                },
+            ) = (
+                sys.entity_data(&p1).expect("data for p1 found"),
+                sys.entity_data(&p2).expect("data for p1 found"),
+            ) {
+                println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
+            }
+
+            if let (
+                Point::OnWorkplane {
+                    coords: [arc_center_u, arc_center_v],
+                    ..
+                },
+                Point::OnWorkplane {
+                    coords: [arc_start_u, arc_start_v],
+                    ..
+                },
+                Point::OnWorkplane {
+                    coords: [arc_finish_u, arc_finish_v],
+                    ..
+                },
+            ) = (
+                sys.entity_data(&arc_center)
+                    .expect("data for arc_center found"),
+                sys.entity_data(&arc_start)
+                    .expect("data for arc_start found"),
+                sys.entity_data(&arc_finish)
+                    .expect("data for arc_finish found"),
+            ) {
+                println!(
+                    "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
+                    arc_center_u,
+                    arc_center_v,
+                    arc_start_u,
+                    arc_start_v,
+                    arc_finish_u,
+                    arc_finish_v
+                );
+            }
+
+            if let Point::OnWorkplane {
+                coords: [center_u, center_v],
+                ..
+            } = sys
+                .entity_data(&circle_center)
+                .expect("data for circle_center found")
+            {
+                let radius = sys
+                    .entity_data(&circle_radius)
+                    .expect("data for circle_radius found")
+                    .val;
+                println!(
+                    "circle center ({:.3} {:.3}) radius {:.3}",
+                    center_u, center_v, radius
+                );
+            }
+
+            println!("{} DOF", dof);
         }
 
-        if let (
-            Point::OnWorkplane {
-                coords: [arc_center_u, arc_center_v],
-                ..
-            },
-            Point::OnWorkplane {
-                coords: [arc_start_u, arc_start_v],
-                ..
-            },
-            Point::OnWorkplane {
-                coords: [arc_finish_u, arc_finish_v],
-                ..
-            },
-        ) = (
-            sys.entity_data(&arc_center)
-                .expect("data for arc_center found"),
-            sys.entity_data(&arc_start)
-                .expect("data for arc_start found"),
-            sys.entity_data(&arc_finish)
-                .expect("data for arc_finish found"),
-        ) {
-            println!(
-                "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
-                arc_center_u, arc_center_v, arc_start_u, arc_start_v, arc_finish_u, arc_finish_v
-            );
-        }
-
-        if let Point::OnWorkplane {
-            coords: [center_u, center_v],
+        SolveResult::Fail {
+            reason,
+            failed_constraints,
             ..
-        } = sys
-            .entity_data(&circle_center)
-            .expect("data for circle_center found")
-        {
-            let radius = sys
-                .entity_data(&circle_radius)
-                .expect("data for circle_radius found")
-                .val;
+        } => {
             println!(
-                "circle center ({:.3} {:.3}) radius {:.3}",
-                center_u, center_v, radius
+                "solve failed: problematic constraints are: {:#?}",
+                failed_constraints
             );
-        }
 
-        println!("{} DOF", ok_result.dof);
-    } else if let Err(fail_result) = result {
-        println!(
-            "solve failed: problematic constraints are: {:#?}",
-            fail_result.failed_constraints
-        );
-
-        match fail_result.reason {
-            FailReason::Inconsistent => println!("system inconsistent"),
-            _ => println!("system nonconvergent"),
+            match reason {
+                FailReason::Inconsistent => println!("system inconsistent"),
+                _ => println!("system nonconvergent"),
+            }
         }
     }
 }

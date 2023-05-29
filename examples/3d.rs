@@ -1,6 +1,7 @@
 use slvs::{
     constraint::PtPtDistance,
     entity::{LineSegment, Point},
+    system::SolveResult,
     System,
 };
 
@@ -36,25 +37,26 @@ fn main() {
     let result = sys.solve(&g);
     sys.clear_dragged();
 
-    if let Ok(ok_result) = result {
-        if let Point::In3d {
-            coords: [x1, y1, z1],
-            ..
-        } = sys.entity_data(&p1).expect("p1 should exist")
-        {
-            println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);
-        }
+    match result {
+        SolveResult::Ok { dof } => {
+            if let Point::In3d {
+                coords: [x1, y1, z1],
+                ..
+            } = sys.entity_data(&p1).expect("p1 should exist")
+            {
+                println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);
+            }
 
-        if let Point::In3d {
-            coords: [x2, y2, z2],
-            ..
-        } = sys.entity_data(&p2).expect("p2 should exist")
-        {
-            println!("             ({:.3} {:.3} {:.3})", x2, y2, z2);
-        }
+            if let Point::In3d {
+                coords: [x2, y2, z2],
+                ..
+            } = sys.entity_data(&p2).expect("p2 should exist")
+            {
+                println!("             ({:.3} {:.3} {:.3})", x2, y2, z2);
+            }
 
-        println!("{} DOF", ok_result.dof);
-    } else {
-        println!("solve failed");
+            println!("{} DOF", dof);
+        }
+        SolveResult::Fail { .. } => println!("solve failed"),
     }
 }

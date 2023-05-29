@@ -1,7 +1,11 @@
 /*!
 Each [entity][`crate::entity`] and [constraint][`crate::constraint`] is assigned to a [`Group`].
 
-When solving the system, the solver will only modify elements belonging to the group specified.
+A group is a set of entities and constraints that is solved simultaneously. In a
+parametric CAD system, a single group would typically correspond to a single sketch.
+Constraints within a group may refer to entities outside that group, but only the
+entities within that group will be modified by the solver.
+
 In this way, a sketch can reference elements drawn previously, while ensuring that
 modifications to the system do not propogate backwards into previously defined elements.
 */

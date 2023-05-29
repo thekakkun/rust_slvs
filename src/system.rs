@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     bindings::{
@@ -7,7 +7,8 @@ use crate::{
         SLVS_C_EQUAL_RADIUS, SLVS_C_PROJ_PT_DISTANCE, SLVS_C_PT_ON_CIRCLE, SLVS_E_ARC_OF_CIRCLE,
         SLVS_E_CIRCLE, SLVS_E_CUBIC, SLVS_E_DISTANCE, SLVS_E_LINE_SEGMENT, SLVS_E_NORMAL_IN_2D,
         SLVS_E_NORMAL_IN_3D, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D, SLVS_E_WORKPLANE,
-        SLVS_FREE_IN_3D,
+        SLVS_FREE_IN_3D, SLVS_RESULT_DIDNT_CONVERGE, SLVS_RESULT_INCONSISTENT, SLVS_RESULT_OKAY,
+        SLVS_RESULT_TOO_MANY_UNKNOWNS,
     },
     constraint::{
         AsConstraintData, AsConstraintHandle, ConstraintHandle, CurveCurveTangent, Diameter,
@@ -18,7 +19,6 @@ use crate::{
         ArcOfCircle, AsEntityData, AsEntityHandle, Circle, Cubic, EntityHandle, LineSegment, Normal,
     },
     group::Group,
-    solver::{FailReason, SolveFail, SolveOkay},
 };
 
 #[derive(Debug, Serialize)]
@@ -379,6 +379,36 @@ impl System {
 // Solving the system
 ////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug)]
+pub enum SolveResult {
+    Ok {
+        dof: i32,
+    },
+    Fail {
+        dof: i32,
+        reason: FailReason,
+        failed_constraints: Vec<Box<dyn AsConstraintHandle>>,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum FailReason {
+    Inconsistent,
+    DidntConverge,
+    TooManyUnknowns,
+}
+
+impl From<i32> for FailReason {
+    fn from(value: i32) -> Self {
+        match value as _ {
+            SLVS_RESULT_INCONSISTENT => Self::Inconsistent,
+            SLVS_RESULT_DIDNT_CONVERGE => Self::DidntConverge,
+            SLVS_RESULT_TOO_MANY_UNKNOWNS => Self::TooManyUnknowns,
+            _ => panic!("unknown result value: {}", value),
+        }
+    }
+}
+
 impl System {
     // Check generate.cpp. Has info on mapping from entity to paramater
     pub fn set_dragged<E: AsEntityData>(
@@ -410,7 +440,7 @@ impl System {
         self.dragged = [0; 4];
     }
 
-    pub fn solve(&mut self, group: &Group) -> Result<SolveOkay, SolveFail> {
+    pub fn solve(&mut self, group: &Group) -> SolveResult {
         let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
         let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
 
@@ -418,10 +448,13 @@ impl System {
             Slvs_Solve(&mut slvs_system, group.handle());
         };
 
-        match FailReason::try_from(slvs_system.result) {
-            Ok(fail_reason) => Err(SolveFail {
+        match slvs_system.result as _ {
+            SLVS_RESULT_OKAY => SolveResult::Ok {
                 dof: slvs_system.dof,
-                reason: fail_reason,
+            },
+            _ => SolveResult::Fail {
+                dof: slvs_system.dof,
+                reason: slvs_system.result.into(),
                 failed_constraints: failed_handles
                     .into_iter()
                     .filter_map(|h| match h {
@@ -429,10 +462,7 @@ impl System {
                         _ => Some(self.boxed_constraint_handle(*self.slvs_constraint(h).unwrap())),
                     })
                     .collect(),
-            }),
-            Err(_) => Ok(SolveOkay {
-                dof: slvs_system.dof,
-            }),
+            },
         }
     }
 }

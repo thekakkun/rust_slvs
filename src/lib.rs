@@ -6,12 +6,10 @@ Sketch geometries by creating [entities][`entity`] within the system,
 then add [constraints][`constraint`] to define relationships between multiple
 entities.
 
-While the original C++ library used the `Slvs_Entity` and `Slvs_Constraint` structs
-to store all data pertaining to entities and constraints, these have been split
-into handles ([`entity::EntityHandle`] and [`constraint::ConstraintHandle`]) and
-data (structs that implement [`entity::AsEntityData`] and [`constraint::AsConstraintData`])
-use the handles as "keys" to reference elements, and data structs as typed "values"
-to add and update elements within `System`.
+Entities and constraints are referenced by their handles ([`entity::EntityHandle`]
+and [`constraint::ConstraintHandle`], respectively). These are wrappers around
+`u32` values with a phantom type used to ensure that entity and constraint definitions
+are correctly referencing the expected type of entity.
 
 # Examples
 
@@ -24,7 +22,7 @@ use slvs::{
     constraint::{Diameter, EqualRadius, PtLineDistance, PtPtDistance, Vertical},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
     make_quaternion,
-    solver::FailReason,
+    system::{FailReason, SolveResult},
     System,
 };
 
@@ -115,7 +113,7 @@ sys.constrain(PtPtDistance::new(g2, p1, p2, 30.0, Some(workplane)))
 sys.constrain(PtLineDistance::new(g2, origin, line, 10.0, Some(workplane)))
     .expect("distance from line to origin is 10.0");
 // And the line segment is vertical.
-sys.constrain(Vertical::new_line(g2, workplane, line))
+sys.constrain(Vertical::from_line(g2, workplane, line))
     .expect("line segment is vertical");
 // And the distance from one endpoint to the origin is 15.0 units.
 sys.constrain(PtPtDistance::new(g2, p1, origin, 15.0, Some(workplane)))
@@ -135,76 +133,89 @@ sys.constrain(Diameter::new(g2, arc, 17.0 * 2.0))
 // And solve.
 let result = sys.solve(&g2);
 
-if let Ok(ok_result) = result {
-    println!("solved okay");
-    if let (
-        Point::OnWorkplane {
-            coords: [u1, v1], ..
-        },
-        Point::OnWorkplane {
-            coords: [u2, v2], ..
-        },
-    ) = (
-        sys.entity_data(&p1).expect("data for p1 found"),
-        sys.entity_data(&p2).expect("data for p1 found"),
-    ) {
-        println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
+match result {
+    SolveResult::Ok { dof } => {
+        println!("solved okay");
+        if let (
+            Point::OnWorkplane {
+                coords: [u1, v1], ..
+            },
+            Point::OnWorkplane {
+                coords: [u2, v2], ..
+            },
+        ) = (
+            sys.entity_data(&p1).expect("data for p1 found"),
+            sys.entity_data(&p2).expect("data for p1 found"),
+        ) {
+            println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
+        }
+
+        if let (
+            Point::OnWorkplane {
+                coords: [arc_center_u, arc_center_v],
+                ..
+            },
+            Point::OnWorkplane {
+                coords: [arc_start_u, arc_start_v],
+                ..
+            },
+            Point::OnWorkplane {
+                coords: [arc_finish_u, arc_finish_v],
+                ..
+            },
+        ) = (
+            sys.entity_data(&arc_center)
+                .expect("data for arc_center found"),
+            sys.entity_data(&arc_start)
+                .expect("data for arc_start found"),
+            sys.entity_data(&arc_finish)
+                .expect("data for arc_finish found"),
+        ) {
+            println!(
+                "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
+                arc_center_u,
+                arc_center_v,
+                arc_start_u,
+                arc_start_v,
+                arc_finish_u,
+                arc_finish_v
+            );
+        }
+
+        if let Point::OnWorkplane {
+            coords: [center_u, center_v],
+            ..
+        } = sys
+            .entity_data(&circle_center)
+            .expect("data for circle_center found")
+        {
+            let radius = sys
+                .entity_data(&circle_radius)
+                .expect("data for circle_radius found")
+                .val;
+            println!(
+                "circle center ({:.3} {:.3}) radius {:.3}",
+                center_u, center_v, radius
+            );
+        }
+
+        println!("{} DOF", dof);
     }
 
-    if let (
-        Point::OnWorkplane {
-            coords: [arc_center_u, arc_center_v],
-            ..
-        },
-        Point::OnWorkplane {
-            coords: [arc_start_u, arc_start_v],
-            ..
-        },
-        Point::OnWorkplane {
-            coords: [arc_finish_u, arc_finish_v],
-            ..
-        },
-    ) = (
-        sys.entity_data(&arc_center)
-            .expect("data for arc_center found"),
-        sys.entity_data(&arc_start)
-            .expect("data for arc_start found"),
-        sys.entity_data(&arc_finish)
-            .expect("data for arc_finish found"),
-    ) {
-        println!(
-            "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
-            arc_center_u, arc_center_v, arc_start_u, arc_start_v, arc_finish_u, arc_finish_v
-        );
-    }
-
-    if let Point::OnWorkplane {
-        coords: [center_u, center_v],
+    SolveResult::Fail {
+        reason,
+        failed_constraints,
         ..
-    } = sys
-        .entity_data(&circle_center)
-        .expect("data for circle_center found")
-    {
-        let radius = sys
-            .entity_data(&circle_radius)
-            .expect("data for circle_radius found")
-            .val;
+    } => {
         println!(
-            "circle center ({:.3} {:.3}) radius {:.3}",
-            center_u, center_v, radius
+            "solve failed: problematic constraints are: {:#?}",
+            failed_constraints
         );
-    }
 
-    println!("{} DOF", ok_result.dof);
-} else if let Err(fail_result) = result {
-    println!(
-        "solve failed: problematic constraints are: {:#?}",
-        fail_result.failed_constraints
-    );
-
-    match fail_result.reason {
-        FailReason::Inconsistent => println!("system inconsistent"),
-        _ => println!("system nonconvergent"),
+        match reason {
+            FailReason::Inconsistent => println!("system inconsistent"),
+            _ => println!("system nonconvergent"),
+        }
     }
 }
 ```
@@ -213,11 +224,10 @@ if let Ok(ok_result) = result {
 pub mod constraint;
 pub mod entity;
 pub mod group;
-pub mod solver;
 
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 pub use system::System;
 
 mod bindings;
 mod element;
-mod system;
+pub mod system;
