@@ -48,6 +48,7 @@ use crate::{
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsEntityHandle: AsAny + AsHandle {
+    /// Get the type name as a string
     fn type_name(&self) -> &'static str;
 }
 
@@ -117,6 +118,7 @@ impl From<Slvs_Entity> for Box<dyn AsEntityHandle> {
 /// handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityHandle<E: AsEntityData> {
+    /// The entity handle
     pub handle: u32,
     pub(super) phantom: PhantomData<E>,
 }

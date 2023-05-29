@@ -27,17 +27,27 @@ pub trait FromSystem {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! define_element {
-    ($slvs_type:ident,
+    (
+        $slvs_type:ident,
+        $(#[$doc:meta])*
         struct $name:ident {
-            $($field_name:ident: $field_type:ty,)*
+            $(
+                $(#[$member_doc:meta])*
+                $field_name:ident: $field_type:ty,
+            )*
         }) => {
         #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+        $(#[$doc])*
         pub struct $name {
+            /// The group that `entity` belongs to.
             pub group: Group,
-            $(pub $field_name: $field_type,)*
+            $(  $(#[$member_doc])*
+                pub $field_name: $field_type,
+            )*
         }
 
         impl $name {
+            #[doc = concat!( "Create a new `", stringify!($name), "` instance.")]
             pub fn new(group: Group, $($field_name: $field_type,)*) -> Self {
                 Self{
                     group,
