@@ -30,7 +30,7 @@ fn main() {
 
     // Let's tell the solver to keep the second point as close to constant
     // as possible, instead moving the first point.
-    sys.set_dragged(&p2);
+    sys.set_dragged(p2).expect("p2 is locked in place");
 
     // Now that we have written our system, we solve.
     let result = sys.solve(&g);

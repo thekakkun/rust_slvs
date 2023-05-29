@@ -25,7 +25,7 @@ pub enum Vertical {
 }
 
 impl Vertical {
-    pub fn new_points(
+    pub fn from_points(
         group: Group,
         workplane: EntityHandle<Workplane>,
         point_a: EntityHandle<Point>,
@@ -39,7 +39,7 @@ impl Vertical {
         }
     }
 
-    pub fn new_line(
+    pub fn from_line(
         group: Group,
         workplane: EntityHandle<Workplane>,
         line: EntityHandle<LineSegment>,

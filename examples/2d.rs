@@ -96,7 +96,7 @@ fn main() {
     sys.constrain(PtLineDistance::new(g2, origin, line, 10.0, Some(workplane)))
         .expect("distance from line to origin is 10.0");
     // And the line segment is vertical.
-    sys.constrain(Vertical::new_line(g2, workplane, line))
+    sys.constrain(Vertical::from_line(g2, workplane, line))
         .expect("line segment is vertical");
     // And the distance from one endpoint to the origin is 15.0 units.
     sys.constrain(PtPtDistance::new(g2, p1, origin, 15.0, Some(workplane)))
