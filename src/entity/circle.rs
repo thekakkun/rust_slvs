@@ -12,7 +12,15 @@ use crate::{
 
 define_element!(
     SLVS_E_CIRCLE,
+    /// A complete circle.
+    ///
+    /// The orientation is defined by a [Normal][crate::entity::Normal], and the size
+    /// of the circle is defined by passing a handle to a [Distance][crate::entity::Distance]
+    /// entity.
+    ///
+    /// See the [module-level documentation][crate] for usage example.
     struct Circle {
+        /// The circle lies within a plane with this normal
         normal: EntityHandle<Normal>,
         center: EntityHandle<Point>,
         radius: EntityHandle<Distance>,
