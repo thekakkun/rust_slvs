@@ -8,20 +8,23 @@ use crate::{
     System,
 };
 
+/// A point on a workplane or free in 3d.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Point {
+    /// A point within a workplane, defined by the workplane and two parameters within
+    /// the coordinate system of the workplane.
     OnWorkplane {
         group: Group,
         workplane: EntityHandle<Workplane>,
         coords: [f64; 2],
     },
-    In3d {
-        group: Group,
-        coords: [f64; 3],
-    },
+
+    /// A point in 3d. Defined by three parameters.
+    In3d { group: Group, coords: [f64; 3] },
 }
 
 impl Point {
+    /// Create a new `Point::OnWorkplane` instance.
     pub fn new_on_workplane(
         group: Group,
         workplane: EntityHandle<Workplane>,
@@ -34,6 +37,7 @@ impl Point {
         }
     }
 
+    /// Create a new `Point::In3d` instance.
     pub fn new_in_3d(group: Group, coords: [f64; 3]) -> Self {
         Self::In3d { group, coords }
     }

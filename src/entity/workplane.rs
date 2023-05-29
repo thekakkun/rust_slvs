@@ -12,10 +12,10 @@ use crate::{
 define_element!(
     SLVS_E_WORKPLANE,
     /// An oriented plane, somewhere in 3d.
-    /// 
+    ///
     /// This entity therefore has 6 degrees of freedom: three translational, and
     /// three rotational. It is specified in terms of its origin and a normal.
-    /// 
+    ///
     /// See the [module-level documentation][crate] for usage example.
     struct Workplane {
         origin: EntityHandle<Point>,

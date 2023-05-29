@@ -14,9 +14,9 @@ define_element!(
     /// A nonrational cubic Bezier segment.
     ///
     /// The curve has the equation:
-    /// 
+    ///
     /// `p(t) = P0*(1 - t)^3 + 3*P1*(1 - t)^2*t + 3*P2*(1 - t)*t^2 + P3*t^3]`
-    /// 
+    ///
     /// as `t` goes from 0 to 1.
     struct Cubic {
         start_point: EntityHandle<Point>,

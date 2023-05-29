@@ -8,12 +8,31 @@ use crate::{
     System,
 };
 
+/// A normal on a workplane or free in 3d.
+///
+/// In SolveSpace, "normals" represent a 3x3 rotation matrix from our base coordinate
+/// system to a new frame, defined by the unit quaternion `[w, x, y, z]` where the quaternion
+/// is given by `w + x*i + y*j + z*k`.
+///
+/// It is useful to think of this quaternion as representing a plane through the origin.
+/// This plane has three associated vectors: basis vectors `U`, `V` that lie within the
+/// plane, and normal `N` that is perpendicular to it.
+///
+/// Convenience functions are provided to convert between this representation as
+/// vectors `U`, `V`, `N` and the unit quaternion.
+///
+/// A unit quaternion has only 3 degrees of freedom, but is specified in terms of
+/// 4 parameters. An extra constraint is therefore generated implicitly, so that
+/// `w^2 + x^2 + y^2 + z^2 = 1`
+/// See the [module-level documentation][crate] for usage example.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Normal {
+    /// A normal within a workplane. This is identical to the workplane's normal.
     OnWorkplane {
         group: Group,
         workplane: EntityHandle<Workplane>,
     },
+    /// A `Normal` in 3d space.
     In3d {
         group: Group,
         w: f64,
@@ -24,10 +43,12 @@ pub enum Normal {
 }
 
 impl Normal {
+    /// Create a new `Normal::OnWorkplane` instance.
     pub fn new_on_workplane(group: Group, workplane: EntityHandle<Workplane>) -> Self {
         Self::OnWorkplane { group, workplane }
     }
 
+    /// Create a new `Normal::In3d` instance.
     pub fn new_in_3d(group: Group, quaternion: [f64; 4]) -> Self {
         let [w, x, y, z] = quaternion;
         Self::In3d { group, w, x, y, z }

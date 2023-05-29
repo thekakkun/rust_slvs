@@ -1,5 +1,3 @@
-// #![deny(missing_docs)]
-
 /*!
 This crate is a wrapper around the [SolveSpace](https://solvespace.com/index.pl)
 geometic constraint solver library.
