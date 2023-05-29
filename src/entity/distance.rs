@@ -11,6 +11,9 @@ use crate::{
 
 define_element!(
     SLVS_E_DISTANCE,
+    /// An entity used to define a radius for [Circle][crate::entity::Circle].
+    /// 
+    /// See the [module-level documentation][crate] for usage example.
     struct Distance {
         val: f64,
     }

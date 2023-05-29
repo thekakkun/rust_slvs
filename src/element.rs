@@ -39,7 +39,7 @@ macro_rules! define_element {
         #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
         $(#[$doc])*
         pub struct $name {
-            /// The group that `entity` belongs to.
+            #[doc = concat!("The group that `", stringify!($name), "` belongs to.")]
             pub group: Group,
             $(  $(#[$member_doc])*
                 pub $field_name: $field_type,
@@ -47,7 +47,7 @@ macro_rules! define_element {
         }
 
         impl $name {
-            #[doc = concat!( "Create a new `", stringify!($name), "` instance.")]
+            #[doc = concat!("Create a new `", stringify!($name), "` instance.")]
             pub fn new(group: Group, $($field_name: $field_type,)*) -> Self {
                 Self{
                     group,
