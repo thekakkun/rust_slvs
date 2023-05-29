@@ -1,9 +1,9 @@
 /*!
 An entity is a geometric thing, like a point or a line segment or a circle.
 
-Entities are sketched [OnWorkplane][crate::target::OnWorkplane] or [OnWorkplane][crate::target::In3d].
-The [EntityHandle], stores information about the type of entity and where it was sketched,
-which are used to ensure that other entities and constraints receive a handle for the expected type of entity.
+The [EntityHandle], stores information about the type of entity, which is used to
+ensure that handles reference the correct type of entity when defining other entities
+and constraints.
 
 They are defined and added to the using structs that implement [AsEntityData],
 and can be retrieved with the [EntityHandle] struct, which is a wrapper for the
@@ -44,6 +44,9 @@ use crate::{
     element::{AsAny, AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
 
+/// An object wrapping a handle for an entity.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsEntityHandle: AsAny + AsHandle {
     fn type_name(&self) -> &'static str;
 }
@@ -110,7 +113,8 @@ impl From<Slvs_Entity> for Box<dyn AsEntityHandle> {
 /// Wrapper for an entity handle.
 ///
 /// The type argument holds information about what type of entity it references,
-/// which is used to check that entity definitions receive the correct type of entity handle.
+/// which is used to check that entity definitions receive the correct type of entity
+/// handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityHandle<E: AsEntityData> {
     pub handle: u32,
@@ -162,14 +166,33 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
-pub trait AsRadiused: AsEntityData {}
-impl AsRadiused for ArcOfCircle {}
-impl AsRadiused for Circle {}
+/// An entity that has a radius.
+///
+/// Used as arguments when creating the [Diameter][crate::constraint::Diameter],
+/// [EqualRadius][crate::constraint::EqualRadius], and [PtOnCircle][crate::constraint::PtOnCircle]
+/// constraints.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
+pub trait AsArc: AsEntityData {}
+impl AsArc for ArcOfCircle {}
+impl AsArc for Circle {}
 
+/// An entity that is a curve with start and end points.
+///
+/// Used as arguments when creating the [CurveCurveTangent][crate::constraint::CurveCurveTangent]
+/// constraint.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsCurve: AsEntityData {}
 impl AsCurve for ArcOfCircle {}
 impl AsCurve for Cubic {}
 
+/// An entity that is a 2d projection target.
+///
+/// Used as an argument when creating the [ProjPtDistance][crate::constraint::ProjPtDistance]
+/// constraint.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsProjectionTarget: AsEntityData {}
 impl AsProjectionTarget for LineSegment {}
 impl AsProjectionTarget for Normal {}

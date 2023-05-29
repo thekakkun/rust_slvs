@@ -4,47 +4,43 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsRadiused, EntityHandle, Point},
+    entity::{AsArc, EntityHandle, Point},
     group::Group,
     System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PtOnCircle<R: AsRadiused> {
+pub struct PtOnCircle<A: AsArc> {
     pub group: Group,
     pub point: EntityHandle<Point>,
-    pub circle: EntityHandle<R>,
+    pub arc: EntityHandle<A>,
 }
 
-impl<R: AsRadiused> PtOnCircle<R> {
-    pub fn new(group: Group, point: EntityHandle<Point>, circle: EntityHandle<R>) -> Self {
-        Self {
-            group,
-            point,
-            circle,
-        }
+impl<A: AsArc> PtOnCircle<A> {
+    pub fn new(group: Group, point: EntityHandle<Point>, arc: EntityHandle<A>) -> Self {
+        Self { group, point, arc }
     }
 }
 
-impl<R: AsRadiused> AsGroup for PtOnCircle<R> {
+impl<A: AsArc> AsGroup for PtOnCircle<A> {
     fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 }
 
-impl<R: AsRadiused> AsSlvsType for PtOnCircle<R> {
+impl<A: AsArc> AsSlvsType for PtOnCircle<A> {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_CIRCLE as _
     }
 }
 
-impl<R: AsRadiused> AsConstraintData for PtOnCircle<R> {
+impl<A: AsArc> AsConstraintData for PtOnCircle<A> {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.circle.handle(), 0, 0, 0])
+        Some([self.arc.handle(), 0, 0, 0])
     }
 
     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
@@ -52,7 +48,7 @@ impl<R: AsRadiused> AsConstraintData for PtOnCircle<R> {
     }
 }
 
-impl<R: AsRadiused> FromSystem for PtOnCircle<R> {
+impl<A: AsArc> FromSystem for PtOnCircle<A> {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -63,7 +59,7 @@ impl<R: AsRadiused> FromSystem for PtOnCircle<R> {
             Ok(Self {
                 group: Group(slvs_constraint.group),
                 point: EntityHandle::new(slvs_constraint.ptA),
-                circle: EntityHandle::new(slvs_constraint.entityA),
+                arc: EntityHandle::new(slvs_constraint.entityA),
             })
         } else {
             Err("Expected constraint to have type SLVS_C_PT_ON_CIRCLE.")

@@ -24,6 +24,7 @@ pub trait FromSystem {
         Self: Sized;
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! define_element {
     ($slvs_type:ident,

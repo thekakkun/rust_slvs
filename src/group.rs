@@ -1,11 +1,9 @@
 /*!
-Each [`crate::entity`] and [`crate::constraint`] is assigned to a [`Group`].
+Each [entity][`crate::entity`] and [constraint][`crate::constraint`] is assigned to a [`Group`].
 
 When solving the system, the solver will only modify elements belonging to the group specified.
 In this way, a sketch can reference elements drawn previously, while ensuring that
 modifications to the system do not propogate backwards into previously defined elements.
-
-Typycally, a group corresponds to a single sketch.
 */
 
 use serde::{Deserialize, Serialize};

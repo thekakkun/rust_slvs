@@ -4,74 +4,74 @@ use super::AsConstraintData;
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsRadiused, EntityHandle},
+    entity::{AsArc, EntityHandle},
     group::Group,
     System,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct EqualRadius<RA, RB>
+pub struct EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
     pub group: Group,
-    pub radius_a: EntityHandle<RA>,
-    pub radius_b: EntityHandle<RB>,
+    pub arc_a: EntityHandle<AA>,
+    pub arc_b: EntityHandle<AB>,
 }
 
-impl<RA, RB> EqualRadius<RA, RB>
+impl<AA, AB> EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
-    pub fn new(group: Group, radius_a: EntityHandle<RA>, radius_b: EntityHandle<RB>) -> Self {
+    pub fn new(group: Group, arc_a: EntityHandle<AA>, arc_b: EntityHandle<AB>) -> Self {
         Self {
             group,
-            radius_a,
-            radius_b,
+            arc_a,
+            arc_b,
         }
     }
 }
 
-impl<RA, RB> AsGroup for EqualRadius<RA, RB>
+impl<AA, AB> AsGroup for EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
     fn group(&self) -> Slvs_hGroup {
         self.group.handle()
     }
 }
 
-impl<RA, RB> AsSlvsType for EqualRadius<RA, RB>
+impl<AA, AB> AsSlvsType for EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
 }
 
-impl<RA, RB> AsConstraintData for EqualRadius<RA, RB>
+impl<AA, AB> AsConstraintData for EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.radius_a.handle(), self.radius_b.handle(), 0, 0])
+        Some([self.arc_a.handle(), self.arc_b.handle(), 0, 0])
     }
 }
 
-impl<RA, RB> FromSystem for EqualRadius<RA, RB>
+impl<AA, AB> FromSystem for EqualRadius<AA, AB>
 where
-    RA: AsRadiused,
-    RB: AsRadiused,
+    AA: AsArc,
+    AB: AsArc,
 {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
@@ -82,8 +82,8 @@ where
         if SLVS_C_EQUAL_RADIUS == slvs_constraint.type_ as _ {
             Ok(Self {
                 group: Group(slvs_constraint.group),
-                radius_a: EntityHandle::new(slvs_constraint.entityA),
-                radius_b: EntityHandle::new(slvs_constraint.entityB),
+                arc_a: EntityHandle::new(slvs_constraint.entityA),
+                arc_b: EntityHandle::new(slvs_constraint.entityB),
             })
         } else {
             Err("Expected constraint to have type SLVS_C_EQUAL_RADIUS.")
