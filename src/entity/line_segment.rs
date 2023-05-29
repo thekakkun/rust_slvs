@@ -11,6 +11,9 @@ use crate::{
 
 define_element!(
     SLVS_E_LINE_SEGMENT,
+    /// A line segment between two points.
+    /// 
+    /// See the [module-level documentation][crate] for usage example.
     struct LineSegment {
         point_a: EntityHandle<Point>,
         point_b: EntityHandle<Point>,
