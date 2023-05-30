@@ -1,11 +1,6 @@
 /*!
 A constraint is a geometric property of an entity, or a relationship between
 multiple entities.
-
-Add constraints to the [`crate::System`] by passing structs that implement
-[`AsConstraintData`] to [`crate::System::constrain()`].
-The handle struct [`ConstraintHandle`] is returned which can then be used retrieve
-or modify constraint data.
  */
 
 pub use angle::Angle;

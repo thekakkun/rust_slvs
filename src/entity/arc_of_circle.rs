@@ -24,7 +24,9 @@ define_element!(
     /// This representation has an extra degree of freedom. An extra
     /// constraint is therefore generated implicitly, so that
     ///
-    /// `distance(center, beginning) = distance(center, end)`
+    /// ```text
+    /// distance(center, start) = distance(center, end)
+    /// ```
     ///
     /// See the [module-level documentation][crate] for usage example.
     struct ArcOfCircle {

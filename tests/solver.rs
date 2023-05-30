@@ -20,19 +20,15 @@ fn inconsistent_constraints() {
     // distance between p1 and p2 is 10
     sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
         .expect("distance constraint added");
-    // distance between p1 and p2 is 20
+    // distance between p1 and p2 is 10
     sys.constrain(PtPtDistance::new(g, p1, p2, 20.0, None))
         .expect("distance constraint added");
 
     let solve_result = sys.solve(&g);
 
-    if let SolveResult::Fail {
-        reason,
-        failed_constraints,
-        ..
-    } = solve_result
-    {
+    if let SolveResult::Fail { reason, .. } = solve_result {
         assert_eq!(reason, FailReason::Inconsistent);
-        println!("{:?}", failed_constraints);
     }
+    println!("{:#?}", sys.entity_data(&p1));
+    println!("{:#?}", sys.entity_data(&p2));
 }

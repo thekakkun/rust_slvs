@@ -2,12 +2,12 @@
 This crate is a wrapper around the [SolveSpace](https://solvespace.com/index.pl)
 geometic constraint solver library.
 
-Sketch geometries by creating [entities][`entity`] within the system,
-then add [constraints][`constraint`] to define relationships between multiple
+Sketch geometries by creating [entities][crate::entity] within the system,
+then add [constraints][crate::constraint] to define relationships between multiple
 entities.
 
-Entities and constraints are referenced by their handles ([`entity::EntityHandle`]
-and [`constraint::ConstraintHandle`], respectively). These are wrappers around
+Entities and constraints are referenced by their handles ([crate::entity::EntityHandle]
+and [crate::constraint::ConstraintHandle], respectively). These are wrappers around
 `u32` values with a phantom type used to ensure that entity and constraint definitions
 are correctly referencing the expected type of entity.
 
@@ -17,7 +17,7 @@ An example of a constraint in 2d. In our first group, we create a workplane
 along the reference frame's xy plane. In a second group, we create some
 entities in that group and dimension them.
 
-```rust
+```
 use slvs::{
     constraint::{Diameter, EqualRadius, PtLineDistance, PtPtDistance, Vertical},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
@@ -221,6 +221,8 @@ match result {
 ```
 */
 
+// #[warn(missing_docs)]
+
 pub mod constraint;
 pub mod entity;
 pub mod group;
@@ -229,5 +231,5 @@ pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 pub use system::System;
 
 mod bindings;
-mod element;
+pub mod element;
 pub mod system;

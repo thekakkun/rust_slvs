@@ -21,6 +21,11 @@ use crate::{
     group::Group,
 };
 
+/// Wrapper around the SolveSpace C structs.
+///
+/// This object is used to store the list of structs expected by the C library.
+/// See the [header file](https://github.com/solvespace/solvespace/blob/master/include/slvs.h)
+/// for what these structs should look like.
 #[derive(Debug, Serialize)]
 pub struct Elements<T> {
     pub list: Vec<T>,
@@ -35,7 +40,7 @@ impl<T> Elements<T> {
         }
     }
 
-    fn get_next_h(&mut self) -> u32 {
+    fn next_h(&mut self) -> u32 {
         let current_h = self.next_h;
         self.next_h += 1;
 
@@ -49,14 +54,22 @@ impl<T> Default for Elements<T> {
     }
 }
 
+/// Object stores all data regarding parameters, entities, and constraints.
 #[derive(Debug, Serialize)]
 pub struct System {
+    /// Groups in the system. Not used within the SolveSpace library, but useful
+    /// to see what groups exist in the system.
     pub groups: Elements<Group>,
+    /// Params as used by the SolveSpace library. Unlike the original C library, these
+    /// are automatically created/updated as necessary, and methods are not surfaced for
+    /// the user to interact with them.
     pub params: Elements<Slvs_Param>,
     pub entities: Elements<Slvs_Entity>,
     pub constraints: Elements<Slvs_Constraint>,
+    /// Sets whether the solver tries to figure out what constraints failed, which can
+    /// be a relatively slow process.
     pub calculate_faileds: bool,
-    pub dragged: [Slvs_hParam; 4],
+    pub(crate) dragged: [Slvs_hParam; 4],
 }
 
 impl System {
@@ -72,18 +85,44 @@ impl System {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Adding elements
-////////////////////////////////////////////////////////////////////////////////
-
 impl System {
+    /// Add a new `Group` to the `System`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{System, group::Group};
+    ///
+    /// let mut sys = System::new();
+    /// let group: Group = sys.add_group();
+    /// ```
     pub fn add_group(&mut self) -> Group {
-        let new_group = Group(self.groups.get_next_h());
+        let new_group = Group(self.groups.next_h());
 
         self.groups.list.push(new_group);
         self.groups.list.last().cloned().unwrap()
     }
 
+    /// Add a new [entity][crate::entity] to the system.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity_data` - A struct defining some sort of `EntityData`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{System, entity::Point};
+    ///
+    /// let mut sys = System::new();
+    /// let group = sys.add_group();
+    /// sys.sketch(Point::new_in_3d(group, [10.0, 20.0, 30.0]));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// If any of the entities referenced in `entity_data` are not found in the system,
+    /// an error will be returned.
     pub fn sketch<E: AsEntityData>(
         &mut self,
         entity_data: E,
@@ -104,7 +143,7 @@ impl System {
         });
 
         let slvs_entity = Slvs_Entity {
-            h: self.entities.get_next_h(),
+            h: self.entities.next_h(),
             group: entity_data.group(),
             type_: entity_data.slvs_type(),
             wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
@@ -121,6 +160,35 @@ impl System {
         Ok(entity_handle)
     }
 
+    /// [Constrain][crate::constraint] entities within the system.
+    ///
+    /// Note that constraints are applied to the system, only once [`System::solve`] has been called.
+    ///
+    /// # Arguments
+    ///
+    /// * `constraint_data` - A struct defining some sort of `ConstraintData`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{System, constraint::PointsCoincident, entity::Point};
+    ///
+    /// let mut sys = System::new();
+    /// let group = sys.add_group();
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(group, [0.0, 0.0, 0.0]))
+    ///     .expect("point created at (0, 0, 0)");
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(group, [10.0, 20.0, 30.0]))
+    ///     .expect("point created at (10, 20, 30");
+    /// sys.constrain(PointsCoincident::new(group, p1, p2, None))
+    ///     .expect("Constraint added so that p1 and p2 are coincident");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// If any of the entities referenced in `constraint_data` are not found in the system,
+    /// an error will be returned.
     pub fn constrain<C: AsConstraintData>(
         &mut self,
         constraint_data: C,
@@ -132,7 +200,7 @@ impl System {
         let [other, other2] = constraint_data.others();
 
         let slvs_constraint = Slvs_Constraint {
-            h: self.constraints.get_next_h(),
+            h: self.constraints.next_h(),
             group: constraint_data.group(),
             type_: constraint_data.slvs_type(),
             wrkpl: constraint_data.workplane().unwrap_or(SLVS_FREE_IN_3D),
@@ -154,37 +222,112 @@ impl System {
         Ok(constraint_handle)
     }
 
-    // Private as user has no reason to create bare param without linking to an entity.
-    pub(crate) fn add_param(&mut self, group: Slvs_hGroup, val: f64) -> Slvs_hParam {
-        let new_param = Slvs_Param {
-            h: self.params.get_next_h(),
-            group,
-            val,
-        };
-
-        self.params.list.push(new_param);
-        self.params.list.last().unwrap().h
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Getting element data
-////////////////////////////////////////////////////////////////////////////////
-
-impl System {
+    /// Get a list of groups within the system.
     pub fn groups(&self) -> Vec<Group> {
         self.groups.list.clone()
     }
 
-    pub fn entity_handles(&self, group: Option<&Group>) -> Vec<Box<dyn AsEntityHandle>> {
+    /// Get a list of the entity handles within the system
+    ///
+    /// # Arguments
+    ///
+    /// * `group` - If provided, only returns handles for entities belonging to group.
+    /// * `entity_handle` - If provided, only returns handles for entities that reference this entity.
+    /// Note that the returned vector will not include the handle for the one specified here.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{
+    /// element::AsHandle,
+    ///   entity::{LineSegment, Point},
+    ///   System,
+    /// };
+    ///
+    /// let mut sys = System::new();
+    /// let g1 = sys.add_group();
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(g1, [0.0, 0.0, 0.0]))
+    ///     .expect("p1 belongs in g1");
+    /// let g2 = sys.add_group();
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(g2, [10.0, 10.0, 10.0]))
+    ///     .expect("p2 belongs in g1");
+    ///
+    /// let line = sys
+    ///     .sketch(LineSegment::new(g1, p1, p2))
+    ///     .expect("line 1 belongs in g1, references p1 and p2");
+    ///
+    /// let entity_handles = sys.entity_handles(None, None);
+    /// assert!(entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    ///
+    /// // p2 is the only entity in g2
+    /// let g2_entity_handles = sys.entity_handles(Some(&g2), None);
+    /// assert!(!g2_entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
+    /// assert!(g2_entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
+    /// assert!(!g2_entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    ///
+    /// // line is the only entity that references p1
+    /// let p1_entity_handles = sys.entity_handles(None, Some(&p1));
+    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
+    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
+    /// assert!(p1_entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// ```
+    pub fn entity_handles(
+        &self,
+        group: Option<&Group>,
+        entity_handle: Option<&dyn AsEntityHandle>,
+    ) -> Vec<Box<dyn AsEntityHandle>> {
         self.entities
             .list
             .iter()
             .filter(|&slvs_entity| group.map_or(true, |group| slvs_entity.group == group.handle()))
+            .filter(|&slvs_entity| {
+                entity_handle.map_or(true, |entity_handle| {
+                    [slvs_entity.wrkpl, slvs_entity.normal, slvs_entity.distance]
+                        .contains(&entity_handle.handle())
+                        | slvs_entity.point.contains(&entity_handle.handle())
+                })
+            })
             .map(|&slvs_entity| slvs_entity.into())
             .collect()
     }
 
+    /// Get the data for the entity referenced by handle.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity_handle` - Handle for the entity you want to get data on.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{entity::Point, System};
+    ///
+    /// let mut sys = System::new();
+    /// let g = sys.add_group();
+    ///
+    /// let p = sys
+    ///     .sketch(Point::new_in_3d(g, [10.0, 20.0, 30.0]))
+    ///     .expect("point in 3d created at (10, 20, 30)");
+    ///
+    /// let p_data = sys.entity_data(&p).expect("point found");
+    /// if let Point::In3d {
+    ///     coords: [x, y, z], ..
+    /// } = p_data
+    /// {
+    ///     assert_eq!(x, 10.0);
+    ///     assert_eq!(y, 20.0);
+    ///     assert_eq!(z, 30.0);
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if entity with that handle does not exist, or if entity data
+    /// within the system is not for entity of type `E`.
     pub fn entity_data<E: AsEntityData>(
         &self,
         entity_handle: &EntityHandle<E>,
@@ -192,6 +335,57 @@ impl System {
         E::from_system(self, entity_handle)
     }
 
+    /// Get a list of the constraint handles within the system
+    ///
+    /// # Arguments
+    ///
+    /// * `group` - If provided, only returns handles for constraints belonging to group.
+    /// * `entity_handle` - If provided, only returns handles for constraints acting upon entity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{
+    ///     constraint::{PointsCoincident, PtPtDistance},
+    ///     entity::Point,
+    ///     System,
+    /// };
+    ///
+    /// let mut sys = System::new();
+    /// let g = sys.add_group();
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(g, [0.0, 0.0, 0.0]))
+    ///     .expect("p1 created");
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
+    ///     .expect("p2 created");
+    /// let p3 = sys
+    ///     .sketch(Point::new_in_3d(g, [20.0, 20.0, 20.0]))
+    ///     .expect("p2 created");
+    ///
+    /// let p_coincident = sys
+    ///     .constrain(PointsCoincident::new(g, p1, p2, None))
+    ///     .expect("p1 and p2 are coincident");
+    /// let p_distance = sys
+    ///     .constrain(PtPtDistance::new(g, p2, p3, 10.0, None))
+    ///     .expect("p2 and p3 are 10 units apart");
+    ///
+    /// let constraint_handles = sys.constraint_handles(None, None);
+    /// assert!(constraint_handles
+    ///     .iter()
+    ///     .any(|c| Ok(p_coincident) == c.try_into()));
+    /// assert!(constraint_handles
+    ///     .iter()
+    ///     .any(|c| Ok(p_distance) == c.try_into()));
+    ///
+    /// let p1_constraint_handles = sys.constraint_handles(None, Some(&p1));
+    /// assert!(p1_constraint_handles
+    ///     .iter()
+    ///     .any(|c| Ok(p_coincident) == c.try_into()));
+    /// assert!(!p1_constraint_handles
+    ///     .iter()
+    ///     .any(|c| Ok(p_distance) == c.try_into()));
+    /// ```
     pub fn constraint_handles(
         &self,
         group: Option<&Group>,
@@ -220,32 +414,87 @@ impl System {
             .collect()
     }
 
+    /// Get the data for the constraint referenced by handle.
+    ///
+    /// # Arguments
+    /// * `constraint_handle` - Handle for the constraint you want data on.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{constraint::PointsCoincident, entity::Point, System};
+    ///
+    /// let mut sys = System::new();
+
+    /// let g = sys.add_group();
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(g, [0.0, 0.0, 0.0]))
+    ///     .expect("p1 created");
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
+    ///     .expect("p2 created");
+
+    /// let p_coincident = sys
+    ///     .constrain(PointsCoincident::new(g, p1, p2, None))
+    ///     .expect("p1 and p2 are coincident");
+
+    /// println!(
+    ///     "{:#?}",
+    ///     sys.constraint_data(&p_coincident)
+    ///         .expect("coincident data found")
+    /// );
+    /// ```
     pub fn constraint_data<C: AsConstraintData>(
         &self,
         constraint_handle: &ConstraintHandle<C>,
     ) -> Result<C, &'static str> {
         C::from_system(self, constraint_handle)
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-// Updating element data
-////////////////////////////////////////////////////////////////////////////////
-
-impl System {
-    pub(crate) fn update_param(
-        &mut self,
-        h: Slvs_hParam,
-        group: Slvs_hGroup,
-        val: f64,
-    ) -> Result<(), &'static str> {
-        let mut param = self.mut_slvs_param(h)?;
-        param.group = group;
-        param.val = val;
-
-        Ok(())
-    }
-
+    /// Update the entity data within the system, and return the updated entity data.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity_handle` - Handle for the entity you want to update.
+    /// * `f` - Function that takes a reference to the entity data and mutates it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{entity::Point, System};
+    ///
+    /// let mut sys = System::new();
+    /// let g = sys.add_group();
+    /// let p = sys
+    ///     .sketch(Point::new_in_3d(g, [0.0, 0.0, 0.0]))
+    ///     .expect("point in 3d created");
+    ///
+    /// let updated_p_x = 10.0;
+    /// let updated_p_y = 20.0;
+    /// let updated_p_z = 30.0;
+    ///
+    /// let updated_p_data = sys
+    ///     .update_entity(&p, |entity| {
+    ///         if let Point::In3d { ref mut coords, .. } = entity {
+    ///             *coords = [updated_p_x, updated_p_y, updated_p_z]
+    ///         }
+    ///     })
+    ///     .expect("should get updated point data");
+    ///
+    /// if let Point::In3d {
+    ///     coords: [x, y, z], ..
+    /// } = updated_p_data
+    /// {
+    ///     assert_eq!(x, updated_p_x);
+    ///     assert_eq!(y, updated_p_y);
+    ///     assert_eq!(z, updated_p_z);
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified entity does not exist, or if entity data references
+    /// any entity that does not exist.
     pub fn update_entity<E, F>(
         &mut self,
         entity_handle: &EntityHandle<E>,
@@ -291,6 +540,17 @@ impl System {
         Ok(entity_data)
     }
 
+    /// Update the constraint data within the system, and return the updated constraint data.
+    ///
+    /// # Arguments
+    ///
+    /// * `constraint_handle` - Handle for the constraint you want to update.
+    /// * `f` - Function that takes a reference to the constraint data and mutates it.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified constraint does not exist, or if the constraint data
+    /// references any entity that does not exist in the system.
     pub fn update_constraint<C, F>(
         &mut self,
         constraint_handle: &ConstraintHandle<C>,
@@ -325,13 +585,35 @@ impl System {
 
         Ok(constraint_data)
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-// Deleting elements
-////////////////////////////////////////////////////////////////////////////////
-
-impl System {
+    /// Deletes a group from the system
+    ///
+    /// Note that this *will not* delete the entities and constraints that belong to
+    /// said group.
+    ///
+    /// # Arguments
+    ///
+    /// * `group` - The group to be deleted.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::System;
+    ///
+    /// let mut sys = System::new();
+    ///
+    /// let g1 = sys.add_group();
+    /// let g2 = sys.add_group();
+    ///
+    /// sys.delete_group(g1).expect("g1 deleted");
+    /// let groups = sys.groups();
+    /// assert!(!groups.contains(&g1));
+    /// assert!(groups.contains(&g2));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified group does not exist in system.
     pub fn delete_group(&mut self, group: Group) -> Result<Group, &'static str> {
         let ix = self.group_ix(group.handle())?;
         self.groups.list.remove(ix);
@@ -346,6 +628,47 @@ impl System {
         Ok(())
     }
 
+    /// Deletes an entity from the system, and returns the data for that entity.
+    ///
+    /// Note that this *will not* delete entities and constraints that reference
+    /// the deleted entity.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity_handle` - Handle for entity to be deleted.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use slvs::{
+    /// entity::{LineSegment, Point},
+    /// System,
+    /// };
+    ///
+    /// let mut sys = System::new();
+    /// let g1 = sys.add_group();
+    ///
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(g1, [0.0, 0.0, 0.0]))
+    ///     .expect("p1 created");
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(g1, [10.0, 10.0, 10.0]))
+    ///     .expect("p2 created");
+    /// let line = sys
+    ///     .sketch(LineSegment::new(g1, p1, p2))
+    ///     .expect("line created between p1 and p2");
+    ///
+    /// sys.delete_entity(p2)
+    ///     .expect("p2 is deleted from the system");
+    /// let entity_handles = sys.entity_handles(None, None);
+    /// assert!(entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
+    /// assert!(!entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified entity does not exist in system.
     pub fn delete_entity<E: AsEntityData>(
         &mut self,
         entity_handle: EntityHandle<E>,
@@ -356,12 +679,23 @@ impl System {
         let deleted_entity = self.entities.list.remove(ix);
 
         for param_h in deleted_entity.param {
-            self.delete_param(param_h)?
+            if param_h != 0 {
+                self.delete_param(param_h)?
+            }
         }
 
         Ok(entity_data)
     }
 
+    /// Deletes a constraint from the system, and returns the data for that constraint.
+    ///
+    /// # Arguments
+    ///
+    /// * `constraint_handle` - Handle for the constraint to be deleted.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified constraint does not exist in system.
     pub fn delete_constraint<C: AsConstraintData>(
         &mut self,
         constraint_handle: ConstraintHandle<C>,
@@ -373,44 +707,51 @@ impl System {
 
         Ok(constraint_data)
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-// Solving the system
-////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug)]
-pub enum SolveResult {
-    Ok {
-        dof: i32,
-    },
-    Fail {
-        dof: i32,
-        reason: FailReason,
-        failed_constraints: Vec<Box<dyn AsConstraintHandle>>,
-    },
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum FailReason {
-    Inconsistent,
-    DidntConverge,
-    TooManyUnknowns,
-}
-
-impl From<i32> for FailReason {
-    fn from(value: i32) -> Self {
-        match value as _ {
-            SLVS_RESULT_INCONSISTENT => Self::Inconsistent,
-            SLVS_RESULT_DIDNT_CONVERGE => Self::DidntConverge,
-            SLVS_RESULT_TOO_MANY_UNKNOWNS => Self::TooManyUnknowns,
-            _ => panic!("unknown result value: {}", value),
-        }
-    }
-}
-
-impl System {
-    // Check generate.cpp. Has info on mapping from entity to paramater
+    /// Sets an entity to be dragged.
+    ///
+    /// This tells the solver that it should attempt to change this entity location
+    /// as little as possible, even if it requires other parameters to be changed more.
+    ///
+    /// This property can be cleared by calling [`System::clear_dragged`].
+    ///
+    /// # Arguments
+    ///
+    /// * `entity_handle` - The entity to be set to dragged.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use slvs::{constraint::PtPtDistance, entity::Point, System};
+    ///
+    /// let mut sys = System::new();
+    /// let g = sys.add_group();
+    ///
+    /// let p1 = sys
+    ///     .sketch(Point::new_in_3d(g, [0.0, 0.0, 0.0]))
+    ///     .expect("p1 created");
+    /// let p2 = sys
+    ///     .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
+    ///     .expect("p2 created");
+    /// sys.constrain(PtPtDistance::new(g, p1, p2, 100.0, None))
+    ///     .expect("p1 and p2 are 100 units apart");
+    ///
+    /// sys.set_dragged(p1)
+    ///     .expect("Try not to move p1 when solving");
+    /// sys.solve(&g);
+    /// sys.clear_dragged();
+    ///
+    /// println!(
+    ///     "{:#?}",
+    ///     sys.entity_data(&p2)
+    ///         .expect("p1 should still be close to (0, 0, 0)")
+    /// );
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if specified entity does not exist, or if entity references
+    /// other entities that do not exist.
     pub fn set_dragged<E: AsEntityData>(
         &mut self,
         entity_handle: EntityHandle<E>,
@@ -436,10 +777,30 @@ impl System {
         Ok(entity_handle)
     }
 
+    /// Clear the dragged entity.
+    ///
+    /// See [`System::set_dragged`] for more information.
     pub fn clear_dragged(&mut self) {
         self.dragged = [0; 4];
     }
 
+    /// Solve the geometric constraint.
+    ///
+    /// The solver will attempt to satistfy the constraints within the specified group
+    /// to within tolerance.
+    ///
+    /// There are three possible outcomes for the solver.
+    ///
+    /// * All constraints were satisfied to within numerical tolerance, in which
+    /// case [`SolveResult::Ok`] is returned.
+    /// * The solver can prove that two constraints are inconsistent. In that case, a
+    /// list of inconsistent results are included in [`SolveResult::Fail`].
+    /// * The solver cannot prove that two constraints are inconsistent, but it cannot
+    /// find a solution. The list of unsatisfied constraints are included in [`SolveResult::Fail`].
+    ///
+    /// # Arguments
+    ///
+    /// * `group` - Only entities within this group are modified during solve.
     pub fn solve(&mut self, group: &Group) -> SolveResult {
         let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
         let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
@@ -467,6 +828,140 @@ impl System {
     }
 }
 
+/// The solver will converge all parameter values to within this tolerance.
+pub const SOLVE_TOLERANCE: f64 = 10e-8;
+
+/// Information on the results of [`System::solve`].
+#[derive(Debug)]
+pub enum SolveResult {
+    /// Solver was able to find a solution to the constraints within tolerance.
+    ///
+    /// Note that this *does not* mean that the system is fully constrained. Just
+    /// that all constraints are satisfied.
+    Ok {
+        /// The number of unconstrained degrees of freedom.
+        dof: i32,
+    },
+
+    /// Solver was unable to find a solution that satisfies all constraints.
+    Fail {
+        /// The number of unconstrained degrees of freedom.
+        dof: i32,
+        /// Reason for the failure.
+        reason: FailReason,
+        /// Constraints that were inconsistent or unsatisfied during the solve step.
+        failed_constraints: Vec<Box<dyn AsConstraintHandle>>,
+    },
+}
+
+/// Reasons that the constraint solver failed.
+///
+/// # Examples
+///
+/// Most commonly, a failed solve will result from an over-constrained system. This can
+/// fall into two different categories: consistently over-constrained and inconsistently
+/// over-constrained.
+///
+/// A **consistently over-constrained** system is solveable, but has redundant constraints.
+/// In the example below, the distance between `p1` and `p2` is constrained to be
+/// 10 units *twice*.
+///
+/// Note that while the solver returns a failure, the locations for `p1` and `p2` have
+/// moved to satisfy the constraint.
+/// ```
+/// use slvs::{
+/// constraint::PtPtDistance,
+/// entity::Point,
+/// system::{FailReason, SolveResult},
+/// System,
+/// };
+///
+///     let mut sys = System::new();
+/// let g = sys.add_group();
+///
+/// let p1 = sys
+///     .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
+///     .expect("p1 created");
+/// let p2 = sys
+///     .sketch(Point::new_in_3d(g, [20.0, 20.0, 20.0]))
+///     .expect("p2 created");
+///
+/// // distance between p1 and p2 is 10
+/// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
+///     .expect("distance constraint added");
+/// // distance between p1 and p2 is 10
+/// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
+///     .expect("distance constraint added");
+///
+/// let solve_result = sys.solve(&g);
+///
+/// if let SolveResult::Fail { reason, .. } = solve_result {
+///     assert_eq!(reason, FailReason::Inconsistent);
+/// }
+/// println!("{:#?}", sys.entity_data(&p1));
+/// println!("{:#?}", sys.entity_data(&p2));
+/// ```
+///
+/// An **inconsistently over-constrained* system has constraints that cannot be satisfied
+/// simultaneously. Here, we have tried to constrain the distances between `p1` and `p2`
+/// to be 10 units and 20 units apart, at the same time.
+///
+/// With inconsistently over-constrained systems, entities will remain in their initial
+/// position after the solve attempt.
+/// ```
+/// use slvs::{
+/// constraint::PtPtDistance,
+/// entity::Point,
+/// system::{FailReason, SolveResult},
+/// System,
+/// };
+///
+///     let mut sys = System::new();
+/// let g = sys.add_group();
+///
+/// let p1 = sys
+///     .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
+///     .expect("p1 created");
+/// let p2 = sys
+///     .sketch(Point::new_in_3d(g, [20.0, 20.0, 20.0]))
+///     .expect("p2 created");
+///
+/// // distance between p1 and p2 is 10
+/// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
+///     .expect("distance constraint added");
+/// // distance between p1 and p2 is 10
+/// sys.constrain(PtPtDistance::new(g, p1, p2, 20.0, None))
+///     .expect("distance constraint added");
+///
+/// let solve_result = sys.solve(&g);
+///
+/// if let SolveResult::Fail { reason, .. } = solve_result {
+///     assert_eq!(reason, FailReason::Inconsistent);
+/// }
+/// println!("{:#?}", sys.entity_data(&p1));
+/// println!("{:#?}", sys.entity_data(&p2));
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum FailReason {
+    Inconsistent,
+    /// The conditions required to ensure that [Newton's method](https://en.wikipedia.org/wiki/Newton's_method)
+    /// will converge were not met. I'm not sure if this can be naturally be created.
+    DidntConverge,
+    /// The system has a hardcoded ceiling of 2048 variables.
+    TooManyUnknowns,
+}
+
+impl From<i32> for FailReason {
+    fn from(value: i32) -> Self {
+        match value as _ {
+            SLVS_RESULT_INCONSISTENT => Self::Inconsistent,
+            SLVS_RESULT_DIDNT_CONVERGE => Self::DidntConverge,
+            SLVS_RESULT_TOO_MANY_UNKNOWNS => Self::TooManyUnknowns,
+            _ => panic!("unknown result value: {}", value),
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private methods for interfacing with slvs elements
 ////////////////////////////////////////////////////////////////////////////////
@@ -484,6 +979,30 @@ impl System {
             .list
             .binary_search_by_key(&h, |&Slvs_Param { h, .. }| h)
             .map_err(|_| "Specified parameter not found.")
+    }
+
+    pub(crate) fn add_param(&mut self, group: Slvs_hGroup, val: f64) -> Slvs_hParam {
+        let new_param = Slvs_Param {
+            h: self.params.next_h(),
+            group,
+            val,
+        };
+
+        self.params.list.push(new_param);
+        self.params.list.last().unwrap().h
+    }
+
+    pub(crate) fn update_param(
+        &mut self,
+        h: Slvs_hParam,
+        group: Slvs_hGroup,
+        val: f64,
+    ) -> Result<(), &'static str> {
+        let mut param = self.mut_slvs_param(h)?;
+        param.group = group;
+        param.val = val;
+
+        Ok(())
     }
 
     pub(crate) fn slvs_param(&self, h: Slvs_hParam) -> Result<&Slvs_Param, &'static str> {
