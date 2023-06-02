@@ -23,7 +23,8 @@ define_element!(
     /// # use slvs::{
     /// # constraint::PointsCoincident,
     /// # entity::{Normal, Point, Workplane},
-    /// # make_quaternion, System,
+    /// # utils::make_quaternion,
+    /// # System,
     /// # };
     /// #
     /// # let mut sys = System::new();

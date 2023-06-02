@@ -1,7 +1,8 @@
 use slvs::{
     constraint::PointsCoincident,
     entity::{Normal, Point, Workplane},
-    make_quaternion, System,
+    utils::make_quaternion,
+    System,
 };
 
 #[test]

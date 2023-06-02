@@ -1,7 +1,8 @@
 use slvs::{
     constraint::{EqualLengthLines, PointsCoincident, PtOnLine, PtPtDistance, Vertical},
     entity::{LineSegment, Normal, Point, Workplane},
-    make_quaternion, System,
+    utils::make_quaternion,
+    System,
 };
 
 // Demo of drawing a triangle in 3-space, consisting of lines between:
@@ -66,7 +67,7 @@ fn main() {
     sys.constrain(PointsCoincident::new(g2, p3b, p1a, None))
         .expect("coincidence between 2d and 3d point");
 
-    sys.constrain(PointsCoincident::new(g2, origin, p1a,None))
+    sys.constrain(PointsCoincident::new(g2, origin, p1a, None))
         .expect("p1a on origin");
     sys.constrain(Vertical::from_line(g2, workplane, l1))
         .expect("l1 is vertical on workplane");

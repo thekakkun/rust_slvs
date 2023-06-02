@@ -1,8 +1,8 @@
 use slvs::{
     constraint::{Diameter, EqualRadius, PtLineDistance, PtPtDistance, Vertical},
     entity::{ArcOfCircle, Circle, Distance, LineSegment, Normal, Point, Workplane},
-    make_quaternion,
     system::{FailReason, SolveResult},
+    utils::make_quaternion,
     System,
 };
 
