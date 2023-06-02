@@ -1,7 +1,7 @@
 //! A variety of utility functions, for geometry calculations and conversions.
 
-use nalgebra::{Quaternion, UnitQuaternion, Vector3};
-use std::mem::MaybeUninit;
+use nalgebra::{Quaternion, UnitQuaternion, Vector, Vector3};
+use std::{f64::consts::PI, mem::MaybeUninit};
 
 use crate::bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, Slvs_QuaternionV};
 
@@ -166,6 +166,21 @@ pub fn project_3d_to_2d(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> 
     let [u, v, _]: [f64; 3] = rotated_vector.into();
 
     [u, v]
+}
+
+/// Calculate the smallest angle between two vectors
+///
+/// # Arguments
+///
+/// * `vec_a` - Start and end coordinates of the first vector.
+/// * `vec_b` - Start and end coordinates of the second vector.
+pub fn angle<const N: usize>(vec_a: [[f64; N]; 2], vec_b: [[f64; N]; 2]) -> f64 {
+    let vec_a: Vector<_, _, _> =
+        Vector::<_, _, _>::from(vec_a[0]) - Vector::<_, _, _>::from(vec_a[1]);
+    let vec_b: Vector<_, _, _> =
+        Vector::<_, _, _>::from(vec_b[0]) - Vector::<_, _, _>::from(vec_b[1]);
+
+    vec_a.angle(&vec_b) / PI * 180.0
 }
 
 #[cfg(test)]
