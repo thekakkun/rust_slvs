@@ -3,6 +3,8 @@ name = "slvs"
 version = "0.5.0"
 edition = "2021"
 description = "Rust wrapper for the SolveSpace constraint solver library."
+keywords = ["geometry", "cad", "constraint_solver"]
+categories = ["api-bindings", "graphics", "mathematics"]
 license  = "GPL-3.0"
 repository = "https://github.com/thekakkun/rust_slvs"
 exclude = [
@@ -31,4 +33,5 @@ cc = "1.0.79"
 dunce = "1.0.3"
 
 [dependencies]
+nalgebra = "0.32.2"
 serde = { version = "1.0", features = ["derive"] }

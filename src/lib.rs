@@ -226,6 +226,7 @@ match result {
 pub mod constraint;
 pub mod entity;
 pub mod group;
+pub mod utils;
 
 pub use bindings::{make_quaternion, quaternion_n, quaternion_u, quaternion_v};
 pub use system::System;

@@ -1,7 +1,14 @@
 /*!
 A constraint is a geometric property of an entity, or a relationship between
 multiple entities.
- */
+
+The [`ConstraintHandle<C>`] stores information about the type of constraint in a phantom type.
+This is used to figure out what kind of data it needs to return when querying the
+system.
+
+The constraint data is defined and added to the system using structs that implement 
+[`AsConstraintData`].
+*/
 
 pub use angle::Angle;
 pub use arc_arc_difference::ArcArcDifference;
@@ -100,11 +107,11 @@ use crate::{
     element::{AsAny, AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Constraint Handle
-////////////////////////////////////////////////////////////////////////////////
-
+/// An object wrapping a handle for a constraint
+/// 
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsConstraintHandle: AsAny + AsHandle {
+    /// Get the type name as a string.
     fn type_name(&self) -> &'static str;
 }
 
@@ -232,8 +239,12 @@ impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
     }
 }
 
+/// Wrapper for a constraint handle.
+/// 
+/// The `phantom` member holds information about what type of constraint it references.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConstraintHandle<C: AsConstraintData> {
+    /// The constraint handle
     pub handle: u32,
     pub(super) phantom: PhantomData<C>,
 }

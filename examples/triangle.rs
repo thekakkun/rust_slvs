@@ -66,7 +66,7 @@ fn main() {
     sys.constrain(PointsCoincident::new(g2, p3b, p1a, None))
         .expect("coincidence between 2d and 3d point");
 
-    sys.constrain(PointsCoincident::new(g2, origin, p1a, Some(workplane)))
+    sys.constrain(PointsCoincident::new(g2, origin, p1a,None))
         .expect("p1a on origin");
     sys.constrain(Vertical::from_line(g2, workplane, l1))
         .expect("l1 is vertical on workplane");

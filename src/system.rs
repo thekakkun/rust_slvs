@@ -621,13 +621,6 @@ impl System {
         Ok(group)
     }
 
-    pub(crate) fn delete_param(&mut self, h: Slvs_hParam) -> Result<(), &'static str> {
-        let ix = self.param_ix(h)?;
-        self.params.list.remove(ix);
-
-        Ok(())
-    }
-
     /// Deletes an entity from the system, and returns the data for that entity.
     ///
     /// Note that this *will not* delete entities and constraints that reference
@@ -829,6 +822,8 @@ impl System {
 }
 
 /// The solver will converge all parameter values to within this tolerance.
+///
+/// This is a hard-coded value, and not configurable by the user.
 pub const SOLVE_TOLERANCE: f64 = 10e-8;
 
 /// Information on the results of [`System::solve`].
@@ -889,7 +884,7 @@ pub enum SolveResult {
 /// // distance between p1 and p2 is 10
 /// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
 ///     .expect("distance constraint added");
-/// // distance between p1 and p2 is 10
+/// // distance between p1 and p2 is 10, a second time
 /// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
 ///     .expect("distance constraint added");
 ///
@@ -897,9 +892,9 @@ pub enum SolveResult {
 ///
 /// if let SolveResult::Fail { reason, .. } = solve_result {
 ///     assert_eq!(reason, FailReason::Inconsistent);
+///     println!("{:#?}", sys.entity_data(&p1));
+///     println!("{:#?}", sys.entity_data(&p2));
 /// }
-/// println!("{:#?}", sys.entity_data(&p1));
-/// println!("{:#?}", sys.entity_data(&p2));
 /// ```
 ///
 /// An **inconsistently over-constrained* system has constraints that cannot be satisfied
@@ -929,7 +924,7 @@ pub enum SolveResult {
 /// // distance between p1 and p2 is 10
 /// sys.constrain(PtPtDistance::new(g, p1, p2, 10.0, None))
 ///     .expect("distance constraint added");
-/// // distance between p1 and p2 is 10
+/// // distance between p1 and p2 is 20
 /// sys.constrain(PtPtDistance::new(g, p1, p2, 20.0, None))
 ///     .expect("distance constraint added");
 ///
@@ -937,9 +932,9 @@ pub enum SolveResult {
 ///
 /// if let SolveResult::Fail { reason, .. } = solve_result {
 ///     assert_eq!(reason, FailReason::Inconsistent);
+///     println!("{:#?}", sys.entity_data(&p1));
+///     println!("{:#?}", sys.entity_data(&p2));
 /// }
-/// println!("{:#?}", sys.entity_data(&p1));
-/// println!("{:#?}", sys.entity_data(&p2));
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum FailReason {
@@ -1001,6 +996,13 @@ impl System {
         let mut param = self.mut_slvs_param(h)?;
         param.group = group;
         param.val = val;
+
+        Ok(())
+    }
+
+    pub(crate) fn delete_param(&mut self, h: Slvs_hParam) -> Result<(), &'static str> {
+        let ix = self.param_ix(h)?;
+        self.params.list.remove(ix);
 
         Ok(())
     }

@@ -128,7 +128,7 @@ fn main() {
                 },
             ) = (
                 sys.entity_data(&p1).expect("data for p1 found"),
-                sys.entity_data(&p2).expect("data for p1 found"),
+                sys.entity_data(&p2).expect("data for p2 found"),
             ) {
                 println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
             }

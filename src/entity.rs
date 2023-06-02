@@ -1,12 +1,12 @@
 /*!
 An entity is a geometric thing, like a point or a line segment or a circle.
 
-The [EntityHandle], stores information about the type of entity, which is used to
-ensure that handles reference the correct type of entity when defining other entities
-and constraints.
+The [`EntityHandle<E>`] stores information about the type of entity in a phantom type, which
+is used to ensure that handles reference the correct type of entity when defining other
+entities and constraints.
 
-They are defined and added to the using structs that implement [AsEntityData],
-and can be retrieved with the [EntityHandle] struct, which is a wrapper for the
+They are defined and added to the using structs that implement [`AsEntityData`],
+and can be retrieved with the [`EntityHandle`] struct, which is a wrapper for the
 entity handle.
 */
 
@@ -48,7 +48,7 @@ use crate::{
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsEntityHandle: AsAny + AsHandle {
-    /// Get the type name as a string
+    /// Get the type name as a string.
     fn type_name(&self) -> &'static str;
 }
 
@@ -113,7 +113,7 @@ impl From<Slvs_Entity> for Box<dyn AsEntityHandle> {
 
 /// Wrapper for an entity handle.
 ///
-/// The type argument holds information about what type of entity it references,
+/// The `phantom` member holds information about what type of entity it references,
 /// which is used to check that entity definitions receive the correct type of entity
 /// handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
