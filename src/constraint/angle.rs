@@ -12,7 +12,7 @@ use crate::{
 
 define_element!(
     SLVS_C_ANGLE,
-    /// The constrain the `angle` between `line_a` and `line_b`, in degrees.
+    /// Constrain the `angle` between `line_a` and `line_b`, in degrees.
     ///
     /// This constraint equation is written in the form
     ///
@@ -60,6 +60,8 @@ define_element!(
     ///     .expect("Workplane created");
     ///
     /// let g = sys.add_group();
+    ///
+    /// // Create line_ab
     /// let point_a = sys
     ///     .sketch(Point::new_in_3d(g, [10.0, 11.0, 12.0]))
     ///     .expect("point in 3d created");
@@ -70,6 +72,7 @@ define_element!(
     ///     .sketch(LineSegment::new(g, point_a, point_b))
     ///     .expect("line between two 3d points created");
     ///
+    /// // Create line_cd
     /// let point_c = sys
     ///     .sketch(Point::new_in_3d(g, [16.0, 17.0, 18.0]))
     ///     .expect("point in 3d created");
@@ -83,7 +86,7 @@ define_element!(
     /// // Constrain angle between line_ab and line_cd to be 30 degrees apart.
     /// let angle_constraint = sys
     ///     .constrain(Angle::new(g, line_ab, line_cd, 30.0, None, false))
-    ///     .expect("Angle between l1 and l2 constrained to 30 degrees");
+    ///     .expect("constraint added");
     ///
     /// sys.solve(&g);
     ///

@@ -6,7 +6,7 @@ The [`ConstraintHandle<C>`] stores information about the type of constraint in a
 This is used to figure out what kind of data it needs to return when querying the
 system.
 
-The constraint data is defined and added to the system using structs that implement 
+The constraint data is defined and added to the system using structs that implement
 [`AsConstraintData`].
 */
 
@@ -108,7 +108,7 @@ use crate::{
 };
 
 /// An object wrapping a handle for a constraint
-/// 
+///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsConstraintHandle: AsAny + AsHandle {
     /// Get the type name as a string.
@@ -240,7 +240,7 @@ impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
 }
 
 /// Wrapper for a constraint handle.
-/// 
+///
 /// The `phantom` member holds information about what type of constraint it references.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConstraintHandle<C: AsConstraintData> {

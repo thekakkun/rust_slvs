@@ -133,6 +133,31 @@ pub fn distance<const N: usize>(coords_a: [f64; N], coords_b: [f64; N]) -> f64 {
         .sqrt()
 }
 
+/// Calculate the length of the arc.
+///
+/// # Arguments
+///
+/// * `center` - The coordinates for the center of the arc.
+/// * `arc_start` - The coordinates for the start of the arc, going counter-clockwise
+/// from this point.
+/// * `arc_end` - The coordinates for the end of the arc. Represents a full circle if coincident
+/// with `start_point`.
+pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 {
+    let radius = distance(center, arc_start);
+
+    if arc_start == arc_end {
+        2.0 * PI * radius
+    } else {
+        let start_vec: Vector<_, _, _> =
+            Vector::<_, _, _>::from(center) - Vector::<_, _, _>::from(arc_start);
+        let end_vec: Vector<_, _, _> =
+            Vector::<_, _, _>::from(center) - Vector::<_, _, _>::from(arc_end);
+        let angle = start_vec.angle(&end_vec);
+
+        angle * radius
+    }
+}
+
 /// Convert 2d coordinates on a plane, into 3d coordinates.
 ///
 /// # Arguments
