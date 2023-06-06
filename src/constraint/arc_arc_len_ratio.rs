@@ -12,6 +12,7 @@ use crate::{
 
 define_element!(
     SLVS_C_ARC_ARC_LEN_RATIO,
+    /// The length of `arc_a` divided by the length of `arc_b` is equal to `ratio`.
     struct ArcArcLenRatio {
         arc_a: EntityHandle<ArcOfCircle>,
         arc_b: EntityHandle<ArcOfCircle>,
@@ -50,5 +51,123 @@ impl FromSystem for ArcArcLenRatio {
         } else {
             Err("Expected constraint to have type SLVS_C_ARC_ARC_LEN_RATIO.")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        constraint::ArcArcLenRatio,
+        entity::{ArcOfCircle, Normal, Point, Workplane},
+        system::SOLVE_TOLERANCE,
+        utils::{arc_len, make_quaternion},
+        System,
+    };
+
+    #[test]
+    fn arc_arc_len_ratio() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-69.0, -71.0, -49.0]))
+            .expect("Origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([-80.0, -72.0, 36.0], [56.0, -57.0, 4.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("Workplane created");
+
+        let g = sys.add_group();
+
+        // Create arc_a
+        let center_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-35.0, -2.0]))
+            .expect("point on workplane created");
+        let arc_start_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-67.0, -78.0]))
+            .expect("point on workplane created");
+        let arc_end_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-16.0, 94.0]))
+            .expect("point on workplane created");
+        let arc_a = sys
+            .sketch(ArcOfCircle::new(
+                g,
+                workplane,
+                center_a,
+                arc_start_a,
+                arc_end_a,
+            ))
+            .expect("Arc created");
+
+        // Create arc_b
+        let center_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-6.0, -69.0]))
+            .expect("point on workplane created");
+        let arc_start_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-41.0, 99.0]))
+            .expect("point on workplane created");
+        let arc_end_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [47.0, -70.0]))
+            .expect("point on workplane created");
+        let arc_b = sys
+            .sketch(ArcOfCircle::new(
+                g,
+                workplane,
+                center_b,
+                arc_start_b,
+                arc_end_b,
+            ))
+            .expect("Arc created");
+
+        // Constrain length of arc_a to be 2.5 times longer than arc_b.
+        let ratio = 2.5;
+        sys.constrain(ArcArcLenRatio::new(g, arc_a, arc_b, ratio))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        let arc_a_len = if let (
+            Point::OnWorkplane { coords: center, .. },
+            Point::OnWorkplane {
+                coords: arc_start, ..
+            },
+            Point::OnWorkplane {
+                coords: arc_end, ..
+            },
+        ) = (
+            sys.entity_data(&center_a).expect("center_a data found"),
+            sys.entity_data(&arc_start_a)
+                .expect("arc_start_a data found"),
+            sys.entity_data(&arc_end_a).expect("arc_end_a data found"),
+        ) {
+            dbg!(arc_len(center, arc_start, arc_end))
+        } else {
+            unreachable!()
+        };
+        let arc_b_len = if let (
+            Point::OnWorkplane { coords: center, .. },
+            Point::OnWorkplane {
+                coords: arc_start, ..
+            },
+            Point::OnWorkplane {
+                coords: arc_end, ..
+            },
+        ) = (
+            sys.entity_data(&center_b).expect("center_b data found"),
+            sys.entity_data(&arc_start_b)
+                .expect("arc_start_b data found"),
+            sys.entity_data(&arc_end_b).expect("arc_end_b data found"),
+        ) {
+            dbg!(arc_len(center, arc_start, arc_end))
+        } else {
+            unreachable!()
+        };
+
+        assert!((arc_a_len / arc_b_len - ratio).abs() < SOLVE_TOLERANCE);
     }
 }
