@@ -1,7 +1,11 @@
 //! A variety of utility functions, for geometry calculations and conversions.
 
-use nalgebra::{Quaternion, UnitQuaternion, Vector, Vector3};
-use std::{f64::consts::PI, mem::MaybeUninit};
+use euclid::{
+    default::{Point2D, Point3D, Rotation3D, Size3D, Vector2D, Vector3D},
+    Angle,
+};
+
+use std::mem::MaybeUninit;
 
 use crate::{
     bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, Slvs_QuaternionV},
@@ -145,12 +149,10 @@ pub fn distance<const N: usize>(coords_a: [f64; N], coords_b: [f64; N]) -> f64 {
 /// * `normal` - The normal of the plane, as a unit quaternion.
 pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], normal: [f64; 4]) -> [f64; 3] {
     let [w, i, j, k] = normal;
-    let normal_quaternion = UnitQuaternion::from_quaternion(Quaternion::new(w, i, j, k));
+    let normal_quaternion = Rotation3D::unit_quaternion(i, j, k, w);
+    let rotated_point = normal_quaternion.transform_point3d(Point2D::from(point).to_3d());
 
-    let [u, v] = point;
-    let rotated_point = normal_quaternion.transform_vector(&Vector3::new(u, v, 0.0));
-
-    (Vector3::from(origin) + rotated_point).into()
+    (rotated_point + Size3D::from(origin)).into()
 }
 
 /// Project a point in 3d onto a plane
@@ -162,13 +164,11 @@ pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], normal: [f64; 4]) -> 
 /// * `normal` - The normal of the plane to project onto, as a unit quaternion.
 pub fn project_3d_to_2d(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> [f64; 2] {
     let [w, i, j, k] = normal;
-    let normal_quaternion = UnitQuaternion::from_quaternion(Quaternion::new(w, i, j, k));
-
-    let rotated_vector =
-        normal_quaternion.inverse_transform_vector(&(Vector3::from(point) - Vector3::from(origin)));
-    let [u, v, _]: [f64; 3] = rotated_vector.into();
-
-    [u, v]
+    let normal_quaternion = Rotation3D::unit_quaternion(i, j, k, w);
+    let rotated_point = normal_quaternion
+        .inverse()
+        .transform_point3d(Point3D::from(point) - Size3D::from(origin));
+    rotated_point.to_2d().into()
 }
 
 /// Calculate the angle from `vec_a` to `vec_b`, in 2d space.
@@ -178,14 +178,14 @@ pub fn project_3d_to_2d(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> 
 /// * `vec_a` - Start and end coordinates of the first vector.
 /// * `vec_b` - Start and end coordinates of the second vector.
 pub fn angle_2d(vec_a: [[f64; 2]; 2], vec_b: [[f64; 2]; 2]) -> f64 {
-    let vec_a: Vector<_, _, _> = Vector::from(vec_a[1]) - Vector::from(vec_a[0]);
-    let vec_b: Vector<_, _, _> = Vector::from(vec_b[1]) - Vector::from(vec_b[0]);
+    let vec_a = Vector2D::from(vec_a[1]) - Vector2D::from(vec_a[0]);
+    let vec_b = Vector2D::from(vec_b[1]) - Vector2D::from(vec_b[0]);
 
-    if vec_a.perp(&vec_b).is_sign_positive() {
-        vec_a.angle(&vec_b) / PI * 180.0
-    } else {
-        (2.0 * PI - vec_a.angle(&vec_b)) / PI * 180.0
-    }
+    // this uses a fast but inaccurate algorithm.
+    // let angle = vec_a.angle_to(vec_b);
+    let angle = Angle::radians(vec_b.y.atan2(vec_b.x) - vec_a.y.atan2(vec_a.x));
+
+    angle.positive().to_degrees()
 }
 
 /// Calculate the angle from `vec_a` to `vec_b`, in 3d space.
@@ -195,14 +195,14 @@ pub fn angle_2d(vec_a: [[f64; 2]; 2], vec_b: [[f64; 2]; 2]) -> f64 {
 /// * `vec_a` - Start and end coordinates of the first vector.
 /// * `vec_b` - Start and end coordinates of the second vector.
 pub fn angle_3d(vec_a: [[f64; 3]; 2], vec_b: [[f64; 3]; 2]) -> f64 {
-    let vec_a: Vector<_, _, _> = Vector::from(vec_a[1]) - Vector::from(vec_a[0]);
-    let vec_b: Vector<_, _, _> = Vector::from(vec_b[1]) - Vector::from(vec_b[0]);
+    let vec_a = Vector3D::from(vec_a[1]) - Vector3D::from(vec_a[0]);
+    let vec_b = Vector3D::from(vec_b[1]) - Vector3D::from(vec_b[0]);
 
-    if vec_a.cross(&vec_b).z.is_sign_positive() {
-        (2.0 * PI - vec_a.angle(&vec_b)) / PI * 180.0
-    } else {
-        vec_a.angle(&vec_b) / PI * 180.0
-    }
+    // this uses a fast but inaccurate algorithm.
+    // let angle = vec_a.angle_to(vec_b);
+    let angle = Angle::radians((vec_a.dot(vec_b) / (vec_a.length() * vec_b.length())).acos());
+
+    angle.positive().to_degrees()
 }
 
 /// Calculate the length of the arc.
@@ -214,34 +214,30 @@ pub fn angle_3d(vec_a: [[f64; 3]; 2], vec_b: [[f64; 3]; 2]) -> f64 {
 /// from this point.
 /// * `arc_end` - The coordinates for the end of the arc. Represents a full circle if coincident
 /// with `start_point`.
+///
+/// # Panics
+///
+/// Function will panic if points do not define a circular arc, that is
+///
+/// ```text
+/// distance(center, arc_start) == distance(center, arc_end)
+/// ```
 pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 {
-    let radius = distance(center, arc_start);
+    let start_vec = Vector2D::from(arc_start) - Vector2D::from(center);
+    let end_vec = Vector2D::from(arc_end) - Vector2D::from(center);
 
-    if SOLVE_TOLERANCE < (radius - distance(center, arc_end)).abs() {
+    if SOLVE_TOLERANCE < (start_vec.length() - end_vec.length()).abs() {
         panic!("Not a circular arc")
     }
 
-    // TODO: does this need tolerance?
-    if arc_start == arc_end {
-        2.0 * PI * radius
-    } else {
-        let start_vec: Vector<_, _, _> = Vector::from(arc_start) - Vector::from(center);
-        let end_vec: Vector<_, _, _> = Vector::from(arc_end) - Vector::from(center);
-        let angle = start_vec.angle(&end_vec);
-
-        println!("{:?} {:?}", angle * radius, (2.0 * PI - angle) * radius);
-
-        if start_vec.perp(&end_vec).is_sign_positive() {
-            angle * radius
-        } else {
-            (2.0 * PI - angle) * radius
-        }
-    }
+    let angle = Angle::radians(end_vec.y.atan2(end_vec.x) - start_vec.y.atan2(start_vec.x));
+    angle.positive().radians * start_vec.length()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::{PI, SQRT_2};
 
     #[test]
     fn test_distance() {
@@ -301,13 +297,24 @@ mod tests {
 
     #[test]
     fn test_arc_len() {
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [1.0, 0.0]) - 2.0 * PI).abs() < 1e-6);
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [1.0, 1.0]) - 0.25 * PI).abs() < 1e-6);
+        assert!(
+            (arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, SQRT_2 / 2.0]) - 0.25 * PI).abs()
+                < 1e-6
+        );
         assert!((arc_len([0.0, 0.0], [1.0, 0.0], [0.0, 1.0]) - 0.5 * PI).abs() < 1e-6);
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [-1.0, 1.0]) - 0.75 * PI).abs() < 1e-6);
+        assert!(
+            (arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, SQRT_2 / 2.0]) - 0.75 * PI).abs()
+                < 1e-6
+        );
         assert!((arc_len([0.0, 0.0], [1.0, 0.0], [-1.0, 0.0]) - PI).abs() < 1e-6);
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [-1.0, -1.0]) - 1.25 * PI).abs() < 1e-6);
+        assert!(
+            (arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, -SQRT_2 / 2.0]) - 1.25 * PI).abs()
+                < 1e-6
+        );
         assert!((arc_len([0.0, 0.0], [1.0, 0.0], [0.0, -1.0]) - 1.5 * PI).abs() < 1e-6);
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [1.0, -1.0]) - 1.75 * PI).abs() < 1e-6);
+        assert!(
+            (arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, -SQRT_2 / 2.0]) - 1.75 * PI).abs()
+                < 1e-6
+        );
     }
 }
