@@ -566,6 +566,7 @@ impl System {
 
         let slvs_constraint = self.mut_slvs_constraint(constraint_handle.handle())?;
         slvs_constraint.group = constraint_data.group();
+        slvs_constraint.wrkpl = constraint_data.workplane().unwrap_or(SLVS_FREE_IN_3D);
         slvs_constraint.valA = constraint_data.val().unwrap_or(0.0);
 
         let [pt_a, pt_b] = constraint_data.points().unwrap_or([0; 2]);
@@ -824,7 +825,7 @@ impl System {
 /// The solver will converge all parameter values to within this tolerance.
 ///
 /// This is a hard-coded value, and not configurable by the user.
-pub const SOLVE_TOLERANCE: f64 = 10e-8;
+pub const SOLVE_TOLERANCE: f64 = 10e-6;
 
 /// Information on the results of [`System::solve`].
 #[derive(Debug)]
@@ -940,9 +941,9 @@ pub enum SolveResult {
 pub enum FailReason {
     Inconsistent,
     /// The conditions required to ensure that [Newton's method](https://en.wikipedia.org/wiki/Newton's_method)
-    /// will converge were not met. I'm not sure if this can be naturally be created.
+    /// will converge were not met.
     DidntConverge,
-    /// The system has a hardcoded ceiling of 2048 variables.
+    /// The system exceeds the hard-coded maximum of 2048 variables.
     TooManyUnknowns,
 }
 
