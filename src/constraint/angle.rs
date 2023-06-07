@@ -37,8 +37,7 @@ define_element!(
         line_b: EntityHandle<LineSegment>,
         /// The angle between `line_a` and `line_b`, in degrees.
         angle: f64,
-        /// If provided, constrains the angle between the lines projected onto this
-        /// workplane.
+        /// If provided, constraint applies when projected onto this workplane.
         workplane: Option<EntityHandle<Workplane>>,
         /// If `true`, sets the supplementary angle.
         supplementary: bool,
@@ -91,9 +90,9 @@ impl FromSystem for Angle {
 #[cfg(test)]
 mod tests {
     use crate::{
+        angle_within_tolerance,
         constraint::Angle,
         entity::{LineSegment, Normal, Point, Workplane},
-        system::SOLVE_TOLERANCE,
         utils::{angle_2d, angle_3d, make_quaternion, project_3d_to_2d},
         System,
     };
@@ -177,7 +176,7 @@ mod tests {
             sys.entity_data(&point_d).expect("data for point_d found"),
         ) {
             let normal = [w, x, y, z];
-            let angle = dbg!(angle_2d(
+            let angle = angle_2d(
                 [
                     project_3d_to_2d(coords_a, origin, normal),
                     project_3d_to_2d(coords_b, origin, normal),
@@ -186,8 +185,9 @@ mod tests {
                     project_3d_to_2d(coords_c, origin, normal),
                     project_3d_to_2d(coords_d, origin, normal),
                 ],
-            ));
-            assert!((angle - 45.0).abs() < SOLVE_TOLERANCE);
+            );
+
+            angle_within_tolerance!(angle, 45_f64);
         } else {
             unreachable!()
         }
@@ -245,8 +245,9 @@ mod tests {
             sys.entity_data(&point_c).expect("data for point_c found"),
             sys.entity_data(&point_d).expect("data for point_d found"),
         ) {
-            let angle = dbg!(angle_3d([coords_a, coords_b], [coords_c, coords_d]));
-            assert!((angle - 150.0).abs() < SOLVE_TOLERANCE);
+            let angle = angle_3d([coords_a, coords_b], [coords_c, coords_d]);
+
+            angle_within_tolerance!(angle, 150_f64);
         } else {
             unreachable!()
         }

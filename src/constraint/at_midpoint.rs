@@ -13,10 +13,10 @@ use crate::{
 define_element!(
     SLVS_C_AT_MIDPOINT,
     /// `point` lies at the the midpoint of `line`.
-    /// The constraint is projected onto a `workplane` if provided.
     struct AtMidpoint {
         point: EntityHandle<Point>,
         line: EntityHandle<LineSegment>,
+        /// If provided, constraint applies when projected onto this workplane.
         workplane: Option<EntityHandle<Workplane>>,
     }
 );
@@ -61,13 +61,12 @@ impl FromSystem for AtMidpoint {
 #[cfg(test)]
 mod tests {
     use crate::{
+        angle_within_tolerance, len_within_tolerance,
+        constraint::AtMidpoint,
         entity::{LineSegment, Normal, Point, Workplane},
-        system::SOLVE_TOLERANCE,
         utils::{angle_2d, angle_3d, distance, make_quaternion, project_3d_to_2d},
         System,
     };
-
-    use super::AtMidpoint;
 
     #[test]
     fn at_midpoint_on_workplane() {
@@ -100,7 +99,7 @@ mod tests {
             .sketch(LineSegment::new(g, point_a, point_b))
             .expect("line between two 3d points created");
 
-        // Create line_cd
+        // Create midpoint
         let point = sys
             .sketch(Point::new_in_3d(g, [-16.0, 38.0, -45.0]))
             .expect("point in 3d created");
@@ -132,8 +131,8 @@ mod tests {
             let point_b = project_3d_to_2d(coords_b, origin, normal);
             let point = project_3d_to_2d(coords, origin, normal);
 
-            assert!((distance(point, point_a) - distance(point, point_b)).abs() < SOLVE_TOLERANCE);
-            assert!((angle_2d([point, point_a], [point, point_b]) - 180.0).abs() < SOLVE_TOLERANCE)
+            len_within_tolerance!(distance(point, point_a), distance(point, point_b));
+            angle_within_tolerance!(angle_2d([point, point_a], [point, point_b]), 180_f64);
         } else {
             unreachable!()
         }
@@ -155,7 +154,7 @@ mod tests {
             .sketch(LineSegment::new(g, point_a, point_b))
             .expect("line between two 3d points created");
 
-        // Create line_cd
+        // Create midpoint
         let point = sys
             .sketch(Point::new_in_3d(g, [-5.0, -50.0, -76.0]))
             .expect("point in 3d created");
@@ -178,12 +177,8 @@ mod tests {
             sys.entity_data(&point_b).expect("data for point_b found"),
             sys.entity_data(&point).expect("data for point_c found"),
         ) {
-            assert!(
-                (distance(coords, coords_a) - distance(coords, coords_b)).abs() < SOLVE_TOLERANCE
-            );
-            assert!(
-                (angle_3d([coords, coords_a], [coords, coords_b]) - 180.0).abs() < SOLVE_TOLERANCE
-            )
+            len_within_tolerance!(distance(coords, coords_a), distance(coords, coords_b));
+            angle_within_tolerance!(angle_3d([coords, coords_a], [coords, coords_b]), 180_f64);
         } else {
             unreachable!()
         }

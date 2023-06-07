@@ -12,17 +12,20 @@ use crate::{
 
 define_element!(
     SLVS_C_CUBIC_LINE_TANGENT,
+    /// The `cubic` is tangent to the `line`.
     struct CubicLineTangent {
-        workplane: EntityHandle<Workplane>,
         cubic: EntityHandle<Cubic>,
         line: EntityHandle<LineSegment>,
-        to_start: bool,
+        /// If `true` line is tangent to the end of the cubic instead of the start.
+        to_end: bool,
+        /// If provided, constraint applies when projected onto this workplane.
+        workplane: Option<EntityHandle<Workplane>>,
     }
 );
 
 impl AsConstraintData for CubicLineTangent {
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.handle())
+        self.workplane.map(|workplane| workplane.handle())
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
@@ -30,7 +33,7 @@ impl AsConstraintData for CubicLineTangent {
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_start, false]
+        [self.to_end, false]
     }
 }
 
@@ -44,13 +47,195 @@ impl FromSystem for CubicLineTangent {
         if SLVS_C_CUBIC_LINE_TANGENT == slvs_constraint.type_ as _ {
             Ok(Self {
                 group: Group(slvs_constraint.group),
-                workplane: EntityHandle::new(slvs_constraint.wrkpl),
                 cubic: EntityHandle::new(slvs_constraint.entityA),
                 line: EntityHandle::new(slvs_constraint.entityB),
-                to_start: slvs_constraint.other != 0,
+                to_end: slvs_constraint.other != 0,
+                workplane: match slvs_constraint.wrkpl {
+                    0 => None,
+                    h => Some(EntityHandle::new(h)),
+                },
             })
         } else {
             Err("Expected constraint to have type SLVS_C_CUBIC_LINE_TANGENT.")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        angle_within_tolerance,
+        constraint::CubicLineTangent,
+        entity::{Cubic, LineSegment, Normal, Point, Workplane},
+        utils::{angle_2d, make_quaternion},
+        System,
+    };
+
+    #[test]
+    fn cubic_line_tangent_on_workplane() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-64.0, -80.0, -94.0]))
+            .expect("Origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([82.0, 11.0, -47.0], [91.0, 77.0, -93.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("Workplane created");
+
+        let g = sys.add_group();
+
+        // Create line_ab
+        let start_point = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-37.0, 59.0]))
+            .expect("point created");
+        let start_control = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-35.0, -74.0]))
+            .expect("point created");
+        let end_control = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-62.0, 45.0]))
+            .expect("point created");
+        let end_point = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-65.0, 74.0]))
+            .expect("point created");
+        let cubic = sys
+            .sketch(Cubic::new(
+                g,
+                start_point,
+                start_control,
+                end_control,
+                end_point,
+            ))
+            .expect("cubic created");
+
+        let point_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [58.0, -85.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [20.0, -62.0]))
+            .expect("point created");
+        let line = sys
+            .sketch(LineSegment::new(g, point_a, point_b))
+            .expect("line created");
+
+        sys.constrain(CubicLineTangent::new(g, cubic, line, false, None))
+            .expect("cubic and line are tangent");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::OnWorkplane {
+                coords: coords_start,
+                ..
+            },
+            Point::OnWorkplane {
+                coords: coords_control,
+                ..
+            },
+            Point::OnWorkplane {
+                coords: coords_a, ..
+            },
+            Point::OnWorkplane {
+                coords: coords_b, ..
+            },
+        ) = (
+            sys.entity_data(&start_point)
+                .expect("data for point_c found"),
+            sys.entity_data(&start_control)
+                .expect("data for point_d found"),
+            sys.entity_data(&point_a).expect("data for point_a found"),
+            sys.entity_data(&point_b).expect("data for point_b found"),
+        ) {
+            let angle = dbg!(angle_2d(
+                [coords_start, coords_control,],
+                [coords_a, coords_b,],
+            ));
+            angle_within_tolerance!(angle, 180_f64);
+        } else {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn cubic_line_tangent_in_3d() {
+        let mut sys = System::new();
+
+        let g = sys.add_group();
+
+        // Create
+        let start_point = sys
+            .sketch(Point::new_in_3d(g, [-87.0, 58.0, 93.0]))
+            .expect("point created");
+        let start_control = sys
+            .sketch(Point::new_in_3d(g, [6.0, -99.0, 14.0]))
+            .expect("point created");
+        let end_control = sys
+            .sketch(Point::new_in_3d(g, [-64.0, -93.0, -75.0]))
+            .expect("point created");
+        let end_point = sys
+            .sketch(Point::new_in_3d(g, [-67.0, -63.0, -72.0]))
+            .expect("point created");
+        let cubic = sys
+            .sketch(Cubic::new(
+                g,
+                start_point,
+                start_control,
+                end_control,
+                end_point,
+            ))
+            .expect("cubic created");
+
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [18.0, -34.0, -27.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [-10.0, 95.0, 69.0]))
+            .expect("point created");
+        let line = sys
+            .sketch(LineSegment::new(g, point_a, point_b))
+            .expect("line created");
+
+        sys.constrain(CubicLineTangent::new(g, cubic, line, false, None))
+            .expect("cubic and line are tangent");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::OnWorkplane {
+                coords: coords_start,
+                ..
+            },
+            Point::OnWorkplane {
+                coords: coords_control,
+                ..
+            },
+            Point::OnWorkplane {
+                coords: coords_a, ..
+            },
+            Point::OnWorkplane {
+                coords: coords_b, ..
+            },
+        ) = (
+            sys.entity_data(&start_point)
+                .expect("data for point_c found"),
+            sys.entity_data(&start_control)
+                .expect("data for point_d found"),
+            sys.entity_data(&point_a).expect("data for point_a found"),
+            sys.entity_data(&point_b).expect("data for point_b found"),
+        ) {
+            let angle = dbg!(angle_2d(
+                [coords_start, coords_control,],
+                [coords_a, coords_b,],
+            ));
+            angle_within_tolerance!(angle, 0_f64);
+        } else {
+            unreachable!()
         }
     }
 }

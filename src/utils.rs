@@ -238,6 +238,43 @@ pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 
     angle.positive().radians * start_vec.length()
 }
 
+/// Compares two lengths, panics if not within the solver tolerance
+///
+/// If comparing angles, not lengths, use [`angle_within_tolerance`].
+#[macro_export]
+macro_rules! len_within_tolerance {
+    ($left:expr, $right:expr) => {
+        assert!(
+            // In reality, the difference should be much smaller than the tolerance.
+            ($left - $right).abs() <= $crate::system::SOLVE_TOLERANCE * 1e-2,
+            "assertion failed: `(left ≈ right)`
+ left: `{}`,
+right: `{}`",
+            stringify!($left),
+            stringify!($right)
+        )
+    };
+}
+
+/// Compares two angles, in degrees. Panics if the cosine of the two angles is not within the
+/// solver tolerance.
+///
+/// If comparing lengths, not angles, use [`len_within_tolerance`].
+#[macro_export]
+macro_rules! angle_within_tolerance {
+    ($left:expr, $right:expr) => {
+        assert!(
+            ($left.to_radians().cos() - $right.to_radians().cos()).abs()
+                <= $crate::system::SOLVE_TOLERANCE,
+            "assertion failed: `(left ≈ right)`
+ left: `{}`,
+right: `{}`",
+            stringify!($left),
+            stringify!($right)
+        )
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,12 +295,13 @@ mod tests {
             make_quaternion([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
         );
 
-        assert!(
-            distance(
+        len_within_tolerance!(
+            (distance(
                 coords_3d,
                 [16.530612244897966, 46.734693877551024, 50.51020408163265]
-            ) < 1e-6
-        )
+            )),
+            0.0
+        );
     }
 
     #[test]
@@ -274,51 +312,68 @@ mod tests {
             make_quaternion([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
         );
 
-        assert!(distance(coords_2d, [7.142857142857142, 33.57142857142857]) < 1e-6)
+        len_within_tolerance!(
+            distance(coords_2d, [7.142857142857142, 33.57142857142857]),
+            0.0
+        );
     }
 
     #[test]
     fn angles() {
-        assert!((angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, 0.0]])).abs() < 1e-6);
-        assert!((angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, 1.0]]) - 45.0).abs() < 1e-6);
-        assert!((angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]) - 90.0).abs() < 1e-6);
-        assert!(
-            (angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, 1.0]]) - 135.0).abs() < 1e-6
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, 0.0]]),
+            0_f64
         );
-        assert!(
-            (angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, 0.0]]) - 180.0).abs() < 1e-6
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, 1.0]]),
+            45_f64
         );
-        assert!(
-            (angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, -1.0]]) - 225.0).abs() < 1e-6
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]),
+            90_f64
         );
-        assert!(
-            (angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [0.0, -1.0]]) - 270.0).abs() < 1e-6
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, 1.0]]),
+            135_f64
         );
-        assert!(
-            (angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, -1.0]]) - 315.0).abs() < 1e-6
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, 0.0]]),
+            180_f64
+        );
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [-1.0, -1.0]]),
+            225_f64
+        );
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [0.0, -1.0]]),
+            270_f64
+        );
+        angle_within_tolerance!(
+            angle_2d([[0.0, 0.0], [1.0, 0.0]], [[0.0, 0.0], [1.0, -1.0]]),
+            315_f64
         );
     }
 
     #[test]
     fn test_arc_len() {
-        assert!(
-            (arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, SQRT_2 / 2.0]) - 0.25 * PI).abs()
-                < 1e-6
+        len_within_tolerance!(
+            arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, SQRT_2 / 2.0]),
+            0.25 * PI
         );
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [0.0, 1.0]) - 0.5 * PI).abs() < 1e-6);
-        assert!(
-            (arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, SQRT_2 / 2.0]) - 0.75 * PI).abs()
-                < 1e-6
+        len_within_tolerance!(arc_len([0.0, 0.0], [1.0, 0.0], [0.0, 1.0]), 0.5 * PI);
+        len_within_tolerance!(
+            arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, SQRT_2 / 2.0]),
+            0.75 * PI
         );
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [-1.0, 0.0]) - PI).abs() < 1e-6);
-        assert!(
-            (arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, -SQRT_2 / 2.0]) - 1.25 * PI).abs()
-                < 1e-6
+        len_within_tolerance!(arc_len([0.0, 0.0], [1.0, 0.0], [-1.0, 0.0]), PI);
+        len_within_tolerance!(
+            arc_len([0.0, 0.0], [1.0, 0.0], [-SQRT_2 / 2.0, -SQRT_2 / 2.0]),
+            1.25 * PI
         );
-        assert!((arc_len([0.0, 0.0], [1.0, 0.0], [0.0, -1.0]) - 1.5 * PI).abs() < 1e-6);
-        assert!(
-            (arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, -SQRT_2 / 2.0]) - 1.75 * PI).abs()
-                < 1e-6
+        len_within_tolerance!(arc_len([0.0, 0.0], [1.0, 0.0], [0.0, -1.0]), 1.5 * PI);
+        len_within_tolerance!(
+            arc_len([0.0, 0.0], [1.0, 0.0], [SQRT_2 / 2.0, -SQRT_2 / 2.0]),
+            1.75 * PI
         );
     }
 }
