@@ -193,7 +193,7 @@ impl System {
         &mut self,
         constraint_data: C,
     ) -> Result<ConstraintHandle<C>, &'static str> {
-        self.validate_constraint_data(&constraint_data)?;
+        let workplane_h = self.constraint_target(&constraint_data)?;
 
         let [pt_a, pt_b] = constraint_data.points().unwrap_or([0; 2]);
         let [entity_a, entity_b, entity_c, entity_d] = constraint_data.entities().unwrap_or([0; 4]);
@@ -203,7 +203,7 @@ impl System {
             h: self.constraints.next_h(),
             group: constraint_data.group(),
             type_: constraint_data.slvs_type(),
-            wrkpl: constraint_data.workplane().unwrap_or(SLVS_FREE_IN_3D),
+            wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
             valA: constraint_data.val().unwrap_or(0.0),
             ptA: pt_a,
             ptB: pt_b,
@@ -562,7 +562,7 @@ impl System {
     {
         let mut constraint_data = self.constraint_data(constraint_handle)?;
         f(&mut constraint_data);
-        self.validate_constraint_data(&constraint_data)?;
+        self.constraint_target(&constraint_data)?;
 
         let slvs_constraint = self.mut_slvs_constraint(constraint_handle.handle())?;
         slvs_constraint.group = constraint_data.group();
@@ -1104,34 +1104,74 @@ impl System {
         Ok(&mut self.constraints.list[ix])
     }
 
-    pub(crate) fn validate_constraint_data(
+    pub(crate) fn constraint_target<C: AsConstraintData>(
         &self,
-        constraint_data: &impl AsConstraintData,
-    ) -> Result<(), &'static str> {
+        constraint_data: &C,
+    ) -> Result<Option<Slvs_hEntity>, &'static str> {
+        let mut referenced_workplanes = Vec::new();
+
         if let Some(points_h) = constraint_data.points() {
-            let all_points_valid: Result<Vec<_>, _> = points_h
-                .into_iter()
+            let slvs_points: Result<Vec<_>, _> = points_h
+                .iter()
                 .filter_map(|point_h| match point_h {
                     0 => None,
-                    _ => Some(self.slvs_entity(point_h).map(|_| ())),
+                    _ => Some(self.slvs_entity(*point_h)),
                 })
                 .collect();
-            all_points_valid?;
+            referenced_workplanes.extend(slvs_points?.iter().map(|slvs_point| slvs_point.wrkpl));
         }
 
         if let Some(entities_h) = constraint_data.entities() {
-            let all_entities_valid: Result<Vec<_>, _> = entities_h
-                .into_iter()
+            let slvs_points: Result<Vec<_>, _> = entities_h
+                .iter()
                 .filter_map(|entity_h| match entity_h {
                     0 => None,
-                    _ => Some(self.slvs_entity(entity_h).map(|_| ())),
+                    _ => Some(self.slvs_entity(*entity_h)),
                 })
                 .collect();
-            all_entities_valid?;
+            referenced_workplanes.extend(slvs_points?.iter().map(|slvs_point| slvs_point.wrkpl));
         }
 
-        Ok(())
+        if let Some(workplane_h) = constraint_data.workplane() {
+            Ok(Some(workplane_h))
+        } else if referenced_workplanes
+            .iter()
+            .all(|x| *x == referenced_workplanes[0])
+        {
+            Ok(Some(referenced_workplanes[0]))
+        } else {
+            Ok(None)
+        }
     }
+
+    // pub(crate) fn validate_constraint_data(
+    //     &self,
+    //     constraint_data: &impl AsConstraintData,
+    // ) -> Result<(), &'static str> {
+    //     if let Some(points_h) = constraint_data.points() {
+    //         let all_points_valid: Result<Vec<_>, _> = points_h
+    //             .into_iter()
+    //             .filter_map(|point_h| match point_h {
+    //                 0 => None,
+    //                 _ => Some(self.slvs_entity(point_h).map(|_| ())),
+    //             })
+    //             .collect();
+    //         all_points_valid?;
+    //     }
+
+    //     if let Some(entities_h) = constraint_data.entities() {
+    //         let all_entities_valid: Result<Vec<_>, _> = entities_h
+    //             .into_iter()
+    //             .filter_map(|entity_h| match entity_h {
+    //                 0 => None,
+    //                 _ => Some(self.slvs_entity(entity_h).map(|_| ())),
+    //             })
+    //             .collect();
+    //         all_entities_valid?;
+    //     }
+
+    //     Ok(())
+    // }
 
     pub(crate) fn boxed_constraint_handle(
         &self,
