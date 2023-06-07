@@ -99,7 +99,7 @@ mod tests {
     };
 
     #[test]
-    fn test_angle() {
+    fn angle_on_workplane() {
         let mut sys = System::new();
 
         let workplane_g = sys.add_group();
@@ -141,46 +141,17 @@ mod tests {
             .expect("line between two 3d points created");
 
         // Constrain angle between line_ab and line_cd to be 30 degrees apart.
-        let angle_constraint = sys
-            .constrain(Angle::new(g, line_ab, line_cd, 150.0, None, false))
-            .expect("constraint added");
+        sys.constrain(Angle::new(
+            g,
+            line_ab,
+            line_cd,
+            45.0,
+            Some(workplane),
+            false,
+        ))
+        .expect("constraint added");
 
-        sys.solve(&g);
-
-        if let (
-            Point::In3d {
-                coords: coords_a, ..
-            },
-            Point::In3d {
-                coords: coords_b, ..
-            },
-            Point::In3d {
-                coords: coords_c, ..
-            },
-            Point::In3d {
-                coords: coords_d, ..
-            },
-        ) = (
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
-            sys.entity_data(&point_c).expect("data for point_c found"),
-            sys.entity_data(&point_d).expect("data for point_d found"),
-        ) {
-            let angle = dbg!(angle_3d([coords_a, coords_b], [coords_c, coords_d]));
-            assert!((angle - 150.0).abs() < SOLVE_TOLERANCE);
-        } else {
-            unreachable!()
-        }
-
-        // Update the angle constraint.
-        // Now, angle between the lines are 45 degrees, when projected onto workplane.
-        sys.update_constraint(&angle_constraint, |constraint| {
-            constraint.angle = 45.0;
-            constraint.workplane = Some(workplane);
-        })
-        .expect("Lines are now 45 degrees apart, when projected on workplane");
-
-        sys.solve(&g);
+        dbg!(sys.solve(&g));
 
         if let (
             Point::In3d { coords: origin, .. },
@@ -217,6 +188,65 @@ mod tests {
                 ],
             ));
             assert!((angle - 45.0).abs() < SOLVE_TOLERANCE);
+        } else {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn angle_in_3d() {
+        let mut sys = System::new();
+        let g = sys.add_group();
+
+        // Create line_ab
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [30.0, 62.0, 23.0]))
+            .expect("point in 3d created");
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [57.0, -3.0, -33.0]))
+            .expect("point in 3d created");
+        let line_ab = sys
+            .sketch(LineSegment::new(g, point_a, point_b))
+            .expect("line between two 3d points created");
+
+        // Create line_cd
+        let point_c = sys
+            .sketch(Point::new_in_3d(g, [44.0, -18.0, 88.0]))
+            .expect("point in 3d created");
+        let point_d = sys
+            .sketch(Point::new_in_3d(g, [-46.0, -23.0, 41.0]))
+            .expect("point in 3d created");
+        let line_cd = sys
+            .sketch(LineSegment::new(g, point_c, point_d))
+            .expect("line between two 3d points created");
+
+        // Constrain angle between line_ab and line_cd to be 30 degrees apart.
+        sys.constrain(Angle::new(g, line_ab, line_cd, 150.0, None, false))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::In3d {
+                coords: coords_a, ..
+            },
+            Point::In3d {
+                coords: coords_b, ..
+            },
+            Point::In3d {
+                coords: coords_c, ..
+            },
+            Point::In3d {
+                coords: coords_d, ..
+            },
+        ) = (
+            sys.entity_data(&point_a).expect("data for point_a found"),
+            sys.entity_data(&point_b).expect("data for point_b found"),
+            sys.entity_data(&point_c).expect("data for point_c found"),
+            sys.entity_data(&point_d).expect("data for point_d found"),
+        ) {
+            let angle = dbg!(angle_3d([coords_a, coords_b], [coords_c, coords_d]));
+            assert!((angle - 150.0).abs() < SOLVE_TOLERANCE);
         } else {
             unreachable!()
         }
