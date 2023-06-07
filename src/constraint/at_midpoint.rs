@@ -61,9 +61,10 @@ impl FromSystem for AtMidpoint {
 #[cfg(test)]
 mod tests {
     use crate::{
-        angle_within_tolerance, len_within_tolerance,
+        angle_within_tolerance,
         constraint::AtMidpoint,
         entity::{LineSegment, Normal, Point, Workplane},
+        len_within_tolerance,
         utils::{angle_2d, angle_3d, distance, make_quaternion, project_3d_to_2d},
         System,
     };

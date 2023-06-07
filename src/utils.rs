@@ -238,9 +238,9 @@ pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 
     angle.positive().radians * start_vec.length()
 }
 
-/// Compares two lengths, panics if not within the solver tolerance
+/// Asserts that two lengths are within [tolerance][crate::system::SOLVE_TOLERANCE].
 ///
-/// If comparing angles, not lengths, use [`angle_within_tolerance`].
+/// If comparing angles, not lengths, use [`angle_within_tolerance`][crate::angle_within_tolerance].
 #[macro_export]
 macro_rules! len_within_tolerance {
     ($left:expr, $right:expr) => {
@@ -256,8 +256,9 @@ right: `{}`",
     };
 }
 
-/// Compares two angles, in degrees. Panics if the cosine of the two angles is not within the
-/// solver tolerance.
+/// Asserts that two angles, in degrees are within [tolerance][crate::system::SOLVE_TOLERANCE].
+///
+/// Comparison is done between the cosine of the two angles.
 ///
 /// If comparing lengths, not angles, use [`len_within_tolerance`].
 #[macro_export]

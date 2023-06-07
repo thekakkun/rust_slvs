@@ -6,8 +6,8 @@ Sketch geometries by creating [entities][crate::entity] within the system,
 then add [constraints][crate::constraint] to define relationships between multiple
 entities.
 
-Entities and constraints are referenced by their handles ([crate::entity::EntityHandle]
-and [crate::constraint::ConstraintHandle], respectively). These are wrappers around
+Entities and constraints are referenced by their handles ([`EntityHandle`][crate::entity::EntityHandle]
+and [`ConstraintHandle`][crate::constraint::ConstraintHandle], respectively). These are wrappers around
 `u32` values with a phantom type used to ensure that entity and constraint definitions
 are correctly referencing the expected type of entity.
 

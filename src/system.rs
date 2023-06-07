@@ -1144,35 +1144,6 @@ impl System {
         }
     }
 
-    // pub(crate) fn validate_constraint_data(
-    //     &self,
-    //     constraint_data: &impl AsConstraintData,
-    // ) -> Result<(), &'static str> {
-    //     if let Some(points_h) = constraint_data.points() {
-    //         let all_points_valid: Result<Vec<_>, _> = points_h
-    //             .into_iter()
-    //             .filter_map(|point_h| match point_h {
-    //                 0 => None,
-    //                 _ => Some(self.slvs_entity(point_h).map(|_| ())),
-    //             })
-    //             .collect();
-    //         all_points_valid?;
-    //     }
-
-    //     if let Some(entities_h) = constraint_data.entities() {
-    //         let all_entities_valid: Result<Vec<_>, _> = entities_h
-    //             .into_iter()
-    //             .filter_map(|entity_h| match entity_h {
-    //                 0 => None,
-    //                 _ => Some(self.slvs_entity(entity_h).map(|_| ())),
-    //             })
-    //             .collect();
-    //         all_entities_valid?;
-    //     }
-
-    //     Ok(())
-    // }
-
     pub(crate) fn boxed_constraint_handle(
         &self,
         slvs_constraint: Slvs_Constraint,
