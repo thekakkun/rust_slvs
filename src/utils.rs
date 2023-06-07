@@ -171,7 +171,7 @@ pub fn project_3d_to_2d(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> 
     rotated_point.to_2d().into()
 }
 
-/// Calculate the angle from `vec_a` to `vec_b`, in 2d space.
+/// Calculate the angle from `vec_a` to `vec_b`, in 2d space, going clockwise.
 ///
 /// # Arguments
 ///
@@ -188,7 +188,7 @@ pub fn angle_2d(vec_a: [[f64; 2]; 2], vec_b: [[f64; 2]; 2]) -> f64 {
     angle.positive().to_degrees()
 }
 
-/// Calculate the angle from `vec_a` to `vec_b`, in 3d space.
+/// Calculate the shortest angle from `vec_a` to `vec_b`, in 3d space.
 ///
 /// # Arguments
 ///
@@ -200,7 +200,11 @@ pub fn angle_3d(vec_a: [[f64; 3]; 2], vec_b: [[f64; 3]; 2]) -> f64 {
 
     // this uses a fast but inaccurate algorithm.
     // let angle = vec_a.angle_to(vec_b);
-    let angle = Angle::radians((vec_a.dot(vec_b) / (vec_a.length() * vec_b.length())).acos());
+    let angle = Angle::radians(
+        (vec_a.dot(vec_b) / (vec_a.length() * vec_b.length()))
+            .clamp(-1.0, 1.0)
+            .acos(),
+    );
 
     angle.positive().to_degrees()
 }
