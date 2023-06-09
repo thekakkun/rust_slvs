@@ -155,6 +155,12 @@ impl System {
 
         self.entities.list.push(slvs_entity);
 
+        // For an arc, needs a solve step to ensure that
+        // distance(center, start) = distance(center, end)
+        if SLVS_E_ARC_OF_CIRCLE == entity_data.slvs_type() as _ {
+            self.solve(&Group(entity_data.group()));
+        }
+
         let entity_handle = EntityHandle::new(slvs_entity.h);
 
         Ok(entity_handle)

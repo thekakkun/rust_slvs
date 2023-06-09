@@ -28,6 +28,9 @@ define_element!(
     /// distance(center, start) = distance(center, end)
     /// ```
     ///
+    /// This constraint is solved when adding the entity to the system, so points will
+    /// be moved if an arc cannot be created from them.
+    ///
     /// See the [module-level documentation][crate] for usage example.
     struct ArcOfCircle {
         /// The workpane Arc lies on
