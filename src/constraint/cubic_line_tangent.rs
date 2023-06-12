@@ -233,6 +233,7 @@ mod tests {
                 [coords_start, coords_control,],
                 [coords_a, coords_b,],
             ));
+
             angle_within_tolerance!(angle, 0_f64);
         } else {
             unreachable!()

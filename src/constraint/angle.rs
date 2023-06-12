@@ -30,8 +30,7 @@ define_element!(
     /// (A dot B)/(|A||B|) = -cos(valA)
     /// ```
     ///
-    /// Note that the solver will fail if the two lines are initially parallel to eachother.
-    ///
+    /// Note that the solver will fail if the two lines are initially parallel to each other.
     struct Angle {
         line_a: EntityHandle<LineSegment>,
         line_b: EntityHandle<LineSegment>,
@@ -103,12 +102,12 @@ mod tests {
 
         let workplane_g = sys.add_group();
         let origin = sys
-            .sketch(Point::new_in_3d(workplane_g, [40.0, -2.0, -7.0]))
+            .sketch(Point::new_in_3d(workplane_g, [0.0, 0.0, 0.0]))
             .expect("Origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
-                make_quaternion([96.0, -96.0, 35.0], [50.0, -32.0, 63.0]),
+                make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
             ))
             .expect("normal created");
         let workplane = sys
