@@ -44,8 +44,8 @@ impl FromSystem for ArcLineDifference {
         if SLVS_C_ARC_LINE_DIFFERENCE == slvs_constraint.type_ as _ {
             Ok(Self {
                 group: Group(slvs_constraint.group),
-                arc: EntityHandle::new(slvs_constraint.entityA),
-                line: EntityHandle::new(slvs_constraint.entityB),
+                arc: EntityHandle::new(slvs_constraint.entityB),
+                line: EntityHandle::new(slvs_constraint.entityA),
                 difference: slvs_constraint.valA,
             })
         } else {
