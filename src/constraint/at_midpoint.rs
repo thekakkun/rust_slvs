@@ -65,7 +65,7 @@ mod tests {
         constraint::AtMidpoint,
         entity::{LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
-        utils::{angle_2d, angle_3d, distance, make_quaternion, project_3d_to_2d},
+        utils::{angle_2d, angle_3d, distance, make_quaternion, project_on_plane},
         System,
     };
 
@@ -128,9 +128,9 @@ mod tests {
             sys.entity_data(&point).expect("data for point_c found"),
         ) {
             let normal = [w, x, y, z];
-            let point_a = project_3d_to_2d(coords_a, origin, normal);
-            let point_b = project_3d_to_2d(coords_b, origin, normal);
-            let point = project_3d_to_2d(coords, origin, normal);
+            let point_a = project_on_plane(coords_a, origin, normal);
+            let point_b = project_on_plane(coords_b, origin, normal);
+            let point = project_on_plane(coords, origin, normal);
 
             len_within_tolerance!(distance(point, point_a), distance(point, point_b));
             angle_within_tolerance!(angle_2d([point, point_a], [point, point_b]), 180_f64);

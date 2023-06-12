@@ -5,7 +5,7 @@ use euclid::{
     Angle,
 };
 
-use std::mem::MaybeUninit;
+use std::{iter::zip, mem::MaybeUninit};
 
 use crate::{
     bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, Slvs_QuaternionV},
@@ -157,6 +157,43 @@ pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], normal: [f64; 4]) -> 
     (rotated_point + Size3D::from(origin)).into()
 }
 
+/// Project a point onto a line, in the same dimension space.
+///
+/// # Arguments
+///
+/// `point` - Coordinates of the point.
+/// `line_start` - Coordinates of one end of the line.
+/// `line_end` - Coordiantes of the other end of the line.
+pub fn project_on_line<const N: usize>(
+    point: [f64; N],
+    line_start: [f64; N],
+    line_end: [f64; N],
+) -> [f64; N] {
+    let line_direction: [f64; N] = zip(line_end, line_start)
+        .map(|(e, s)| e - s)
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap();
+    let point_to_line_start: [f64; N] = zip(point, line_start)
+        .map(|(e, s)| e - s)
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap();
+
+    let t = zip(line_direction, point_to_line_start)
+        .map(|(a, b)| a * b)
+        .sum::<f64>()
+        / zip(line_direction, line_direction)
+            .map(|(a, b)| a * b)
+            .sum::<f64>();
+
+    zip(line_start, line_direction)
+        .map(|(s, d)| s + d * t)
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap()
+}
+
 /// Project a point in 3d onto a plane
 ///
 /// # Arguments
@@ -164,7 +201,7 @@ pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], normal: [f64; 4]) -> 
 /// * `point` - Coordinates of the point.
 /// * `origin` - Origin point of the plane to project onto.
 /// * `normal` - The normal of the plane to project onto, as a unit quaternion.
-pub fn project_3d_to_2d(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> [f64; 2] {
+pub fn project_on_plane(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> [f64; 2] {
     let [w, i, j, k] = normal;
     let normal_quaternion = Rotation3D::unit_quaternion(i, j, k, w);
     let rotated_point = normal_quaternion
@@ -309,7 +346,7 @@ mod tests {
 
     #[test]
     fn test_3d_to_2d() {
-        let coords_2d = project_3d_to_2d(
+        let coords_2d = project_on_plane(
             [34.89795918367347, 37.55102040816326, 56.63265306122449],
             [10.0, 20.0, 30.0],
             make_quaternion([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),

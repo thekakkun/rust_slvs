@@ -92,7 +92,7 @@ mod tests {
         angle_within_tolerance,
         constraint::Angle,
         entity::{LineSegment, Normal, Point, Workplane},
-        utils::{angle_2d, angle_3d, make_quaternion, project_3d_to_2d},
+        utils::{angle_2d, angle_3d, make_quaternion, project_on_plane},
         System,
     };
 
@@ -177,12 +177,12 @@ mod tests {
             let normal = [w, x, y, z];
             let angle = angle_2d(
                 [
-                    project_3d_to_2d(coords_a, origin, normal),
-                    project_3d_to_2d(coords_b, origin, normal),
+                    project_on_plane(coords_a, origin, normal),
+                    project_on_plane(coords_b, origin, normal),
                 ],
                 [
-                    project_3d_to_2d(coords_c, origin, normal),
-                    project_3d_to_2d(coords_d, origin, normal),
+                    project_on_plane(coords_c, origin, normal),
+                    project_on_plane(coords_d, origin, normal),
                 ],
             );
 
