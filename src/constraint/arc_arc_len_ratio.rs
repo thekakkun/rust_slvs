@@ -59,7 +59,7 @@ mod tests {
     use crate::{
         constraint::ArcArcLenRatio,
         entity::{ArcOfCircle, Normal, Point, Workplane},
-        system::SOLVE_TOLERANCE,
+        len_within_tolerance,
         utils::{arc_len, make_quaternion},
         System,
     };
@@ -130,6 +130,7 @@ mod tests {
             .expect("constraint added");
 
         dbg!(sys.solve(&g));
+        dbg!(sys.solve(&g));
 
         let arc_a_len = if let (
             Point::OnWorkplane { coords: center, .. },
@@ -145,7 +146,7 @@ mod tests {
                 .expect("arc_start_a data found"),
             sys.entity_data(&arc_end_a).expect("arc_end_a data found"),
         ) {
-            dbg!(arc_len(center, arc_start, arc_end))
+            arc_len(center, arc_start, arc_end)
         } else {
             unreachable!()
         };
@@ -163,11 +164,11 @@ mod tests {
                 .expect("arc_start_b data found"),
             sys.entity_data(&arc_end_b).expect("arc_end_b data found"),
         ) {
-            dbg!(arc_len(center, arc_start, arc_end))
+            arc_len(center, arc_start, arc_end)
         } else {
             unreachable!()
         };
 
-        assert!((arc_a_len / arc_b_len - ratio).abs() < SOLVE_TOLERANCE);
+        len_within_tolerance!(arc_a_len / arc_b_len, ratio);
     }
 }

@@ -12,11 +12,15 @@ use crate::{
 
 define_element!(
     SLVS_C_ARC_LINE_TANGENT,
+    /// The `arc` is tangent to the `line`.
+    ///
+    /// If `to_end` is true, the arc is tangent at its end. Otherwise, the arc is tangent
+    /// at its start.
     struct ArcLineTangent {
         workplane: EntityHandle<Workplane>,
         arc: EntityHandle<ArcOfCircle>,
         line: EntityHandle<LineSegment>,
-        to_start: bool,
+        to_end: bool,
     }
 );
 
@@ -30,7 +34,7 @@ impl AsConstraintData for ArcLineTangent {
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_start, false]
+        [self.to_end, false]
     }
 }
 
@@ -47,10 +51,102 @@ impl FromSystem for ArcLineTangent {
                 workplane: EntityHandle::new(slvs_constraint.wrkpl),
                 arc: EntityHandle::new(slvs_constraint.entityA),
                 line: EntityHandle::new(slvs_constraint.entityB),
-                to_start: slvs_constraint.other != 0,
+                to_end: slvs_constraint.other != 0,
             })
         } else {
             Err("Expected constraint to have type SLVS_C_ARC_LINE_TANGENT.")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ArcLineTangent;
+    use crate::{
+        angle_within_tolerance,
+        entity::{ArcOfCircle, LineSegment, Normal, Point, Workplane},
+        utils::{angle_2d, make_quaternion, project_3d_to_2d},
+        System,
+    };
+
+    #[test]
+    fn arc_line_tangent() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-99.0, -90.0, 38.0]))
+            .expect("Origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([41.0, -59.0, -29.0], [-96.0, 42.0, 10.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("Workplane created");
+
+        let g = sys.add_group();
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [48.0, 29.0, 87.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [-53.0, 69.0, 6.0]))
+            .expect("point created");
+        let line = sys
+            .sketch(LineSegment::new(g, point_a, point_b))
+            .expect("line created");
+
+        let center = sys
+            .sketch(Point::new_on_workplane(g, workplane, [0.0, 46.0]))
+            .expect("point on workplane created");
+        let arc_start = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-48.0, 90.0]))
+            .expect("point on workplane created");
+        let arc_end = sys
+            .sketch(Point::new_on_workplane(g, workplane, [98.0, 64.0]))
+            .expect("point on workplane created");
+        let arc = sys
+            .sketch(ArcOfCircle::new(g, workplane, center, arc_start, arc_end))
+            .expect("Arc created");
+
+        sys.constrain(ArcLineTangent::new(g, workplane, arc, line, false))
+            .expect("arc and line are tangent");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::In3d { coords: origin, .. },
+            Normal::In3d { w, x, y, z, .. },
+            Point::In3d {
+                coords: coords_a, ..
+            },
+            Point::In3d {
+                coords: coords_b, ..
+            },
+            Point::OnWorkplane { coords: center, .. },
+            Point::OnWorkplane { coords: start, .. },
+        ) = (
+            sys.entity_data(&origin).expect("data for origin found"),
+            sys.entity_data(&normal).expect("data for normal found"),
+            sys.entity_data(&point_a).expect("data for point_a found"),
+            sys.entity_data(&point_b).expect("data for point_b found"),
+            sys.entity_data(&center).expect("data for point_c found"),
+            sys.entity_data(&arc_start).expect("data for point_d found"),
+        ) {
+            let normal = [w, x, y, z];
+            let angle = angle_2d(
+                [
+                    project_3d_to_2d(coords_a, origin, normal),
+                    project_3d_to_2d(coords_b, origin, normal),
+                ],
+                [center, start],
+            );
+
+            angle_within_tolerance!(angle, 90_f64);
+        } else {
+            unreachable!()
         }
     }
 }

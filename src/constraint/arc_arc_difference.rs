@@ -59,7 +59,7 @@ mod tests {
     use crate::{
         constraint::ArcArcDifference,
         entity::{ArcOfCircle, Normal, Point, Workplane},
-        system::SOLVE_TOLERANCE,
+        len_within_tolerance,
         utils::{arc_len, make_quaternion},
         System,
     };
@@ -70,12 +70,12 @@ mod tests {
 
         let workplane_g = sys.add_group();
         let origin = sys
-            .sketch(Point::new_in_3d(workplane_g, [0.0, 74.0, 15.0]))
+            .sketch(Point::new_in_3d(workplane_g, [0.0, 0.0, 0.0]))
             .expect("Origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
-                make_quaternion([-20.0, 94.0, -24.0], [59.0, -88.0, 35.0]),
+                make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
             ))
             .expect("normal created");
         let workplane = sys
@@ -125,10 +125,10 @@ mod tests {
             .expect("Arc created");
 
         // Constrain arc lengths to have a difference of 100 units.
-        let difference = 50.0;
+        let difference = 100.0;
         sys.constrain(ArcArcDifference::new(g, arc_a, arc_b, difference))
             .expect("constraint added");
-
+        dbg!(sys.solve(&g));
         dbg!(sys.solve(&g));
 
         let arc_a_len = if let (
@@ -145,8 +145,7 @@ mod tests {
                 .expect("arc_start_a data found"),
             sys.entity_data(&arc_end_a).expect("arc_end_a data found"),
         ) {
-            println!("{:?} {:?} {:?}", center, arc_start, arc_end);
-            dbg!(arc_len(center, arc_start, arc_end))
+            arc_len(center, arc_start, arc_end)
         } else {
             unreachable!()
         };
@@ -164,12 +163,11 @@ mod tests {
                 .expect("arc_start_b data found"),
             sys.entity_data(&arc_end_b).expect("arc_end_b data found"),
         ) {
-            println!("{:?} {:?} {:?}", center, arc_start, arc_end);
-            dbg!(arc_len(center, arc_start, arc_end))
+            arc_len(center, arc_start, arc_end)
         } else {
             unreachable!()
         };
 
-        assert!(((arc_a_len - arc_b_len).abs() - difference).abs() < SOLVE_TOLERANCE);
+        len_within_tolerance!(arc_a_len - arc_b_len, difference);
     }
 }
