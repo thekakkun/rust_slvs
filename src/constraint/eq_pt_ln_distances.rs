@@ -12,11 +12,14 @@ use crate::{
 
 define_element!(
     SLVS_C_EQ_PT_LN_DISTANCES,
+    /// the distance between `line_a` and `point_a` are equal to the distance between
+    /// `line_b` and `point_b`.
     struct EqPtLnDistances {
         line_a: EntityHandle<LineSegment>,
         point_a: EntityHandle<Point>,
         line_b: EntityHandle<LineSegment>,
         point_b: EntityHandle<Point>,
+        /// If provided, constraint applies when projected onto this workplane.
         workplane: Option<EntityHandle<Workplane>>,
     }
 );
@@ -56,5 +59,212 @@ impl FromSystem for EqPtLnDistances {
         } else {
             Err("Expected constraint to have type SLVS_C_EQ_PT_LN_DISTANCES.")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        constraint::EqPtLnDistances,
+        entity::{LineSegment, Normal, Point, Workplane},
+        len_within_tolerance,
+        utils::{distance, make_quaternion, project_on_line, project_on_plane},
+        System,
+    };
+
+    #[test]
+    fn eq_len_pt_line_d_on_workplane() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [61.0, -65.0, -60.0]))
+            .expect("Origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([-63.0, -2.0, 34.0], [-22.0, 22.0, 59.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("Workplane created");
+
+        let g = sys.add_group();
+
+        let point_a_start = sys
+            .sketch(Point::new_in_3d(g, [10.0, -2.0, -60.0]))
+            .expect("point in 3d created");
+        let point_a_end = sys
+            .sketch(Point::new_in_3d(g, [-68.0, 85.0, -2.0]))
+            .expect("point in 3d created");
+        let line_a = sys
+            .sketch(LineSegment::new(g, point_a_start, point_a_end))
+            .expect("line between two 3d points created");
+
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [8.0, -52.0, 44.0]))
+            .expect("point created");
+
+        let point_b_start = sys
+            .sketch(Point::new_in_3d(g, [-79.0, -46.0, 95.0]))
+            .expect("point in 3d created");
+        let point_b_end = sys
+            .sketch(Point::new_in_3d(g, [-7.0, -47.0, 80.0]))
+            .expect("point in 3d created");
+        let line_b = sys
+            .sketch(LineSegment::new(g, point_b_start, point_b_end))
+            .expect("line between two 3d points created");
+
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [-88.0, -60.0, -70.0]))
+            .expect("point created");
+
+        sys.constrain(EqPtLnDistances::new(
+            g,
+            line_a,
+            point_a,
+            line_b,
+            point_b,
+            Some(workplane),
+        ))
+        .expect("constraint added.");
+
+        dbg!(sys.solve(&g));
+
+        if let (Point::In3d { coords: origin, .. }, Normal::In3d { w, x, y, z, .. }) = (
+            sys.entity_data(&origin).expect("data for origin found"),
+            sys.entity_data(&normal).expect("data for normal found"),
+        ) {
+            let normal = [w, x, y, z];
+
+            let dist_a = if let (
+                Point::In3d {
+                    coords: line_start, ..
+                },
+                Point::In3d {
+                    coords: line_end, ..
+                },
+                Point::In3d { coords: point, .. },
+            ) = (
+                sys.entity_data(&point_a_start).expect("data found"),
+                sys.entity_data(&point_a_end).expect("data found"),
+                sys.entity_data(&point_a).expect("data found"),
+            ) {
+                let line_start = project_on_plane(line_start, origin, normal);
+                let line_end = project_on_plane(line_end, origin, normal);
+                let point = project_on_plane(point, origin, normal);
+
+                distance(point, project_on_line(point, line_start, line_end))
+            } else {
+                unreachable!()
+            };
+
+            let dist_b = if let (
+                Point::In3d {
+                    coords: line_start, ..
+                },
+                Point::In3d {
+                    coords: line_end, ..
+                },
+                Point::In3d { coords: point, .. },
+            ) = (
+                sys.entity_data(&point_b_start).expect("data found"),
+                sys.entity_data(&point_b_end).expect("data found"),
+                sys.entity_data(&point_b).expect("data found"),
+            ) {
+                let line_start = project_on_plane(line_start, origin, normal);
+                let line_end = project_on_plane(line_end, origin, normal);
+                let point = project_on_plane(point, origin, normal);
+
+                distance(point, project_on_line(point, line_start, line_end))
+            } else {
+                unreachable!()
+            };
+
+            len_within_tolerance!(dist_a, dist_b)
+        } else {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn eq_len_pt_line_d_in_3d() {
+        let mut sys = System::new();
+
+        let g = sys.add_group();
+
+        let point_a_start = sys
+            .sketch(Point::new_in_3d(g, [-52.0, 65.0, 50.0]))
+            .expect("point in 3d created");
+        let point_a_end = sys
+            .sketch(Point::new_in_3d(g, [-48.0, 90.0, -51.0]))
+            .expect("point in 3d created");
+        let line_a = sys
+            .sketch(LineSegment::new(g, point_a_start, point_a_end))
+            .expect("line between two 3d points created");
+
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [99.0, -93.0, -37.0]))
+            .expect("point created");
+
+        let point_b_start = sys
+            .sketch(Point::new_in_3d(g, [93.0, -37.0, -60.0]))
+            .expect("point in 3d created");
+        let point_b_end = sys
+            .sketch(Point::new_in_3d(g, [79.0, 60.0, 80.0]))
+            .expect("point in 3d created");
+        let line_b = sys
+            .sketch(LineSegment::new(g, point_b_start, point_b_end))
+            .expect("line between two 3d points created");
+
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [-35.0, 70.0, -86.0]))
+            .expect("point created");
+
+        sys.constrain(EqPtLnDistances::new(
+            g, line_a, point_a, line_b, point_b, None,
+        ))
+        .expect("constraint added.");
+
+        dbg!(sys.solve(&g));
+
+        let dist_a = if let (
+            Point::In3d {
+                coords: line_start, ..
+            },
+            Point::In3d {
+                coords: line_end, ..
+            },
+            Point::In3d { coords: point, .. },
+        ) = (
+            sys.entity_data(&point_a_start).expect("data found"),
+            sys.entity_data(&point_a_end).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+        ) {
+            distance(point, project_on_line(point, line_start, line_end))
+        } else {
+            unreachable!()
+        };
+
+        let dist_b = if let (
+            Point::In3d {
+                coords: line_start, ..
+            },
+            Point::In3d {
+                coords: line_end, ..
+            },
+            Point::In3d { coords: point, .. },
+        ) = (
+            sys.entity_data(&point_b_start).expect("data found"),
+            sys.entity_data(&point_b_end).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+        ) {
+            distance(point, project_on_line(point, line_start, line_end))
+        } else {
+            unreachable!()
+        };
+
+        len_within_tolerance!(dist_a, dist_b)
     }
 }
