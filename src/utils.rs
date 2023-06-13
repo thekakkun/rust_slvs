@@ -277,6 +277,11 @@ pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 
     angle.positive().radians * start_vec.length()
 }
 
+/// Returns the rounded modulo, where the remainder for `a/n` falls between `-n/2` and `n/2`.
+pub fn rounded_mod(a: f64, n: f64) -> f64 {
+    a - n * (a / n).round()
+}
+
 /// Asserts that two lengths are within [tolerance][crate::system::SOLVE_TOLERANCE].
 ///
 /// If comparing angles, not lengths, use [`angle_within_tolerance`][crate::angle_within_tolerance].

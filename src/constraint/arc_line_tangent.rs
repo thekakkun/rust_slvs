@@ -65,7 +65,7 @@ mod tests {
     use crate::{
         angle_within_tolerance,
         entity::{ArcOfCircle, LineSegment, Normal, Point, Workplane},
-        utils::{angle_2d, make_quaternion, project_on_plane},
+        utils::{angle_2d, make_quaternion, project_on_plane, rounded_mod},
         System,
     };
 
@@ -144,7 +144,7 @@ mod tests {
                 [center, start],
             );
 
-            angle_within_tolerance!(angle, 90_f64);
+            angle_within_tolerance!(rounded_mod(angle, 180.0), 90_f64);
         } else {
             unreachable!()
         }

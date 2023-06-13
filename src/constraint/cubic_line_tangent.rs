@@ -67,7 +67,7 @@ mod tests {
         angle_within_tolerance,
         constraint::CubicLineTangent,
         entity::{Cubic, LineSegment, Normal, Point, Workplane},
-        utils::{angle_2d, make_quaternion},
+        utils::{angle_2d, angle_3d, make_quaternion, rounded_mod},
         System,
     };
 
@@ -145,18 +145,13 @@ mod tests {
                 coords: coords_b, ..
             },
         ) = (
-            sys.entity_data(&start_point)
-                .expect("data for point_c found"),
-            sys.entity_data(&start_control)
-                .expect("data for point_d found"),
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
+            sys.entity_data(&start_point).expect("data found"),
+            sys.entity_data(&start_control).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
         ) {
-            let angle = dbg!(angle_2d(
-                [coords_start, coords_control,],
-                [coords_a, coords_b,],
-            ));
-            angle_within_tolerance!(angle, 180_f64);
+            let angle = angle_2d([coords_start, coords_control], [coords_a, coords_b]);
+            angle_within_tolerance!(rounded_mod(angle, 180.0), 0_f64);
         } else {
             unreachable!()
         }
@@ -168,7 +163,6 @@ mod tests {
 
         let g = sys.add_group();
 
-        // Create
         let start_point = sys
             .sketch(Point::new_in_3d(g, [-87.0, 58.0, 93.0]))
             .expect("point created");
@@ -204,37 +198,32 @@ mod tests {
         sys.constrain(CubicLineTangent::new(g, cubic, line, false, None))
             .expect("cubic and line are tangent");
 
+        println!("{:#?}", sys);
         dbg!(sys.solve(&g));
 
         if let (
-            Point::OnWorkplane {
+            Point::In3d {
                 coords: coords_start,
                 ..
             },
-            Point::OnWorkplane {
+            Point::In3d {
                 coords: coords_control,
                 ..
             },
-            Point::OnWorkplane {
+            Point::In3d {
                 coords: coords_a, ..
             },
-            Point::OnWorkplane {
+            Point::In3d {
                 coords: coords_b, ..
             },
         ) = (
-            sys.entity_data(&start_point)
-                .expect("data for point_c found"),
-            sys.entity_data(&start_control)
-                .expect("data for point_d found"),
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
+            sys.entity_data(&start_point).expect("data found"),
+            sys.entity_data(&start_control).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
         ) {
-            let angle = dbg!(angle_2d(
-                [coords_start, coords_control,],
-                [coords_a, coords_b,],
-            ));
-
-            angle_within_tolerance!(angle, 0_f64);
+            let angle = angle_3d([coords_start, coords_control], [coords_a, coords_b]);
+            angle_within_tolerance!(rounded_mod(angle, 180.0), 0_f64);
         } else {
             unreachable!()
         }
