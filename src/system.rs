@@ -1,3 +1,5 @@
+use std::sync::{Mutex, MutexGuard};
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -801,6 +803,8 @@ impl System {
     ///
     /// * `group` - Only entities within this group are modified during solve.
     pub fn solve(&mut self, group: &Group) -> SolveResult {
+        let _lock = SolverGuard::lock();
+
         let mut failed_handles: Vec<Slvs_hConstraint> = vec![0; self.constraints.list.len()];
         let mut slvs_system = Slvs_System::from(self, &mut failed_handles);
 
@@ -824,6 +828,15 @@ impl System {
                     .collect(),
             },
         }
+    }
+}
+
+struct SolverGuard;
+
+impl SolverGuard {
+    fn lock() -> MutexGuard<'static, ()> {
+        static SOLVER_MUTEX: Mutex<()> = Mutex::new(());
+        SOLVER_MUTEX.lock().unwrap()
     }
 }
 
