@@ -136,7 +136,7 @@ mod tests {
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [-67.0, 18.0, 49.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -145,20 +145,18 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
-
-        // Create arc_a
         let center_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [49.0, 62.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_start_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [-37.0, 93.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_end_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [-4.0, -9.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_a = sys
             .sketch(ArcOfCircle::new(
                 g,
@@ -167,18 +165,17 @@ mod tests {
                 arc_start_a,
                 arc_end_a,
             ))
-            .expect("Arc created");
+            .expect("arc created");
 
-        // Create arc_b
         let center_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [-14.0, 72.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_start_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [59.0, -6.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_end_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [29.0, -24.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_b = sys
             .sketch(ArcOfCircle::new(
                 g,
@@ -187,15 +184,13 @@ mod tests {
                 arc_start_b,
                 arc_end_b,
             ))
-            .expect("Arc created");
+            .expect("arc created");
 
-        // Constrain arc lengths to have a difference of 100 units.
         sys.constrain(CurveCurveTangent::new(
             g, workplane, arc_a, arc_b, false, false,
         ))
         .expect("constraint added");
         dbg!(sys.solve(&g));
-        // dbg!(sys.solve(&g));
 
         if let (
             Point::OnWorkplane {
@@ -230,7 +225,7 @@ mod tests {
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [-35.0, -37.0, 49.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -239,7 +234,7 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
 
@@ -309,16 +304,12 @@ mod tests {
                 coords: control_b, ..
             },
         ) = (
-            sys.entity_data(&origin).expect("data for origin found"),
-            sys.entity_data(&normal).expect("data for normal found"),
-            sys.entity_data(&start_point_a)
-                .expect("data for point_a found"),
-            sys.entity_data(&start_control_a)
-                .expect("data for point_b found"),
-            sys.entity_data(&start_point_b)
-                .expect("data for point_c found"),
-            sys.entity_data(&start_control_b)
-                .expect("data for point_d found"),
+            sys.entity_data(&origin).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
+            sys.entity_data(&start_point_a).expect("data found"),
+            sys.entity_data(&start_control_a).expect("data found"),
+            sys.entity_data(&start_point_b).expect("data found"),
+            sys.entity_data(&start_control_b).expect("data found"),
         ) {
             let normal = [w, x, y, z];
             let start_a = project_on_plane(start_a, origin, normal);

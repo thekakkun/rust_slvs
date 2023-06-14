@@ -7,10 +7,7 @@ use euclid::{
 
 use std::{iter::zip, mem::MaybeUninit};
 
-use crate::{
-    bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, Slvs_QuaternionV},
-    system::SOLVE_TOLERANCE,
-};
+use crate::bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, Slvs_QuaternionV};
 
 /// Compute a unit quaternion from two basis vectors.
 ///
@@ -269,15 +266,18 @@ pub fn arc_len(center: [f64; 2], arc_start: [f64; 2], arc_end: [f64; 2]) -> f64 
     let start_vec = Vector2D::from(arc_start) - Vector2D::from(center);
     let end_vec = Vector2D::from(arc_end) - Vector2D::from(center);
 
-    if SOLVE_TOLERANCE < (start_vec.length() - end_vec.length()).abs() {
-        panic!("Not a circular arc")
-    }
+    crate::len_within_tolerance!(start_vec.length(), end_vec.length());
 
     let angle = Angle::radians(end_vec.y.atan2(end_vec.x) - start_vec.y.atan2(start_vec.x));
     angle.positive().radians * start_vec.length()
 }
 
 /// Returns the rounded modulo, where the remainder for `a/n` falls between `-n/2` and `n/2`.
+///
+/// # Arguments
+///
+/// * `a` - The dividend.
+/// * `n` - The divisor.
 pub fn rounded_mod(a: f64, n: f64) -> f64 {
     a - n * (a / n).round()
 }

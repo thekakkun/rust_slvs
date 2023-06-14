@@ -73,13 +73,13 @@ mod tests {
     };
 
     #[test]
-    fn eq_len_pt_line_d_on_workplane() {
+    fn on_workplane() {
         let mut sys = System::new();
 
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [61.0, -65.0, -60.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -88,19 +88,19 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
 
         let point_a_start = sys
             .sketch(Point::new_in_3d(g, [10.0, -2.0, -60.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_a_end = sys
             .sketch(Point::new_in_3d(g, [-68.0, 85.0, -2.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_a = sys
             .sketch(LineSegment::new(g, point_a_start, point_a_end))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
         let point_a = sys
             .sketch(Point::new_in_3d(g, [8.0, -52.0, 44.0]))
@@ -108,13 +108,13 @@ mod tests {
 
         let point_b_start = sys
             .sketch(Point::new_in_3d(g, [-79.0, -46.0, 95.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b_end = sys
             .sketch(Point::new_in_3d(g, [-7.0, -47.0, 80.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_b = sys
             .sketch(LineSegment::new(g, point_b_start, point_b_end))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
         let point_b = sys
             .sketch(Point::new_in_3d(g, [-88.0, -60.0, -70.0]))
@@ -128,13 +128,13 @@ mod tests {
             point_b,
             Some(workplane),
         ))
-        .expect("constraint added.");
+        .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
         if let (Point::In3d { coords: origin, .. }, Normal::In3d { w, x, y, z, .. }) = (
-            sys.entity_data(&origin).expect("data for origin found"),
-            sys.entity_data(&normal).expect("data for normal found"),
+            sys.entity_data(&origin).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
         ) {
             let normal = [w, x, y, z];
 
@@ -189,20 +189,20 @@ mod tests {
     }
 
     #[test]
-    fn eq_len_pt_line_d_in_3d() {
+    fn in_3d() {
         let mut sys = System::new();
 
         let g = sys.add_group();
 
         let point_a_start = sys
             .sketch(Point::new_in_3d(g, [-52.0, 65.0, 50.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_a_end = sys
             .sketch(Point::new_in_3d(g, [-48.0, 90.0, -51.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_a = sys
             .sketch(LineSegment::new(g, point_a_start, point_a_end))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
         let point_a = sys
             .sketch(Point::new_in_3d(g, [99.0, -93.0, -37.0]))
@@ -210,13 +210,13 @@ mod tests {
 
         let point_b_start = sys
             .sketch(Point::new_in_3d(g, [93.0, -37.0, -60.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b_end = sys
             .sketch(Point::new_in_3d(g, [79.0, 60.0, 80.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_b = sys
             .sketch(LineSegment::new(g, point_b_start, point_b_end))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
         let point_b = sys
             .sketch(Point::new_in_3d(g, [-35.0, 70.0, -86.0]))
@@ -225,7 +225,7 @@ mod tests {
         sys.constrain(EqPtLnDistances::new(
             g, line_a, point_a, line_b, point_b, None,
         ))
-        .expect("constraint added.");
+        .expect("constraint added");
 
         dbg!(sys.solve(&g));
 

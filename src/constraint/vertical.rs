@@ -9,14 +9,19 @@ use crate::{
     System,
 };
 
+/// Constrain to be vertical.
+///
+/// This constraint can work on two points or a single line segment.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Vertical {
+    /// Two points are vertical.
     Points {
         group: Group,
         workplane: EntityHandle<Workplane>,
         point_a: EntityHandle<Point>,
         point_b: EntityHandle<Point>,
     },
+    /// Line segment is vertical.
     Line {
         group: Group,
         workplane: EntityHandle<Workplane>,
@@ -118,6 +123,118 @@ impl FromSystem for Vertical {
             }
         } else {
             Err("Expected constraint to have type SLVS_C_VERTICAL.")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        constraint::Vertical,
+        entity::{LineSegment, Normal, Point, Workplane},
+        len_within_tolerance,
+        utils::make_quaternion,
+        System,
+    };
+
+    #[test]
+    fn verticalpoints() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-97.0, 22.0, 39.0]))
+            .expect("origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([-35.0, 23.0, 27.0], [-4.0, 77.0, -43.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("workplane created");
+
+        let g = sys.add_group();
+
+        let point_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [74.0, -56.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [71.0, 3.0]))
+            .expect("point created");
+
+        sys.constrain(Vertical::from_points(g, workplane, point_a, point_b))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::OnWorkplane {
+                coords: coords_a, ..
+            },
+            Point::OnWorkplane {
+                coords: coords_b, ..
+            },
+        ) = (
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+        ) {
+            len_within_tolerance!(coords_a[0], coords_b[0])
+        } else {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn verticalline() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [74.0, 60.0, 33.0]))
+            .expect("origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([29.0, 25.0, 69.0], [91.0, 15.0, 81.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("workplane created");
+
+        let g = sys.add_group();
+
+        let point_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-70.0, -86.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [85.0, -17.0]))
+            .expect("point created");
+        let line = sys
+            .sketch(LineSegment::new(g, point_a, point_b))
+            .expect("point created");
+
+        sys.constrain(Vertical::from_line(g, workplane, line))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::OnWorkplane {
+                coords: coords_a, ..
+            },
+            Point::OnWorkplane {
+                coords: coords_b, ..
+            },
+        ) = (
+            sys.entity_data(&point_a).expect("data for found"),
+            sys.entity_data(&point_b).expect("data for found"),
+        ) {
+            len_within_tolerance!(coords_a[0], coords_b[0])
+        } else {
+            unreachable!()
         }
     }
 }

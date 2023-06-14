@@ -70,13 +70,13 @@ mod tests {
     };
 
     #[test]
-    fn at_midpoint_on_workplane() {
+    fn on_workplane() {
         let mut sys = System::new();
 
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [-64.0, -80.0, -94.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -85,28 +85,25 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
-
-        // Create line_ab
         let point_a = sys
             .sketch(Point::new_in_3d(g, [-66.0, -67.0, -43.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b = sys
             .sketch(Point::new_in_3d(g, [-52.0, 73.0, 88.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line = sys
             .sketch(LineSegment::new(g, point_a, point_b))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Create midpoint
         let point = sys
             .sketch(Point::new_in_3d(g, [-16.0, 38.0, -45.0]))
-            .expect("point in 3d created");
+            .expect("point created");
 
         sys.constrain(AtMidpoint::new(g, point, line, Some(workplane)))
-            .expect("point at midpoint of line");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
@@ -121,11 +118,11 @@ mod tests {
             },
             Point::In3d { coords, .. },
         ) = (
-            sys.entity_data(&origin).expect("data for origin found"),
-            sys.entity_data(&normal).expect("data for normal found"),
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
-            sys.entity_data(&point).expect("data for point_c found"),
+            sys.entity_data(&origin).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&point).expect("data found"),
         ) {
             let normal = [w, x, y, z];
             let point_a = project_on_plane(coords_a, origin, normal);
@@ -140,28 +137,26 @@ mod tests {
     }
 
     #[test]
-    fn at_midpoint_in_3d() {
+    fn in_3d() {
         let mut sys = System::new();
-        let g = sys.add_group();
 
-        // Create line_ab
+        let g = sys.add_group();
         let point_a = sys
             .sketch(Point::new_in_3d(g, [73.0, 36.0, 99.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b = sys
             .sketch(Point::new_in_3d(g, [-52.0, -39.0, 33.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line = sys
             .sketch(LineSegment::new(g, point_a, point_b))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Create midpoint
         let point = sys
             .sketch(Point::new_in_3d(g, [-5.0, -50.0, -76.0]))
-            .expect("point in 3d created");
+            .expect("point created");
 
         sys.constrain(AtMidpoint::new(g, point, line, None))
-            .expect("point at midpoint of line");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
@@ -174,9 +169,9 @@ mod tests {
             },
             Point::In3d { coords, .. },
         ) = (
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
-            sys.entity_data(&point).expect("data for point_c found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&point).expect("data found"),
         ) {
             len_within_tolerance!(distance(coords, coords_a), distance(coords, coords_b));
             angle_within_tolerance!(angle_3d([coords, coords_a], [coords, coords_b]), 180_f64);

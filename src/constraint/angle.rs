@@ -97,13 +97,13 @@ mod tests {
     };
 
     #[test]
-    fn angle_on_workplane() {
+    fn on_workplane() {
         let mut sys = System::new();
 
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [0.0, 0.0, 0.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -112,33 +112,29 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
-
-        // Create line_ab
         let point_a = sys
             .sketch(Point::new_in_3d(g, [-26.0, 75.0, 4.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b = sys
             .sketch(Point::new_in_3d(g, [68.0, 63.0, -77.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_ab = sys
             .sketch(LineSegment::new(g, point_a, point_b))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Create line_cd
         let point_c = sys
             .sketch(Point::new_in_3d(g, [60.0, 0.0, 15.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_d = sys
             .sketch(Point::new_in_3d(g, [69.0, -69.0, 66.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_cd = sys
             .sketch(LineSegment::new(g, point_c, point_d))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Constrain angle between line_ab and line_cd to be 30 degrees apart.
         sys.constrain(Angle::new(
             g,
             line_ab,
@@ -167,12 +163,12 @@ mod tests {
                 coords: coords_d, ..
             },
         ) = (
-            sys.entity_data(&origin).expect("data for origin found"),
-            sys.entity_data(&normal).expect("data for normal found"),
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
-            sys.entity_data(&point_c).expect("data for point_c found"),
-            sys.entity_data(&point_d).expect("data for point_d found"),
+            sys.entity_data(&origin).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&point_c).expect("data found"),
+            sys.entity_data(&point_d).expect("data found"),
         ) {
             let normal = [w, x, y, z];
             let angle = angle_2d(
@@ -193,33 +189,30 @@ mod tests {
     }
 
     #[test]
-    fn angle_in_3d() {
+    fn in_3d() {
         let mut sys = System::new();
-        let g = sys.add_group();
 
-        // Create line_ab
+        let g = sys.add_group();
         let point_a = sys
             .sketch(Point::new_in_3d(g, [30.0, 62.0, 23.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_b = sys
             .sketch(Point::new_in_3d(g, [57.0, -3.0, -33.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_ab = sys
             .sketch(LineSegment::new(g, point_a, point_b))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Create line_cd
         let point_c = sys
             .sketch(Point::new_in_3d(g, [44.0, -18.0, 88.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let point_d = sys
             .sketch(Point::new_in_3d(g, [-46.0, -23.0, 41.0]))
-            .expect("point in 3d created");
+            .expect("point created");
         let line_cd = sys
             .sketch(LineSegment::new(g, point_c, point_d))
-            .expect("line between two 3d points created");
+            .expect("line created");
 
-        // Constrain angle between line_ab and line_cd to be 30 degrees apart.
         sys.constrain(Angle::new(g, line_ab, line_cd, 150.0, None, false))
             .expect("constraint added");
 
@@ -239,10 +232,10 @@ mod tests {
                 coords: coords_d, ..
             },
         ) = (
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
-            sys.entity_data(&point_c).expect("data for point_c found"),
-            sys.entity_data(&point_d).expect("data for point_d found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&point_c).expect("data found"),
+            sys.entity_data(&point_d).expect("data found"),
         ) {
             let angle = angle_3d([coords_a, coords_b], [coords_c, coords_d]);
 

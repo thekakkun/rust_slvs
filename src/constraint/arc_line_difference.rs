@@ -71,7 +71,7 @@ mod tests {
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [76.0, 28.0, 62.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -80,7 +80,7 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
         let point_a = sys
@@ -95,20 +95,20 @@ mod tests {
 
         let center = sys
             .sketch(Point::new_on_workplane(g, workplane, [-10.0, 12.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_start = sys
             .sketch(Point::new_on_workplane(g, workplane, [37.0, 54.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_end = sys
             .sketch(Point::new_on_workplane(g, workplane, [25.0, -59.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc = sys
             .sketch(ArcOfCircle::new(g, workplane, center, arc_start, arc_end))
-            .expect("Arc created");
+            .expect("arc created");
 
         let len_difference = 50.0;
         sys.constrain(ArcLineDifference::new(g, arc, line, len_difference))
-            .expect("arc and line constrained");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
         dbg!(sys.solve(&g));
@@ -121,8 +121,8 @@ mod tests {
                 coords: coords_b, ..
             },
         ) = (
-            sys.entity_data(&point_a).expect("data for point_a found"),
-            sys.entity_data(&point_b).expect("data for point_b found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
         ) {
             distance(coords_a, coords_b)
         } else {
@@ -138,9 +138,9 @@ mod tests {
                 coords: arc_end, ..
             },
         ) = (
-            sys.entity_data(&center).expect("center data found"),
-            sys.entity_data(&arc_start).expect("arc_start data found"),
-            sys.entity_data(&arc_end).expect("arc_end data found"),
+            sys.entity_data(&center).expect("data found"),
+            sys.entity_data(&arc_start).expect("data found"),
+            sys.entity_data(&arc_end).expect("data found"),
         ) {
             arc_len(center, arc_start, arc_end)
         } else {

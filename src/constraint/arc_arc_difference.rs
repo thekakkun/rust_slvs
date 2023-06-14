@@ -71,7 +71,7 @@ mod tests {
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [0.0, 0.0, 0.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -80,20 +80,18 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
-
-        // Create arc_a
         let center_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [-5.0, 56.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_start_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [-62.0, -57.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_end_a = sys
             .sketch(Point::new_on_workplane(g, workplane, [-9.0, 42.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_a = sys
             .sketch(ArcOfCircle::new(
                 g,
@@ -102,18 +100,16 @@ mod tests {
                 arc_start_a,
                 arc_end_a,
             ))
-            .expect("Arc created");
-
-        // Create arc_b
+            .expect("arc created");
         let center_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [-50.0, -10.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_start_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [-41.0, -27.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_end_b = sys
             .sketch(Point::new_on_workplane(g, workplane, [-12.0, 26.0]))
-            .expect("point on workplane created");
+            .expect("point created");
         let arc_b = sys
             .sketch(ArcOfCircle::new(
                 g,
@@ -122,9 +118,8 @@ mod tests {
                 arc_start_b,
                 arc_end_b,
             ))
-            .expect("Arc created");
+            .expect("arc created");
 
-        // Constrain arc lengths to have a difference of 100 units.
         let difference = 100.0;
         sys.constrain(ArcArcDifference::new(g, arc_a, arc_b, difference))
             .expect("constraint added");
@@ -140,10 +135,9 @@ mod tests {
                 coords: arc_end, ..
             },
         ) = (
-            sys.entity_data(&center_a).expect("center_a data found"),
-            sys.entity_data(&arc_start_a)
-                .expect("arc_start_a data found"),
-            sys.entity_data(&arc_end_a).expect("arc_end_a data found"),
+            sys.entity_data(&center_a).expect("data found"),
+            sys.entity_data(&arc_start_a).expect("data found"),
+            sys.entity_data(&arc_end_a).expect("data found"),
         ) {
             arc_len(center, arc_start, arc_end)
         } else {
@@ -158,10 +152,9 @@ mod tests {
                 coords: arc_end, ..
             },
         ) = (
-            sys.entity_data(&center_b).expect("center_b data found"),
-            sys.entity_data(&arc_start_b)
-                .expect("arc_start_b data found"),
-            sys.entity_data(&arc_end_b).expect("arc_end_b data found"),
+            sys.entity_data(&center_b).expect("data found"),
+            sys.entity_data(&arc_start_b).expect("data found"),
+            sys.entity_data(&arc_end_b).expect("data found"),
         ) {
             arc_len(center, arc_start, arc_end)
         } else {

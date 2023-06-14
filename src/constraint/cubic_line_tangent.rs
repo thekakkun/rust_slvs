@@ -72,13 +72,13 @@ mod tests {
     };
 
     #[test]
-    fn cubic_line_tangent_on_workplane() {
+    fn on_workplane() {
         let mut sys = System::new();
 
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [-64.0, -80.0, -94.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -87,11 +87,10 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
 
-        // Create line_ab
         let start_point = sys
             .sketch(Point::new_on_workplane(g, workplane, [-37.0, 59.0]))
             .expect("point created");
@@ -125,7 +124,7 @@ mod tests {
             .expect("line created");
 
         sys.constrain(CubicLineTangent::new(g, cubic, line, false, None))
-            .expect("cubic and line are tangent");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
@@ -158,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn cubic_line_tangent_in_3d() {
+    fn in_3d() {
         let mut sys = System::new();
 
         let g = sys.add_group();
@@ -196,9 +195,8 @@ mod tests {
             .expect("line created");
 
         sys.constrain(CubicLineTangent::new(g, cubic, line, false, None))
-            .expect("cubic and line are tangent");
+            .expect("constraint added");
 
-        println!("{:#?}", sys);
         dbg!(sys.solve(&g));
 
         if let (

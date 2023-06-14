@@ -75,14 +75,13 @@ impl<A: AsArc> FromSystem for Diameter<A> {
 
 #[cfg(test)]
 mod tests {
+    use super::Diameter;
     use crate::{
         entity::{ArcOfCircle, Circle, Distance, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion},
         System,
     };
-
-    use super::Diameter;
 
     #[test]
     fn arc_diameter() {
@@ -91,7 +90,7 @@ mod tests {
         let workplane_g = sys.add_group();
         let origin = sys
             .sketch(Point::new_in_3d(workplane_g, [23.0, 12.0, -14.0]))
-            .expect("Origin created");
+            .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
@@ -100,7 +99,7 @@ mod tests {
             .expect("normal created");
         let workplane = sys
             .sketch(Workplane::new(workplane_g, origin, normal))
-            .expect("Workplane created");
+            .expect("workplane created");
 
         let g = sys.add_group();
         let center = sys
@@ -117,7 +116,7 @@ mod tests {
             .expect("arc created");
 
         sys.constrain(Diameter::new(g, arc, 5.0))
-            .expect("diameter constraint added");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
@@ -159,7 +158,7 @@ mod tests {
             .expect("circle created");
 
         sys.constrain(Diameter::new(g, circle, 5.0))
-            .expect("diameter constraint added");
+            .expect("constraint added");
 
         dbg!(sys.solve(&g));
 
