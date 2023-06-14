@@ -33,11 +33,9 @@ pub use parallel::Parallel;
 pub use perpendicular::Perpendicular;
 pub use points_coincident::PointsCoincident;
 pub use proj_pt_distance::ProjPtDistance;
-pub use pt_face_distance::PtFaceDistance;
 pub use pt_in_plane::PtInPlane;
 pub use pt_line_distance::PtLineDistance;
 pub use pt_on_circle::PtOnCircle;
-pub use pt_on_face::PtOnFace;
 pub use pt_on_line::PtOnLine;
 pub use pt_plane_distance::PtPlaneDistance;
 pub use pt_pt_distance::PtPtDistance;
@@ -72,11 +70,9 @@ mod parallel;
 mod perpendicular;
 mod points_coincident;
 mod proj_pt_distance;
-mod pt_face_distance;
 mod pt_in_plane;
 mod pt_line_distance;
 mod pt_on_circle;
-mod pt_on_face;
 mod pt_on_line;
 mod pt_plane_distance;
 mod pt_pt_distance;
@@ -155,16 +151,11 @@ impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
                 as Box<dyn AsConstraintHandle>,
             SLVS_C_PT_LINE_DISTANCE => Box::new(ConstraintHandle::<PtLineDistance>::new(value.h))
                 as Box<dyn AsConstraintHandle>,
-            SLVS_C_PT_FACE_DISTANCE => Box::new(ConstraintHandle::<PtFaceDistance>::new(value.h))
-                as Box<dyn AsConstraintHandle>,
             SLVS_C_PT_IN_PLANE => {
                 Box::new(ConstraintHandle::<PtInPlane>::new(value.h)) as Box<dyn AsConstraintHandle>
             }
             SLVS_C_PT_ON_LINE => {
                 Box::new(ConstraintHandle::<PtOnLine>::new(value.h)) as Box<dyn AsConstraintHandle>
-            }
-            SLVS_C_PT_ON_FACE => {
-                Box::new(ConstraintHandle::<PtOnFace>::new(value.h)) as Box<dyn AsConstraintHandle>
             }
             SLVS_C_EQUAL_LENGTH_LINES => {
                 Box::new(ConstraintHandle::<EqualLengthLines>::new(value.h))
@@ -233,6 +224,9 @@ impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
             SLVS_C_ARC_LINE_DIFFERENCE => {
                 Box::new(ConstraintHandle::<ArcLineDifference>::new(value.h))
                     as Box<dyn AsConstraintHandle>
+            }
+            SLVS_C_PT_FACE_DISTANCE | SLVS_C_PT_ON_FACE => {
+                panic!("Face entity not defined for library.")
             }
             _ => panic!("Unknown Slvs_Constraint type value {}", value.type_),
         }
