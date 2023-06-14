@@ -111,7 +111,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { quaternion: normal, .. },
+            Normal::In3d { quaternion, .. },
             Point::OnWorkplane {
                 coords: a_start, ..
             },
@@ -128,9 +128,8 @@ mod tests {
             sys.entity_data(&b_start).expect("data found"),
             sys.entity_data(&b_end).expect("data found"),
         ) {
-            
-            let b_start = project_on_plane(b_start, origin, normal);
-            let b_end = project_on_plane(b_end, origin, normal);
+            let b_start = project_on_plane(b_start, origin, quaternion);
+            let b_end = project_on_plane(b_end, origin, quaternion);
 
             len_within_tolerance!(distance(a_start, a_end), distance(b_start, b_end));
         } else {

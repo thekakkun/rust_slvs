@@ -132,12 +132,10 @@ mod tests {
 
         dbg!(sys.solve(&g));
 
-        if let (Point::In3d { coords: origin, .. }, Normal::In3d { quaternion: normal, .. }) = (
+        if let (Point::In3d { coords: origin, .. }, Normal::In3d { quaternion, .. }) = (
             sys.entity_data(&origin).expect("data found"),
             sys.entity_data(&normal).expect("data found"),
         ) {
-            
-
             let dist_a = if let (
                 Point::In3d {
                     coords: line_start, ..
@@ -151,9 +149,9 @@ mod tests {
                 sys.entity_data(&point_a_end).expect("data found"),
                 sys.entity_data(&point_a).expect("data found"),
             ) {
-                let line_start = project_on_plane(line_start, origin, normal);
-                let line_end = project_on_plane(line_end, origin, normal);
-                let point = project_on_plane(point, origin, normal);
+                let line_start = project_on_plane(line_start, origin, quaternion);
+                let line_end = project_on_plane(line_end, origin, quaternion);
+                let point = project_on_plane(point, origin, quaternion);
 
                 distance(point, project_on_line(point, line_start, line_end))
             } else {
@@ -173,9 +171,9 @@ mod tests {
                 sys.entity_data(&point_b_end).expect("data found"),
                 sys.entity_data(&point_b).expect("data found"),
             ) {
-                let line_start = project_on_plane(line_start, origin, normal);
-                let line_end = project_on_plane(line_end, origin, normal);
-                let point = project_on_plane(point, origin, normal);
+                let line_start = project_on_plane(line_start, origin, quaternion);
+                let line_end = project_on_plane(line_end, origin, quaternion);
+                let point = project_on_plane(point, origin, quaternion);
 
                 distance(point, project_on_line(point, line_start, line_end))
             } else {

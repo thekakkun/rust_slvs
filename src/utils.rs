@@ -145,9 +145,9 @@ pub fn distance<const N: usize>(coords_a: [f64; N], coords_b: [f64; N]) -> f64 {
 ///
 /// * `point` - Coordinates of the point on the plane.
 /// * `origin` - Origin point for the defintion of the plane.
-/// * `normal` - The normal of the plane, as a unit quaternion.
-pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], normal: [f64; 4]) -> [f64; 3] {
-    let [w, i, j, k] = normal;
+/// * `quaternion` - The normal of the plane, as a unit quaternion.
+pub fn convert_2d_to_3d(point: [f64; 2], origin: [f64; 3], quaternion: [f64; 4]) -> [f64; 3] {
+    let [w, i, j, k] = quaternion;
     let normal_quaternion = Rotation3D::unit_quaternion(i, j, k, w);
     let rotated_point = normal_quaternion.transform_point3d(Point2D::from(point).to_3d());
 
@@ -197,9 +197,9 @@ pub fn project_on_line<const N: usize>(
 ///
 /// * `point` - Coordinates of the point.
 /// * `origin` - Origin point of the plane to project onto.
-/// * `normal` - The normal of the plane to project onto, as a unit quaternion.
-pub fn project_on_plane(point: [f64; 3], origin: [f64; 3], normal: [f64; 4]) -> [f64; 2] {
-    let [w, i, j, k] = normal;
+/// * `quaternion` - The normal of the plane to project onto, as a unit quaternion.
+pub fn project_on_plane(point: [f64; 3], origin: [f64; 3], quaternion: [f64; 4]) -> [f64; 2] {
+    let [w, i, j, k] = quaternion;
     let normal_quaternion = Rotation3D::unit_quaternion(i, j, k, w);
     let rotated_point = normal_quaternion
         .inverse()

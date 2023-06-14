@@ -126,7 +126,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { quaternion: normal, .. },
+            Normal::In3d { quaternion, .. },
             Point::In3d {
                 coords: coords_a, ..
             },
@@ -149,12 +149,11 @@ mod tests {
             sys.entity_data(&point_c).expect("data found"),
             sys.entity_data(&point_d).expect("data found"),
         ) {
-            
-            let coords_a = project_on_plane(coords_a, origin, normal);
-            let coords_b = project_on_plane(coords_b, origin, normal);
-            let point = project_on_plane(point, origin, normal);
-            let coords_c = project_on_plane(coords_c, origin, normal);
-            let coords_d = project_on_plane(coords_d, origin, normal);
+            let coords_a = project_on_plane(coords_a, origin, quaternion);
+            let coords_b = project_on_plane(coords_b, origin, quaternion);
+            let point = project_on_plane(point, origin, quaternion);
+            let coords_c = project_on_plane(coords_c, origin, quaternion);
+            let coords_d = project_on_plane(coords_d, origin, quaternion);
 
             let line_len = distance(coords_a, coords_b);
             let pt_line_dist = distance(point, project_on_line(point, coords_c, coords_d));

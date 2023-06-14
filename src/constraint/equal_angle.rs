@@ -155,12 +155,10 @@ mod tests {
 
         dbg!(sys.solve(&g));
 
-        if let (Point::In3d { coords: origin, .. }, Normal::In3d { quaternion: normal, .. }) = (
+        if let (Point::In3d { coords: origin, .. }, Normal::In3d { quaternion, .. }) = (
             sys.entity_data(&origin).expect("data found"),
             sys.entity_data(&normal).expect("data found"),
         ) {
-            
-
             let angle_ab = if let (
                 Point::In3d {
                     coords: a_start, ..
@@ -176,10 +174,10 @@ mod tests {
                 sys.entity_data(&b_start).expect("data found"),
                 sys.entity_data(&b_end).expect("data found"),
             ) {
-                let a_start = project_on_plane(a_start, origin, normal);
-                let a_end = project_on_plane(a_end, origin, normal);
-                let b_start = project_on_plane(b_start, origin, normal);
-                let b_end = project_on_plane(b_end, origin, normal);
+                let a_start = project_on_plane(a_start, origin, quaternion);
+                let a_end = project_on_plane(a_end, origin, quaternion);
+                let b_start = project_on_plane(b_start, origin, quaternion);
+                let b_end = project_on_plane(b_end, origin, quaternion);
 
                 angle_2d([a_start, a_end], [b_start, b_end])
             } else {
@@ -201,10 +199,10 @@ mod tests {
                 sys.entity_data(&d_start).expect("data found"),
                 sys.entity_data(&d_end).expect("data found"),
             ) {
-                let c_start = project_on_plane(c_start, origin, normal);
-                let c_end = project_on_plane(c_end, origin, normal);
-                let d_start = project_on_plane(d_start, origin, normal);
-                let d_end = project_on_plane(d_end, origin, normal);
+                let c_start = project_on_plane(c_start, origin, quaternion);
+                let c_end = project_on_plane(c_end, origin, quaternion);
+                let d_start = project_on_plane(d_start, origin, quaternion);
+                let d_end = project_on_plane(d_end, origin, quaternion);
 
                 angle_2d([c_start, c_end], [d_start, d_end])
             } else {

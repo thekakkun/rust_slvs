@@ -290,7 +290,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { quaternion: normal, .. },
+            Normal::In3d { quaternion, .. },
             Point::In3d {
                 coords: start_a, ..
             },
@@ -311,11 +311,10 @@ mod tests {
             sys.entity_data(&start_point_b).expect("data found"),
             sys.entity_data(&start_control_b).expect("data found"),
         ) {
-            
-            let start_a = project_on_plane(start_a, origin, normal);
-            let control_a = project_on_plane(control_a, origin, normal);
-            let start_b = project_on_plane(start_b, origin, normal);
-            let control_b = project_on_plane(control_b, origin, normal);
+            let start_a = project_on_plane(start_a, origin, quaternion);
+            let control_a = project_on_plane(control_a, origin, quaternion);
+            let start_b = project_on_plane(start_b, origin, quaternion);
+            let control_b = project_on_plane(control_b, origin, quaternion);
 
             let angle = angle_2d([start_a, control_a], [start_b, control_b]);
 

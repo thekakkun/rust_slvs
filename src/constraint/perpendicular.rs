@@ -109,7 +109,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { quaternion: normal, .. },
+            Normal::In3d { quaternion, .. },
             Point::In3d {
                 coords: coords_a, ..
             },
@@ -130,15 +130,14 @@ mod tests {
             sys.entity_data(&point_c).expect("data found"),
             sys.entity_data(&point_d).expect("data found"),
         ) {
-            
             let angle = angle_2d(
                 [
-                    project_on_plane(coords_a, origin, normal),
-                    project_on_plane(coords_b, origin, normal),
+                    project_on_plane(coords_a, origin, quaternion),
+                    project_on_plane(coords_b, origin, quaternion),
                 ],
                 [
-                    project_on_plane(coords_c, origin, normal),
-                    project_on_plane(coords_d, origin, normal),
+                    project_on_plane(coords_c, origin, quaternion),
+                    project_on_plane(coords_d, origin, quaternion),
                 ],
             );
 

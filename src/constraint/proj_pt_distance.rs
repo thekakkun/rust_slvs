@@ -96,7 +96,7 @@ mod tests {
     use crate::{
         entity::{LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
-        utils::{distance, make_quaternion, project_on_line},
+        utils::{distance, make_quaternion, project_on_line, quaternion_n},
         System,
     };
 
@@ -179,15 +179,15 @@ mod tests {
         let g = sys.add_group();
 
         let point_a = sys
-            .sketch(Point::new_in_3d(g, [-48.0, -61.0, 20.0]))
+            .sketch(Point::new_in_3d(g, [44.0, -58.0, 95.0]))
             .expect("point created");
         let point_b = sys
-            .sketch(Point::new_in_3d(g, [6.0, 29.0, 44.0]))
+            .sketch(Point::new_in_3d(g, [-78.0, -28.0, 76.0]))
             .expect("point created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 g,
-                make_quaternion([57.0, -25.0, 52.0], [-69.0, 24.0, -14.0]),
+                make_quaternion([13.0, 18.0, 76.0], [73.0, 9.0, -20.0]),
             ))
             .expect("normal created");
 
@@ -196,5 +196,27 @@ mod tests {
             .expect("constraint added");
 
         dbg!(sys.solve(&g));
+
+        if let (
+            Point::In3d {
+                coords: coords_a, ..
+            },
+            Point::In3d {
+                coords: coords_b, ..
+            },
+            Normal::In3d { quaternion, .. },
+        ) = (
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
+        ) {
+            let normal_vec = quaternion_n(quaternion);
+            let proj_pt_a = project_on_line(coords_a, [0.0; 3], normal_vec);
+            let proj_pt_b = project_on_line(coords_b, [0.0; 3], normal_vec);
+
+            len_within_tolerance!(distance(proj_pt_a, proj_pt_b), dist)
+        } else {
+            unreachable!();
+        }
     }
 }
