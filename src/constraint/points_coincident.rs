@@ -97,7 +97,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { w, x, y, z, .. },
+            Normal::In3d { quaternion: normal, .. },
             Point::In3d {
                 coords: coords_a, ..
             },
@@ -110,7 +110,7 @@ mod tests {
             sys.entity_data(&point_a).expect("data found"),
             sys.entity_data(&point_b).expect("data found"),
         ) {
-            let normal = [w, x, y, z];
+            
             let coords_b = convert_2d_to_3d(coords_b, origin, normal);
 
             len_within_tolerance!(distance(coords_a, coords_b), 0.0);

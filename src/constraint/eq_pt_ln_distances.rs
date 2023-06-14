@@ -132,11 +132,11 @@ mod tests {
 
         dbg!(sys.solve(&g));
 
-        if let (Point::In3d { coords: origin, .. }, Normal::In3d { w, x, y, z, .. }) = (
+        if let (Point::In3d { coords: origin, .. }, Normal::In3d { quaternion: normal, .. }) = (
             sys.entity_data(&origin).expect("data found"),
             sys.entity_data(&normal).expect("data found"),
         ) {
-            let normal = [w, x, y, z];
+            
 
             let dist_a = if let (
                 Point::In3d {

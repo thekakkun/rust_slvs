@@ -9,12 +9,17 @@ use crate::{
     System,
 };
 
+/// The distance between `point_a` and `point_b`, when projected onto `line`
+/// is equal to `distance`.
+///
+/// Here, `line` can be a [`LineSegment`][crate::entity::LineSegment] or
+/// [`Normal`][crate::entity::Normal].
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ProjPtDistance<L: AsProjectionTarget> {
     pub group: Group,
     pub point_a: EntityHandle<Point>,
     pub point_b: EntityHandle<Point>,
-    pub on_line: EntityHandle<L>,
+    pub line: EntityHandle<L>,
     pub distance: f64,
 }
 
@@ -23,14 +28,14 @@ impl<L: AsProjectionTarget> ProjPtDistance<L> {
         group: Group,
         point_a: EntityHandle<Point>,
         point_b: EntityHandle<Point>,
-        on_line: EntityHandle<L>,
+        line: EntityHandle<L>,
         distance: f64,
     ) -> Self {
         Self {
             group,
             point_a,
             point_b,
-            on_line,
+            line,
             distance,
         }
     }
@@ -53,7 +58,7 @@ impl<L: AsProjectionTarget> AsConstraintData for ProjPtDistance<L> {
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.on_line.handle(), 0, 0, 0])
+        Some([self.line.handle(), 0, 0, 0])
     }
 
     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
@@ -77,11 +82,119 @@ impl<L: AsProjectionTarget> FromSystem for ProjPtDistance<L> {
                 group: Group(slvs_constraint.group),
                 point_a: EntityHandle::new(slvs_constraint.ptA),
                 point_b: EntityHandle::new(slvs_constraint.ptB),
-                on_line: EntityHandle::new(slvs_constraint.entityA),
+                line: EntityHandle::new(slvs_constraint.entityA),
                 distance: slvs_constraint.valA,
             })
         } else {
             Err("Expected constraint to have type SLVS_C_PROJ_PT_DISTANCE.")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        entity::{LineSegment, Normal, Point, Workplane},
+        len_within_tolerance,
+        utils::{distance, make_quaternion, project_on_line},
+        System,
+    };
+
+    use super::ProjPtDistance;
+
+    #[test]
+    fn on_workplane() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-14.0, -1.0, -78.0]))
+            .expect("origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([57.0, -25.0, 52.0], [-69.0, 24.0, -14.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("workplane created");
+
+        let g = sys.add_group();
+        let point_a = sys
+            .sketch(Point::new_on_workplane(g, workplane, [46.0, -65.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-96.0, -9.0]))
+            .expect("point created");
+
+        let line_start = sys
+            .sketch(Point::new_on_workplane(g, workplane, [-82.0, 69.0]))
+            .expect("point created");
+        let line_end = sys
+            .sketch(Point::new_on_workplane(g, workplane, [59.0, -42.0]))
+            .expect("point created");
+        let line = sys
+            .sketch(LineSegment::new(g, line_start, line_end))
+            .expect("line created");
+
+        let dist = 92.0;
+        sys.constrain(ProjPtDistance::new(g, point_a, point_b, line, dist))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::OnWorkplane {
+                coords: coords_a, ..
+            },
+            Point::OnWorkplane {
+                coords: coords_b, ..
+            },
+            Point::OnWorkplane {
+                coords: line_start, ..
+            },
+            Point::OnWorkplane {
+                coords: line_end, ..
+            },
+        ) = (
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+            sys.entity_data(&line_start).expect("data found"),
+            sys.entity_data(&line_end).expect("data found"),
+        ) {
+            let proj_pt_a = project_on_line(coords_a, line_start, line_end);
+            let proj_pt_b = project_on_line(coords_b, line_start, line_end);
+
+            len_within_tolerance!(distance(proj_pt_a, proj_pt_b), dist);
+        } else {
+            unreachable!();
+        }
+    }
+
+    #[test]
+    fn in_3d() {
+        let mut sys = System::new();
+
+        let g = sys.add_group();
+
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [-48.0, -61.0, 20.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [6.0, 29.0, 44.0]))
+            .expect("point created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                g,
+                make_quaternion([57.0, -25.0, 52.0], [-69.0, 24.0, -14.0]),
+            ))
+            .expect("normal created");
+
+        let dist = 63.0;
+        sys.constrain(ProjPtDistance::new(g, point_a, point_b, normal, dist))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
     }
 }

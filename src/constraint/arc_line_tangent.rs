@@ -118,7 +118,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { w, x, y, z, .. },
+            Normal::In3d { quaternion: normal, .. },
             Point::In3d {
                 coords: coords_a, ..
             },
@@ -135,7 +135,7 @@ mod tests {
             sys.entity_data(&center).expect("data found"),
             sys.entity_data(&arc_start).expect("data found"),
         ) {
-            let normal = [w, x, y, z];
+            
             let angle = angle_2d(
                 [
                     project_on_plane(coords_a, origin, normal),

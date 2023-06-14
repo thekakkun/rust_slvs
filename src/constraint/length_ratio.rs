@@ -118,7 +118,7 @@ mod tests {
 
         if let (
             Point::In3d { coords: origin, .. },
-            Normal::In3d { w, x, y, z, .. },
+            Normal::In3d { quaternion: normal, .. },
             Point::OnWorkplane {
                 coords: a_start, ..
             },
@@ -135,7 +135,7 @@ mod tests {
             sys.entity_data(&b_start).expect("data found"),
             sys.entity_data(&b_end).expect("data found"),
         ) {
-            let normal = [w, x, y, z];
+            
             let b_start = project_on_plane(b_start, origin, normal);
             let b_end = project_on_plane(b_end, origin, normal);
 

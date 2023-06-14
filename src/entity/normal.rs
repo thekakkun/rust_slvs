@@ -33,13 +33,7 @@ pub enum Normal {
         workplane: EntityHandle<Workplane>,
     },
     /// A `Normal` in 3d space.
-    In3d {
-        group: Group,
-        w: f64,
-        x: f64,
-        y: f64,
-        z: f64,
-    },
+    In3d { group: Group, quaternion: [f64; 4] },
 }
 
 impl Normal {
@@ -50,8 +44,7 @@ impl Normal {
 
     /// Create a new `Normal::In3d` instance.
     pub fn new_in_3d(group: Group, quaternion: [f64; 4]) -> Self {
-        let [w, x, y, z] = quaternion;
-        Self::In3d { group, w, x, y, z }
+        Self::In3d { group, quaternion }
     }
 }
 
@@ -84,7 +77,7 @@ impl AsEntityData for Normal {
     fn param_vals(&self) -> [Option<f64>; 4] {
         match self {
             Self::OnWorkplane { .. } => [None, None, None, None],
-            Self::In3d { w, x, y, z, .. } => [Some(*w), Some(*x), Some(*y), Some(*z)],
+            Self::In3d { quaternion, .. } => quaternion.map(Some),
         }
     }
 }
@@ -102,13 +95,19 @@ impl FromSystem for Normal {
                 workplane: EntityHandle::new(slvs_entity.wrkpl),
             }),
             SLVS_E_NORMAL_IN_3D => {
-                let [w, x, y, z] = slvs_entity.param.map(|param_h| sys.slvs_param(param_h));
+                let quaternion: Result<Vec<_>, _> = slvs_entity
+                    .param
+                    .iter()
+                    .map(|param_h| sys.slvs_param(*param_h))
+                    .collect();
                 Ok(Self::In3d {
                     group: Group(slvs_entity.group),
-                    w: w?.val,
-                    x: x?.val,
-                    y: y?.val,
-                    z: z?.val,
+                    quaternion: quaternion?
+                        .iter()
+                        .map(|param| param.val)
+                        .collect::<Vec<_>>()
+                        .try_into()
+                        .map_err(|_| "quaternion values not found")?,
                 })
             }
             _ => Err("Expected entity to have type SLVS_E_NORMAL_IN_2D or SLVS_E_NORMAL_IN_3D."),
