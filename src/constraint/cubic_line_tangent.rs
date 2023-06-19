@@ -157,11 +157,7 @@ mod tests {
     }
 
     #[test]
-<<<<<<< HEAD
     #[ignore] // Crashes due to bug in original library.
-=======
-    #[ignore]
->>>>>>> 70ce0783762df8a1adcc380d2068c85103947705
     fn in_3d() {
         let mut sys = System::new();
 
