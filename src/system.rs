@@ -1,6 +1,9 @@
-use std::sync::{Mutex, MutexGuard};
+/*!
+Object used to store and interact with all the elements and constraints in the sketch.
+*/
 
 use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, MutexGuard};
 
 use crate::{
     bindings::{
