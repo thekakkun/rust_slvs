@@ -55,7 +55,11 @@ mod tests {
     use crate::{constraint::SameOrientation, entity::Normal, utils::make_quaternion, System};
 
     #[test]
+<<<<<<< HEAD
     #[ignore] // Crashes due to bug in original library.
+=======
+    #[ignore]
+>>>>>>> 70ce0783762df8a1adcc380d2068c85103947705
     fn same_orientation() {
         let mut sys = System::new();
 
