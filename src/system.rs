@@ -737,7 +737,7 @@ impl System {
     /// sys.constrain(PtPtDistance::new(g, p1, p2, 100.0, None))
     ///     .expect("p1 and p2 are 100 units apart");
     ///
-    /// sys.set_dragged(p1)
+    /// sys.set_dragged(&p1)
     ///     .expect("Try not to move p1 when solving");
     /// sys.solve(&g);
     /// sys.clear_dragged();
@@ -755,8 +755,8 @@ impl System {
     /// other entities that do not exist.
     pub fn set_dragged<E: AsEntityData>(
         &mut self,
-        entity_handle: EntityHandle<E>,
-    ) -> Result<EntityHandle<E>, &'static str> {
+        entity_handle: &EntityHandle<E>,
+    ) -> Result<(), &'static str> {
         let slvs_entity = self.slvs_entity(entity_handle.handle())?;
 
         self.dragged = match slvs_entity.type_ as _ {
@@ -775,7 +775,7 @@ impl System {
             _ => panic!("Unknown Slvs_Entity type value {}", slvs_entity.type_),
         };
 
-        Ok(entity_handle)
+        Ok(())
     }
 
     /// Clear the dragged entity.
