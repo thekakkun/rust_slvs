@@ -12,6 +12,8 @@ use crate::{
 
 define_element!(
     SLVS_C_SYMMETRIC_VERT,
+    /// The points `point_a` and `point_b` are symmetric about the vertical axis
+    /// of the specified workplane.
     struct SymmetricVert {
         workplane: EntityHandle<Workplane>,
         point_a: EntityHandle<Point>,

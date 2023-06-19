@@ -229,5 +229,5 @@ pub mod utils;
 pub use system::System;
 
 mod bindings;
-pub mod element;
+mod element;
 pub mod system;

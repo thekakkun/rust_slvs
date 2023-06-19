@@ -290,6 +290,9 @@ impl<C: AsConstraintData> From<Slvs_Constraint> for ConstraintHandle<C> {
     }
 }
 
+/// An object that holds information about a constraint.
+///
+/// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsConstraintData: private::Sealed + AsGroup + AsSlvsType + FromSystem {
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
