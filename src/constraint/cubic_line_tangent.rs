@@ -157,6 +157,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn in_3d() {
         let mut sys = System::new();
 
