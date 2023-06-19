@@ -98,13 +98,12 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
+        constraint::EqualRadius,
         entity::{ArcOfCircle, Circle, Distance, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion},
         System,
     };
-
-    use super::EqualRadius;
 
     #[test]
     fn equal_radius() {

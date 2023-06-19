@@ -61,9 +61,9 @@ impl FromSystem for ArcLineTangent {
 
 #[cfg(test)]
 mod tests {
-    use super::ArcLineTangent;
     use crate::{
         angle_within_tolerance,
+        constraint::ArcLineTangent,
         entity::{ArcOfCircle, LineSegment, Normal, Point, Workplane},
         utils::{angle_2d, make_quaternion, project_on_plane, rounded_mod},
         System,

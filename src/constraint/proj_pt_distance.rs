@@ -94,13 +94,12 @@ impl<L: AsProjectionTarget> FromSystem for ProjPtDistance<L> {
 #[cfg(test)]
 mod tests {
     use crate::{
+        constraint::ProjPtDistance,
         entity::{LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion, project_on_line, quaternion_n},
         System,
     };
-
-    use super::ProjPtDistance;
 
     #[test]
     fn on_workplane() {

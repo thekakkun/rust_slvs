@@ -12,6 +12,9 @@ use crate::{
 
 define_element!(
     SLVS_C_SAME_ORIENTATION,
+    /// The normals `normal_a` and `normal_b` describe identical rotations.
+    ///
+    /// This constraint therefore restricts three degrees of freedom.
     struct SameOrientation {
         normal_a: EntityHandle<Normal>,
         normal_b: EntityHandle<Normal>,
@@ -43,6 +46,52 @@ impl FromSystem for SameOrientation {
             })
         } else {
             Err("Expected constraint to have type SLVS_C_SAME_ORIENTATION.")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{constraint::SameOrientation, entity::Normal, utils::make_quaternion, System};
+
+    #[test]
+    fn same_orientation() {
+        let mut sys = System::new();
+
+        let g = sys.add_group();
+        let normal_a = sys
+            .sketch(Normal::new_in_3d(
+                g,
+                make_quaternion([90.0, -15.0, -8.0], [-92.0, 65.0, 12.0]),
+            ))
+            .expect("normal created");
+        let normal_b = sys
+            .sketch(Normal::new_in_3d(
+                g,
+                make_quaternion([76.0, 34.0, -42.0], [78.0, 38.0, 22.0]),
+            ))
+            .expect("normal created");
+
+        sys.constrain(SameOrientation::new(g, normal_a, normal_b))
+            .expect("constraint added");
+        dbg!(sys.solve(&g));
+
+        if let (
+            Normal::In3d {
+                quaternion: quaternion_a,
+                ..
+            },
+            Normal::In3d {
+                quaternion: quaternion_b,
+                ..
+            },
+        ) = (
+            sys.entity_data(&normal_a).expect("data found"),
+            sys.entity_data(&normal_b).expect("data found"),
+        ) {
+            assert_eq!(quaternion_a, quaternion_b)
+        } else {
+            unreachable!()
         }
     }
 }

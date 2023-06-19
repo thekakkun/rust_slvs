@@ -48,3 +48,70 @@ impl FromSystem for SymmetricVert {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        constraint::SymmetricVert,
+        entity::{Normal, Point, Workplane},
+        len_within_tolerance,
+        utils::{make_quaternion, project_on_plane},
+        System,
+    };
+
+    #[test]
+    fn symmetric_horiz() {
+        let mut sys = System::new();
+
+        let workplane_g = sys.add_group();
+        let origin = sys
+            .sketch(Point::new_in_3d(workplane_g, [-61.0, -98.0, -89.0]))
+            .expect("origin created");
+        let normal = sys
+            .sketch(Normal::new_in_3d(
+                workplane_g,
+                make_quaternion([-25.0, -41.0, -92.0], [-18.0, -66.0, 36.0]),
+            ))
+            .expect("normal created");
+        let workplane = sys
+            .sketch(Workplane::new(workplane_g, origin, normal))
+            .expect("workplane created");
+
+        let g = sys.add_group();
+        let point_a = sys
+            .sketch(Point::new_in_3d(g, [-30.0, 32.0, 31.0]))
+            .expect("point created");
+        let point_b = sys
+            .sketch(Point::new_in_3d(g, [-14.0, -96.0, -75.0]))
+            .expect("point created");
+
+        sys.constrain(SymmetricVert::new(g, workplane, point_a, point_b))
+            .expect("constraint added");
+
+        dbg!(sys.solve(&g));
+
+        if let (
+            Point::In3d { coords: origin, .. },
+            Normal::In3d { quaternion, .. },
+            Point::In3d {
+                coords: coords_a, ..
+            },
+            Point::In3d {
+                coords: coords_b, ..
+            },
+        ) = (
+            sys.entity_data(&origin).expect("data found"),
+            sys.entity_data(&normal).expect("data found"),
+            sys.entity_data(&point_a).expect("data found"),
+            sys.entity_data(&point_b).expect("data found"),
+        ) {
+            let coords_a = project_on_plane(coords_a, origin, quaternion);
+            let coords_b = project_on_plane(coords_b, origin, quaternion);
+
+            len_within_tolerance!(coords_a[0], coords_b[0]);
+            len_within_tolerance!(coords_a[1], -coords_b[1]);
+        } else {
+            unreachable!()
+        }
+    }
+}

@@ -56,8 +56,8 @@ impl FromSystem for ArcLineDifference {
 
 #[cfg(test)]
 mod tests {
-    use super::ArcLineDifference;
     use crate::{
+        constraint::ArcLineDifference,
         entity::{ArcOfCircle, LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{arc_len, distance, make_quaternion},

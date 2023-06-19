@@ -102,12 +102,12 @@ mod tests {
 
         let workplane_g = sys.add_group();
         let origin = sys
-            .sketch(Point::new_in_3d(workplane_g, [0.0, 0.0, 0.0]))
+            .sketch(Point::new_in_3d(workplane_g, [29.0, 91.0, 0.0]))
             .expect("origin created");
         let normal = sys
             .sketch(Normal::new_in_3d(
                 workplane_g,
-                make_quaternion([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+                make_quaternion([71.0, -71.0, -48.0], [-87.0, -96.0, -30.0]),
             ))
             .expect("normal created");
         let workplane = sys

@@ -56,8 +56,8 @@ impl FromSystem for EqualLengthLines {
 
 #[cfg(test)]
 mod tests {
-    use super::EqualLengthLines;
     use crate::{
+        constraint::EqualLengthLines,
         entity::{LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion, project_on_plane},

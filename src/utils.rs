@@ -15,9 +15,7 @@ use crate::bindings::{Slvs_MakeQuaternion, Slvs_QuaternionN, Slvs_QuaternionU, S
 /// information.
 pub fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4] {
     let [ux, uy, uz] = basis_vec_1;
-    let u_magnitude = (ux.powi(2) + uy.powi(2) + uz.powi(2)).sqrt();
     let [vx, vy, vz] = basic_vec_2;
-    let v_magnitude = (vx.powi(2) + vy.powi(2) + vz.powi(2)).sqrt();
 
     let mut qw = MaybeUninit::<f64>::uninit();
     let mut qx = MaybeUninit::<f64>::uninit();
@@ -26,12 +24,12 @@ pub fn make_quaternion(basis_vec_1: [f64; 3], basic_vec_2: [f64; 3]) -> [f64; 4]
 
     unsafe {
         Slvs_MakeQuaternion(
-            ux / u_magnitude,
-            uy / u_magnitude,
-            uz / u_magnitude,
-            vx / v_magnitude,
-            vy / v_magnitude,
-            vz / v_magnitude,
+            ux,
+            uy,
+            uz,
+            vx,
+            vy,
+            vz,
             qw.as_mut_ptr(),
             qx.as_mut_ptr(),
             qy.as_mut_ptr(),

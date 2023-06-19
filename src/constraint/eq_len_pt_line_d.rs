@@ -62,8 +62,8 @@ impl FromSystem for EqLenPtLineD {
 
 #[cfg(test)]
 mod tests {
-    use super::EqLenPtLineD;
     use crate::{
+        constraint::EqLenPtLineD,
         entity::{LineSegment, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion, project_on_line, project_on_plane},

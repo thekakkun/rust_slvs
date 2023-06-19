@@ -75,8 +75,8 @@ impl<A: AsArc> FromSystem for Diameter<A> {
 
 #[cfg(test)]
 mod tests {
-    use super::Diameter;
     use crate::{
+        constraint::Diameter,
         entity::{ArcOfCircle, Circle, Distance, Normal, Point, Workplane},
         len_within_tolerance,
         utils::{distance, make_quaternion},
