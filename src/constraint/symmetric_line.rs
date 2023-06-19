@@ -151,7 +151,7 @@ mod tests {
                     coords_b,
                     project_on_line(coords_b, coords_line_start, coords_line_end)
                 )
-            )
+            );
         } else {
             unreachable!()
         }

@@ -90,7 +90,7 @@ mod tests {
             sys.entity_data(&normal_a).expect("data found"),
             sys.entity_data(&normal_b).expect("data found"),
         ) {
-            assert_eq!(quaternion_a, quaternion_b)
+            assert_eq!(quaternion_a, quaternion_b);
         } else {
             unreachable!()
         }

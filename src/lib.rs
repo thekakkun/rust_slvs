@@ -221,8 +221,6 @@ match result {
 ```
 */
 
-// #[warn(missing_docs)]
-
 pub mod constraint;
 pub mod entity;
 pub mod group;

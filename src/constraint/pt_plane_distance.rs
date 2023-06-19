@@ -110,7 +110,7 @@ mod tests {
             let projected_point = project_on_plane(coords, origin, quaternion);
             let projected_point_in_3d = convert_2d_to_3d(projected_point, origin, quaternion);
 
-            len_within_tolerance!(distance(projected_point_in_3d, coords), dist)
+            len_within_tolerance!(distance(projected_point_in_3d, coords), dist);
         } else {
             unreachable!()
         }

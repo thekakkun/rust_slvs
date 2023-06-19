@@ -180,7 +180,7 @@ mod tests {
                 unreachable!()
             };
 
-            len_within_tolerance!(dist_a, dist_b)
+            len_within_tolerance!(dist_a, dist_b);
         } else {
             unreachable!()
         }
@@ -263,6 +263,6 @@ mod tests {
             unreachable!()
         };
 
-        len_within_tolerance!(dist_a, dist_b)
+        len_within_tolerance!(dist_a, dist_b);
     }
 }

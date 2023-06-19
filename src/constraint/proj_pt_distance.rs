@@ -213,7 +213,7 @@ mod tests {
             let proj_pt_a = project_on_line(coords_a, [0.0; 3], normal_vec);
             let proj_pt_b = project_on_line(coords_b, [0.0; 3], normal_vec);
 
-            len_within_tolerance!(distance(proj_pt_a, proj_pt_b), dist)
+            len_within_tolerance!(distance(proj_pt_a, proj_pt_b), dist);
         } else {
             unreachable!();
         }

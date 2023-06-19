@@ -212,7 +212,7 @@ mod tests {
                 .expect("vec of len 3");
             let proj_point = project_on_line(point_coords, center_coords, vec_end);
 
-            len_within_tolerance!(distance(point_coords, proj_point), radius)
+            len_within_tolerance!(distance(point_coords, proj_point), radius);
         } else {
             unreachable!()
         }

@@ -60,8 +60,7 @@ impl Vertical {
 impl AsGroup for Vertical {
     fn group(&self) -> Slvs_hGroup {
         match self {
-            Vertical::Points { group, .. } => group.handle(),
-            Vertical::Line { group, .. } => group.handle(),
+            Vertical::Points { group, .. } | Vertical::Line { group, .. } => group.handle(),
         }
     }
 }
@@ -75,8 +74,9 @@ impl AsSlvsType for Vertical {
 impl AsConstraintData for Vertical {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
-            Vertical::Points { workplane, .. } => Some(workplane.handle()),
-            Vertical::Line { workplane, .. } => Some(workplane.handle()),
+            Vertical::Points { workplane, .. } | Vertical::Line { workplane, .. } => {
+                Some(workplane.handle())
+            }
         }
     }
 
@@ -180,7 +180,7 @@ mod tests {
             sys.entity_data(&point_a).expect("data found"),
             sys.entity_data(&point_b).expect("data found"),
         ) {
-            len_within_tolerance!(coords_a[0], coords_b[0])
+            len_within_tolerance!(coords_a[0], coords_b[0]);
         } else {
             unreachable!()
         }
@@ -232,7 +232,7 @@ mod tests {
             sys.entity_data(&point_a).expect("data for found"),
             sys.entity_data(&point_b).expect("data for found"),
         ) {
-            len_within_tolerance!(coords_a[0], coords_b[0])
+            len_within_tolerance!(coords_a[0], coords_b[0]);
         } else {
             unreachable!()
         }

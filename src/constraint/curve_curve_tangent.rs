@@ -212,7 +212,7 @@ mod tests {
             sys.entity_data(&arc_start_b).expect("data found"),
         ) {
             let angle = angle_2d([center_a, start_a], [center_b, start_b]);
-            angle_within_tolerance!(rounded_mod(angle, 180.0), 0_f64)
+            angle_within_tolerance!(rounded_mod(angle, 180.0), 0_f64);
         } else {
             unreachable!()
         };
