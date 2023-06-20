@@ -249,7 +249,6 @@ impl System {
     ///
     /// ```
     /// use slvs::{
-    /// element::AsHandle,
     ///   entity::{LineSegment, Point},
     ///   System,
     /// };
