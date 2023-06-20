@@ -13,6 +13,8 @@ use crate::{
 define_element!(
     SLVS_C_CUBIC_LINE_TANGENT,
     /// The `cubic` is tangent to the `line`.
+    /// 
+    /// Note that this constraint in 3d space (`workplane` is `None`) is currently broken.
     struct CubicLineTangent {
         cubic: EntityHandle<Cubic>,
         line: EntityHandle<LineSegment>,
