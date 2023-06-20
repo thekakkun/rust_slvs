@@ -1,77 +1,34 @@
-use super::{AsCubic, AsCurve, AsEntityData, Entity, FromSlvsEntity, Point, Workplane};
+use serde::{Deserialize, Serialize};
+
+use super::{AsEntityData, EntityHandle, Point};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
-#[derive(Clone, Copy, Debug)]
-pub struct Cubic<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub start_point: Entity<Point<T>>,
-    pub start_control: Entity<Point<T>>,
-    pub end_control: Entity<Point<T>>,
-    pub end_point: Entity<Point<T>>,
-}
 
-impl Cubic<OnWorkplane> {
-    pub fn new(
-        group: Group,
-        workplane: Entity<Workplane>,
-        start_point: Entity<Point<OnWorkplane>>,
-        start_control: Entity<Point<OnWorkplane>>,
-        end_control: Entity<Point<OnWorkplane>>,
-        end_point: Entity<Point<OnWorkplane>>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: Some(workplane),
-            start_point,
-            start_control,
-            end_control,
-            end_point,
-        }
+define_element!(
+    SLVS_E_CUBIC,
+    /// A nonrational cubic Bezier segment.
+    ///
+    /// The curve has the equation:
+    ///
+    /// `p(t) = P0*(1 - t)^3 + 3*P1*(1 - t)^2*t + 3*P2*(1 - t)*t^2 + P3*t^3]`
+    ///
+    /// as `t` goes from 0 to 1.
+    struct Cubic {
+        start_point: EntityHandle<Point>,
+        start_control: EntityHandle<Point>,
+        end_control: EntityHandle<Point>,
+        end_point: EntityHandle<Point>,
     }
-}
+);
 
-impl Cubic<In3d> {
-    pub fn new(
-        group: Group,
-        start_point: Entity<Point<In3d>>,
-        start_control: Entity<Point<In3d>>,
-        end_control: Entity<Point<In3d>>,
-        end_point: Entity<Point<In3d>>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: None,
-            start_point,
-            start_control,
-            end_control,
-            end_point,
-        }
-    }
-}
-
-impl<T: AsTarget> AsCubic for Cubic<T> {}
-impl<T: AsTarget> AsCurve for Cubic<T> {}
-
-impl<T: AsTarget> AsEntityData for Cubic<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_CUBIC as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.handle())
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![
+impl AsEntityData for Cubic {
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([
             self.start_point.handle(),
             self.start_control.handle(),
             self.end_control.handle(),
@@ -80,34 +37,23 @@ impl<T: AsTarget> AsEntityData for Cubic<T> {
     }
 }
 
-impl<T: AsTarget> TypeInfo for Cubic<T> {
-    fn type_of() -> String {
-        format!("Cubic<{}>", T::type_of())
-    }
-}
+impl FromSystem for Cubic {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
 
-impl FromSlvsEntity<OnWorkplane> for Cubic<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            start_point: Entity::new(slvs_entity.point[0]),
-            start_control: Entity::new(slvs_entity.point[1]),
-            end_control: Entity::new(slvs_entity.point[2]),
-            end_point: Entity::new(slvs_entity.point[3]),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for Cubic<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            start_point: Entity::new(slvs_entity.point[0]),
-            start_control: Entity::new(slvs_entity.point[1]),
-            end_control: Entity::new(slvs_entity.point[2]),
-            end_point: Entity::new(slvs_entity.point[3]),
+        if SLVS_E_CUBIC == slvs_entity.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_entity.group),
+                start_point: EntityHandle::new(slvs_entity.point[0]),
+                start_control: EntityHandle::new(slvs_entity.point[1]),
+                end_control: EntityHandle::new(slvs_entity.point[2]),
+                end_point: EntityHandle::new(slvs_entity.point[3]),
+            })
+        } else {
+            Err("Expected entity to have type SLVS_E_CUBIC.")
         }
     }
 }

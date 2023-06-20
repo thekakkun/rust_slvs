@@ -1,93 +1,45 @@
-use std::marker::PhantomData;
+use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, Entity, FromSlvsEntity, Workplane};
+use super::AsEntityData;
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_DISTANCE},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hGroup, SLVS_E_DISTANCE},
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct Distance<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub val: f64,
-    phantom: PhantomData<T>,
+define_element!(
+    SLVS_E_DISTANCE,
+    /// An entity used to define a radius for [Circle][crate::entity::Circle].
+    ///
+    /// See the [module-level documentation][crate] for usage example.
+    struct Distance {
+        val: f64,
+    }
+);
+
+impl AsEntityData for Distance {
+    fn param_vals(&self) -> [Option<f64>; 4] {
+        [Some(self.val), None, None, None]
+    }
 }
 
-impl Distance<OnWorkplane> {
-    pub fn new(group: Group, workplane: Entity<Workplane>, val: f64) -> Self {
-        Self {
-            group,
-            workplane: Some(workplane),
-            val,
-            phantom: PhantomData,
+impl FromSystem for Distance {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
+        let distance_val = sys.slvs_param(slvs_entity.param[0])?.val;
+
+        if SLVS_E_DISTANCE == slvs_entity.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_entity.group),
+                val: distance_val,
+            })
+        } else {
+            Err("Expected entity to have type SLVS_E_DISTANCE.")
         }
-    }
-}
-
-impl Distance<In3d> {
-    pub fn new(group: Group, val: f64) -> Self {
-        Self {
-            group,
-            workplane: None,
-            val,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<T: AsTarget> AsEntityData for Distance<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_DISTANCE as _
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.handle())
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(vec![self.val])
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Distance<T> {
-    fn type_of() -> String {
-        format!("Distance<{}>", T::type_of())
-    }
-}
-
-impl FromSlvsEntity<OnWorkplane> for Distance<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            val: 0.0,
-            phantom: PhantomData,
-        }
-    }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
-    }
-}
-
-impl FromSlvsEntity<In3d> for Distance<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            val: 0.0,
-            phantom: PhantomData,
-        }
-    }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        self.val = vals[0]
     }
 }

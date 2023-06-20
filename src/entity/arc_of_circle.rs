@@ -1,85 +1,81 @@
-use super::{AsArc, AsCurve, AsEntityData, Entity, FromSlvsEntity, Normal, Point, Workplane};
+use serde::{Deserialize, Serialize};
+
+use super::{AsEntityData, EntityHandle, Point, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_ARC_OF_CIRCLE},
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::OnWorkplane,
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct ArcOfCircle {
-    pub group: Group,
-    pub workplane: Entity<Workplane>,
-    pub center: Entity<Point<OnWorkplane>>,
-    pub arc_begin: Entity<Point<OnWorkplane>>,
-    pub arc_end: Entity<Point<OnWorkplane>>,
-    pub normal: Entity<Normal>,
-}
-
-impl ArcOfCircle {
-    pub fn new(
-        group: Group,
-        workplane: Entity<Workplane>,
-        center: Entity<Point<OnWorkplane>>,
-        arc_begin: Entity<Point<OnWorkplane>>,
-        arc_end: Entity<Point<OnWorkplane>>,
-        normal: Entity<Normal>,
-    ) -> Self {
-        Self {
-            group,
-            workplane,
-            center,
-            arc_begin,
-            arc_end,
-            normal,
-        }
+define_element!(
+    SLVS_E_ARC_OF_CIRCLE,
+    /// An arc of a circle.
+    ///
+    /// An arc must always lie within a workplane; it cannot be free in 3d.
+    /// So it is specified with a workplane.
+    ///
+    /// The arc runs counter-clockwise from its beginning to its end (with
+    /// the workplane's normal pointing towards the viewer). If the beginning
+    /// and end of the arc are coincident, then the arc is considered to
+    /// represent a full circle.
+    ///
+    /// This representation has an extra degree of freedom. An extra
+    /// constraint is therefore generated implicitly, so that
+    ///
+    /// ```text
+    /// distance(center, start) = distance(center, end)
+    /// ```
+    ///
+    /// This constraint is solved when adding the entity to the system, so points will
+    /// be moved if an arc cannot be created from them.
+    ///
+    /// See the [module-level documentation][crate] for usage example.
+    struct ArcOfCircle {
+        /// The workpane Arc lies on
+        workplane: EntityHandle<Workplane>,
+        center: EntityHandle<Point>,
+        /// The start point of the arc, going counter-clockwise from this point.
+        arc_start: EntityHandle<Point>,
+        /// The end point of the arc. Represents a full circle if coincident with
+        /// the start point.
+        arc_end: EntityHandle<Point>,
     }
-}
-
-impl AsArc for ArcOfCircle {}
-impl AsCurve for ArcOfCircle {}
+);
 
 impl AsEntityData for ArcOfCircle {
-    fn type_(&self) -> i32 {
-        SLVS_E_ARC_OF_CIRCLE as _
-    }
-
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
     }
 
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([
             self.center.handle(),
-            self.arc_begin.handle(),
+            self.arc_start.handle(),
             self.arc_end.handle(),
+            0,
         ])
     }
-
-    fn normal(&self) -> Option<Slvs_hEntity> {
-        Some(self.normal.handle())
-    }
 }
 
-impl FromSlvsEntity<OnWorkplane> for ArcOfCircle {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: Entity::new(slvs_entity.wrkpl),
-            center: Entity::new(slvs_entity.point[0]),
-            arc_begin: Entity::new(slvs_entity.point[1]),
-            arc_end: Entity::new(slvs_entity.point[2]),
-            normal: Entity::new(slvs_entity.normal),
+impl FromSystem for ArcOfCircle {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
+
+        if SLVS_E_ARC_OF_CIRCLE == slvs_entity.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_entity.group),
+                workplane: EntityHandle::new(slvs_entity.wrkpl),
+                center: EntityHandle::new(slvs_entity.point[0]),
+                arc_start: EntityHandle::new(slvs_entity.point[1]),
+                arc_end: EntityHandle::new(slvs_entity.point[2]),
+            })
+        } else {
+            Err("Expected entity to have type SLVS_E_ARC_OF_CIRCLE.")
         }
-    }
-}
-
-impl TypeInfo for ArcOfCircle {
-    fn type_of() -> String {
-        "ArcOfCircle".to_string()
     }
 }

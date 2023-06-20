@@ -1,82 +1,123 @@
-use super::{AsEntityData, AsPoint, Entity, FromSlvsEntity, Workplane};
+use serde::{Deserialize, Serialize};
+
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct Point<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub coords: T,
+/// A point on a workplane or free in 3d.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub enum Point {
+    /// A point within a workplane, defined by the workplane and two parameters within
+    /// the coordinate system of the workplane.
+    OnWorkplane {
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        coords: [f64; 2],
+    },
+
+    /// A point in 3d. Defined by three parameters.
+    In3d { group: Group, coords: [f64; 3] },
 }
 
-impl Point<OnWorkplane> {
-    pub fn new(group: Group, workplane: Entity<Workplane>, u: f64, v: f64) -> Self {
-        Self {
+impl Point {
+    /// Create a new `Point::OnWorkplane` instance.
+    pub fn new_on_workplane(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        coords: [f64; 2],
+    ) -> Self {
+        Self::OnWorkplane {
             group,
-            workplane: Some(workplane),
-            coords: OnWorkplane(u, v),
+            workplane,
+            coords,
         }
     }
-}
 
-impl Point<In3d> {
-    pub fn new(group: Group, x: f64, y: f64, z: f64) -> Self {
-        Self {
-            group,
-            workplane: None,
-            coords: In3d(x, y, z),
-        }
+    /// Create a new `Point::In3d` instance.
+    pub fn new_in_3d(group: Group, coords: [f64; 3]) -> Self {
+        Self::In3d { group, coords }
     }
 }
 
-impl<T: AsTarget> AsPoint for Point<T> {}
-
-impl<T: AsTarget> AsEntityData for Point<T> {
-    fn type_(&self) -> i32 {
-        <T as AsTarget>::type_()
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|w| w.handle())
-    }
-
+impl AsGroup for Point {
     fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        Some(self.coords.as_vec())
-    }
-}
-
-impl<T: AsTarget> TypeInfo for Point<T> {
-    fn type_of() -> String {
-        format!("Point<{}>", T::type_of())
+        match self {
+            Point::OnWorkplane { group, .. } => group.handle(),
+            Point::In3d { group, .. } => group.handle(),
+        }
     }
 }
 
-impl<T: AsTarget + From<Vec<f64>> + Default> FromSlvsEntity<T> for Point<T> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        if slvs_entity.type_ == SLVS_E_POINT_IN_2D as _ {
-            Self {
-                group: Group(slvs_entity.group),
-                workplane: Some(Entity::new(slvs_entity.wrkpl)),
-                coords: T::default(),
-            }
-        } else {
-            Self {
-                group: Group(slvs_entity.group),
-                workplane: None,
-                coords: T::default(),
-            }
+impl AsSlvsType for Point {
+    fn slvs_type(&self) -> i32 {
+        match self {
+            Point::OnWorkplane { .. } => SLVS_E_POINT_IN_2D as _,
+            Point::In3d { .. } => SLVS_E_POINT_IN_3D as _,
+        }
+    }
+}
+
+impl AsEntityData for Point {
+    fn workplane(&self) -> Option<Slvs_hEntity> {
+        match self {
+            Point::OnWorkplane { workplane, .. } => Some(workplane.handle()),
+            Point::In3d { .. } => None,
         }
     }
 
-    fn set_vals(&mut self, params: Vec<f64>) {
-        self.coords = params.into();
+    fn param_vals(&self) -> [Option<f64>; 4] {
+        match self {
+            Point::OnWorkplane { coords: [u, v], .. } => [Some(*u), Some(*v), None, None],
+            Point::In3d {
+                coords: [x, y, z], ..
+            } => [Some(*x), Some(*y), Some(*z), None],
+        }
+    }
+}
+
+impl FromSystem for Point {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
+        let params: Result<Vec<_>, _> = slvs_entity
+            .param
+            .iter()
+            .filter_map(|param_h| match param_h {
+                0 => None,
+                _ => Some(sys.slvs_param(*param_h)),
+            })
+            .collect();
+        let param_vals: Vec<_> = params?.iter().map(|param| param.val).collect();
+
+        match slvs_entity.type_ as _ {
+            SLVS_E_POINT_IN_2D => {
+                let coords: [f64; 2] = param_vals
+                    .try_into()
+                    .map_err(|_| "Expected exactly 2 parameters")?;
+
+                Ok(Self::OnWorkplane {
+                    group: Group(slvs_entity.group),
+                    workplane: EntityHandle::new(slvs_entity.wrkpl),
+                    coords,
+                })
+            }
+            SLVS_E_POINT_IN_3D => {
+                let coords: [f64; 3] = param_vals
+                    .try_into()
+                    .map_err(|_| "Expected exactly 3 parameters")?;
+
+                Ok(Self::In3d {
+                    group: Group(slvs_entity.group),
+                    coords,
+                })
+            }
+            _ => Err("Expected entity to have type SLVS_E_POINT_IN_2D or SLVS_E_POINT_IN_3D."),
+        }
     }
 }

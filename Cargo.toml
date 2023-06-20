@@ -1,8 +1,10 @@
 [package]
 name = "slvs"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 description = "Rust wrapper for the SolveSpace constraint solver library."
+keywords = ["geometry", "cad", "constraint_solver"]
+categories = ["api-bindings", "graphics", "mathematics"]
 license  = "GPL-3.0"
 repository = "https://github.com/thekakkun/rust_slvs"
 exclude = [
@@ -25,3 +27,7 @@ include = [
 bindgen = "0.64.0"
 cc = "1.0.79"
 dunce = "1.0.3"
+
+[dependencies]
+euclid = "0.22.9"
+serde = { version = "1.0", features = ["derive"] }

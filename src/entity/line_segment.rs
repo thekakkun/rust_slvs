@@ -1,93 +1,46 @@
-use super::{
-    As2dProjectionTarget, AsEntityData, AsLineSegment, Entity, FromSlvsEntity, Point, Workplane,
-};
+use serde::{Deserialize, Serialize};
+
+use super::{AsEntityData, EntityHandle, Point};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct LineSegment<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub point_a: Entity<Point<T>>,
-    pub point_b: Entity<Point<T>>,
-}
+define_element!(
+    SLVS_E_LINE_SEGMENT,
+    /// A line segment between two points.
+    ///
+    /// See the [module-level documentation][crate] for usage example.
+    struct LineSegment {
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
+    }
+);
 
-impl LineSegment<OnWorkplane> {
-    pub fn new(
-        group: Group,
-        workplane: Entity<Workplane>,
-        point_a: Entity<Point<OnWorkplane>>,
-        point_b: Entity<Point<OnWorkplane>>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: Some(workplane),
-            point_a,
-            point_b,
-        }
+impl AsEntityData for LineSegment {
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.point_a.handle(), self.point_b.handle(), 0, 0])
     }
 }
 
-impl LineSegment<In3d> {
-    pub fn new(group: Group, point_a: Entity<Point<In3d>>, point_b: Entity<Point<In3d>>) -> Self {
-        Self {
-            group,
-            workplane: None,
-            point_a,
-            point_b,
-        }
-    }
-}
+impl FromSystem for LineSegment {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
 
-impl<T: AsTarget> AsEntityData for LineSegment<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_LINE_SEGMENT as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.handle())
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.point_a.handle(), self.point_b.handle()])
-    }
-}
-
-impl<T: AsTarget> As2dProjectionTarget for LineSegment<T> {}
-impl<T: AsTarget> AsLineSegment for LineSegment<T> {}
-
-impl<T: AsTarget> TypeInfo for LineSegment<T> {
-    fn type_of() -> String {
-        format!("LineSegment<{}>", T::type_of())
-    }
-}
-
-impl FromSlvsEntity<OnWorkplane> for LineSegment<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            point_a: Entity::new(slvs_entity.point[0]),
-            point_b: Entity::new(slvs_entity.point[1]),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for LineSegment<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            point_a: Entity::new(slvs_entity.point[0]),
-            point_b: Entity::new(slvs_entity.point[1]),
+        if SLVS_E_LINE_SEGMENT == slvs_entity.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_entity.group),
+                point_a: EntityHandle::new(slvs_entity.point[0]),
+                point_b: EntityHandle::new(slvs_entity.point[1]),
+            })
+        } else {
+            Err("Expected entity to have type SLVS_E_LINE_SEGMENT.")
         }
     }
 }

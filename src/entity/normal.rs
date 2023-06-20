@@ -1,47 +1,72 @@
-use super::{As2dProjectionTarget, AsEntityData, Entity, FromSlvsEntity, Workplane};
+use serde::{Deserialize, Serialize};
+
+use super::{AsEntityData, EntityHandle, Workplane};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D},
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::OnWorkplane,
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
+/// A normal on a workplane or free in 3d.
+///
+/// In SolveSpace, "normals" represent a 3x3 rotation matrix from our base coordinate
+/// system to a new frame, defined by the unit quaternion `[w, x, y, z]` where the quaternion
+/// is given by `w + x*i + y*j + z*k`.
+///
+/// It is useful to think of this quaternion as representing a plane through the origin.
+/// This plane has three associated vectors: basis vectors `U`, `V` that lie within the
+/// plane, and normal `N` that is perpendicular to it.
+///
+/// Convenience functions are provided to convert between this representation as
+/// vectors `U`, `V`, `N` and the unit quaternion.
+///
+/// A unit quaternion has only 3 degrees of freedom, but is specified in terms of
+/// 4 parameters. An extra constraint is therefore generated implicitly, so that
+/// `w^2 + x^2 + y^2 + z^2 = 1`
+/// See the [module-level documentation][crate] for usage example.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Normal {
+    /// A normal within a workplane. This is identical to the workplane's normal.
     OnWorkplane {
         group: Group,
-        workplane: Entity<Workplane>,
+        workplane: EntityHandle<Workplane>,
     },
-    In3d {
-        group: Group,
-        w: f64,
-        x: f64,
-        y: f64,
-        z: f64,
-    },
+    /// A `Normal` in 3d space.
+    In3d { group: Group, quaternion: [f64; 4] },
 }
 
 impl Normal {
-    pub fn new_on_workplane(group: Group, workplane: Entity<Workplane>) -> Self {
+    /// Create a new `Normal::OnWorkplane` instance.
+    pub fn new_on_workplane(group: Group, workplane: EntityHandle<Workplane>) -> Self {
         Self::OnWorkplane { group, workplane }
     }
 
+    /// Create a new `Normal::In3d` instance.
     pub fn new_in_3d(group: Group, quaternion: [f64; 4]) -> Self {
-        let [w, x, y, z] = quaternion;
-        Self::In3d { group, w, x, y, z }
+        Self::In3d { group, quaternion }
     }
 }
 
-impl As2dProjectionTarget for Normal {}
+impl AsGroup for Normal {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            Self::OnWorkplane { group, .. } => group.handle(),
+            Self::In3d { group, .. } => group.handle(),
+        }
+    }
+}
 
-impl AsEntityData for Normal {
-    fn type_(&self) -> i32 {
+impl AsSlvsType for Normal {
+    fn slvs_type(&self) -> i32 {
         match self {
             Self::OnWorkplane { .. } => SLVS_E_NORMAL_IN_2D as _,
             Self::In3d { .. } => SLVS_E_NORMAL_IN_3D as _,
         }
     }
+}
 
+impl AsEntityData for Normal {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Self::OnWorkplane { workplane, .. } => Some(workplane.handle()),
@@ -49,50 +74,43 @@ impl AsEntityData for Normal {
         }
     }
 
-    fn group(&self) -> Slvs_hGroup {
+    fn param_vals(&self) -> [Option<f64>; 4] {
         match self {
-            Self::OnWorkplane { group, .. } => group.handle(),
-            Self::In3d { group, .. } => group.handle(),
-        }
-    }
-
-    fn param_vals(&self) -> Option<Vec<f64>> {
-        match self {
-            Self::OnWorkplane { .. } => None,
-            Self::In3d { w, x, y, z, .. } => Some(vec![*w, *x, *y, *z]),
+            Self::OnWorkplane { .. } => [None, None, None, None],
+            Self::In3d { quaternion, .. } => quaternion.map(Some),
         }
     }
 }
 
-impl TypeInfo for Normal {
-    fn type_of() -> String {
-        "Normal".to_string()
-    }
-}
+impl FromSystem for Normal {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
 
-impl FromSlvsEntity<OnWorkplane> for Normal {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        match slvs_entity.wrkpl {
-            0 => Self::In3d {
+        match slvs_entity.type_ as _ {
+            SLVS_E_NORMAL_IN_2D => Ok(Self::OnWorkplane {
                 group: Group(slvs_entity.group),
-                w: 0.0,
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            h => Self::OnWorkplane {
-                group: Group(slvs_entity.group),
-                workplane: Entity::new(h),
-            },
-        }
-    }
-
-    fn set_vals(&mut self, vals: Vec<f64>) {
-        if let Normal::In3d { w, x, y, z, .. } = self {
-            *w = vals[0];
-            *x = vals[1];
-            *y = vals[2];
-            *z = vals[3];
+                workplane: EntityHandle::new(slvs_entity.wrkpl),
+            }),
+            SLVS_E_NORMAL_IN_3D => {
+                let quaternion: Result<Vec<_>, _> = slvs_entity
+                    .param
+                    .iter()
+                    .map(|param_h| sys.slvs_param(*param_h))
+                    .collect();
+                Ok(Self::In3d {
+                    group: Group(slvs_entity.group),
+                    quaternion: quaternion?
+                        .iter()
+                        .map(|param| param.val)
+                        .collect::<Vec<_>>()
+                        .try_into()
+                        .map_err(|_| "quaternion values not found")?,
+                })
+            }
+            _ => Err("Expected entity to have type SLVS_E_NORMAL_IN_2D or SLVS_E_NORMAL_IN_3D."),
         }
     }
 }

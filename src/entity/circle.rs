@@ -1,74 +1,35 @@
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::{AsArc, AsEntityData, Distance, Entity, FromSlvsEntity, Normal, Point, Workplane};
+use super::{AsEntityData, Distance, EntityHandle, Normal, Point};
 use crate::{
-    bindings::{Slvs_Entity, Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
-    element::{AsHandle, TypeInfo},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
+    define_element,
+    element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
     group::Group,
-    target::{AsTarget, In3d, OnWorkplane},
+    System,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct Circle<T: AsTarget> {
-    pub group: Group,
-    pub workplane: Option<Entity<Workplane>>,
-    pub center: Entity<Point<T>>,
-    pub radius: Entity<Distance<T>>,
-    pub normal: Entity<Normal>,
-}
-
-impl Circle<OnWorkplane> {
-    pub fn new(
-        group: Group,
-        workplane: Entity<Workplane>,
-        center: Entity<Point<OnWorkplane>>,
-        radius: Entity<Distance<OnWorkplane>>,
-        normal: Entity<Normal>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: Some(workplane),
-            center,
-            radius,
-            normal,
-        }
+define_element!(
+    SLVS_E_CIRCLE,
+    /// A complete circle.
+    ///
+    /// The orientation is defined by a [Normal][crate::entity::Normal], and the size
+    /// of the circle is defined by passing a handle to a [Distance][crate::entity::Distance]
+    /// entity.
+    ///
+    /// See the [module-level documentation][crate] for usage example.
+    struct Circle {
+        /// The circle lies within a plane with this normal
+        normal: EntityHandle<Normal>,
+        center: EntityHandle<Point>,
+        radius: EntityHandle<Distance>,
     }
-}
+);
 
-impl Circle<In3d> {
-    pub fn new(
-        group: Group,
-        center: Entity<Point<In3d>>,
-        radius: Entity<Distance<In3d>>,
-        normal: Entity<Normal>,
-    ) -> Self {
-        Self {
-            group,
-            workplane: None,
-            center,
-            radius,
-            normal,
-        }
-    }
-}
-
-impl<T: AsTarget> AsArc for Circle<T> {}
-
-impl<T: AsTarget> AsEntityData for Circle<T> {
-    fn type_(&self) -> i32 {
-        SLVS_E_CIRCLE as _
-    }
-
-    fn workplane(&self) -> Option<Slvs_hEntity> {
-        self.workplane.map(|workplane| workplane.handle())
-    }
-
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
-    }
-
-    fn points(&self) -> Option<Vec<Slvs_hEntity>> {
-        Some(vec![self.center.handle()])
+impl AsEntityData for Circle {
+    fn points(&self) -> Option<[Slvs_hEntity; 4]> {
+        Some([self.center.handle(), 0, 0, 0])
     }
 
     fn normal(&self) -> Option<Slvs_hEntity> {
@@ -80,32 +41,22 @@ impl<T: AsTarget> AsEntityData for Circle<T> {
     }
 }
 
-impl<T: AsTarget> TypeInfo for Circle<T> {
-    fn type_of() -> String {
-        format!("Circle<{}>", T::type_of())
-    }
-}
+impl FromSystem for Circle {
+    fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
+        let slvs_entity = sys.slvs_entity(element.handle())?;
 
-impl FromSlvsEntity<OnWorkplane> for Circle<OnWorkplane> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: Some(Entity::new(slvs_entity.wrkpl)),
-            center: Entity::new(slvs_entity.point[0]),
-            radius: Entity::new(slvs_entity.distance),
-            normal: Entity::new(slvs_entity.normal),
-        }
-    }
-}
-
-impl FromSlvsEntity<In3d> for Circle<In3d> {
-    fn from(slvs_entity: Slvs_Entity) -> Self {
-        Self {
-            group: Group(slvs_entity.group),
-            workplane: None,
-            center: Entity::new(slvs_entity.point[0]),
-            radius: Entity::new(slvs_entity.distance),
-            normal: Entity::new(slvs_entity.normal),
+        if SLVS_E_CIRCLE == slvs_entity.type_ as _ {
+            Ok(Self {
+                group: Group(slvs_entity.group),
+                normal: EntityHandle::new(slvs_entity.normal),
+                center: EntityHandle::new(slvs_entity.point[0]),
+                radius: EntityHandle::new(slvs_entity.distance),
+            })
+        } else {
+            Err("Expected entity to have type SLVS_E_CIRCLE.")
         }
     }
 }

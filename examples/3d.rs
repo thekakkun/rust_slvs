@@ -1,7 +1,7 @@
 use slvs::{
     constraint::PtPtDistance,
     entity::{LineSegment, Point},
-    target::In3d,
+    system::SolveResult,
     System,
 };
 
@@ -15,14 +15,14 @@ fn main() {
 
     // A point, initially at (x y z) = (10 10 10)
     let p1 = sys
-        .sketch(Point::<In3d>::new(g, 10.0, 10.0, 10.0))
+        .sketch(Point::new_in_3d(g, [10.0, 10.0, 10.0]))
         .expect("p1 created");
     // and a second point at (20 20 20)
     let p2 = sys
-        .sketch(Point::<In3d>::new(g, 20.0, 20.0, 20.0))
+        .sketch(Point::new_in_3d(g, [20.0, 20.0, 20.0]))
         .expect("p2 created");
     // and a line segment connecting them.
-    sys.sketch(LineSegment::<In3d>::new(g, p1, p2))
+    sys.sketch(LineSegment::new(g, p1, p2))
         .expect("line segment created");
 
     // The distance between the points should be 30.0 units.
@@ -31,21 +31,32 @@ fn main() {
 
     // Let's tell the solver to keep the second point as close to constant
     // as possible, instead moving the first point.
-    sys.set_dragged(&p2);
+    sys.set_dragged(&p2).expect("p2 is locked in place");
 
     // Now that we have written our system, we solve.
     let result = sys.solve(&g);
     sys.clear_dragged();
 
-    if let Ok(ok_result) = result {
-        let In3d(x1, y1, z1) = sys.entity_data(&p1).expect("p1 should exist").coords;
-        println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);
+    match result {
+        SolveResult::Ok { dof } => {
+            if let Point::In3d {
+                coords: [x1, y1, z1],
+                ..
+            } = sys.entity_data(&p1).expect("p1 should exist")
+            {
+                println!("okay; now at ({:.3} {:.3} {:.3})", x1, y1, z1);
+            }
 
-        let In3d(x2, y2, z2) = sys.entity_data(&p2).expect("p2 should exist").coords;
-        println!("             ({:.3} {:.3} {:.3})", x2, y2, z2);
+            if let Point::In3d {
+                coords: [x2, y2, z2],
+                ..
+            } = sys.entity_data(&p2).expect("p2 should exist")
+            {
+                println!("             ({:.3} {:.3} {:.3})", x2, y2, z2);
+            }
 
-        println!("{} DOF", ok_result.dof);
-    } else {
-        println!("solve failed");
+            println!("{} DOF", dof);
+        }
+        SolveResult::Fail { .. } => println!("solve failed"),
     }
 }
