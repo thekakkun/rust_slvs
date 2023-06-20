@@ -8,13 +8,13 @@
 
 ### Prerequisites
 
-- C compiler
+- A C compiler
 
   The SolveSpace library is compiled using [cc](https://docs.rs/cc/latest/cc/), which requires a C compiler.
 
   [See here for more information](https://github.com/rust-lang/cc-rs#compile-time-requirements).
 
-- Clang
+- libclang
 
   Bindings from C to Rust are generated using [bindgen](https://github.com/rust-lang/rust-bindgen), which requires `libclang`. On Windows, the environment variable `LIBCLANG_PATH` will need to be set, pointing to the location of the clang library.
 
