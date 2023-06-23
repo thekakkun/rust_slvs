@@ -21,7 +21,8 @@ use crate::{
     },
     element::AsHandle,
     entity::{
-        ArcOfCircle, AsEntityData, AsEntityHandle, Circle, Cubic, EntityHandle, LineSegment, Normal,
+        ArcOfCircle, AsEntityData, AsEntityHandle, Circle, Cubic, EntityHandle, LineSegment,
+        Normal, SomeEntityHandle,
     },
     group::Group,
 };
@@ -150,7 +151,7 @@ impl System {
         let slvs_entity = Slvs_Entity {
             h: self.entities.next_h(),
             group: entity_data.group(),
-            type_: entity_data.slvs_type(),
+            type_: entity_data.slvs_type() as _,
             wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
             point: entity_data.points().unwrap_or([0; 4]),
             normal: normal_h,
@@ -212,7 +213,7 @@ impl System {
         let slvs_constraint = Slvs_Constraint {
             h: self.constraints.next_h(),
             group: constraint_data.group(),
-            type_: constraint_data.slvs_type(),
+            type_: constraint_data.slvs_type() as _,
             wrkpl: workplane_h.unwrap_or(SLVS_FREE_IN_3D),
             valA: constraint_data.val().unwrap_or(0.0),
             ptA: pt_a,
@@ -249,7 +250,7 @@ impl System {
     ///
     /// ```
     /// use slvs::{
-    ///   entity::{LineSegment, Point},
+    ///   entity::{LineSegment, Point, SomeEntityHandle},
     ///   System,
     /// };
     ///
@@ -267,28 +268,28 @@ impl System {
     ///     .sketch(LineSegment::new(g1, p1, p2))
     ///     .expect("line 1 belongs in g1, references p1 and p2");
     ///
-    /// let entity_handles = sys.entity_handles(None, None);
-    /// assert!(entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
-    /// assert!(entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
-    /// assert!(entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// let entity_handles = sys.entity_handles(None, None::<&SomeEntityHandle>);
+    /// assert!(entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
     ///
     /// // p2 is the only entity in g2
-    /// let g2_entity_handles = sys.entity_handles(Some(&g2), None);
-    /// assert!(!g2_entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
-    /// assert!(g2_entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
-    /// assert!(!g2_entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// let g2_entity_handles = sys.entity_handles(Some(&g2), None::<&SomeEntityHandle>);
+    /// assert!(!g2_entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
+    /// assert!(g2_entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
+    /// assert!(!g2_entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
     ///
     /// // line is the only entity that references p1
     /// let p1_entity_handles = sys.entity_handles(None, Some(&p1));
-    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
-    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
-    /// assert!(p1_entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
+    /// assert!(!p1_entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
+    /// assert!(p1_entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
     /// ```
     pub fn entity_handles(
         &self,
         group: Option<&Group>,
-        entity_handle: Option<&dyn AsEntityHandle>,
-    ) -> Vec<Box<dyn AsEntityHandle>> {
+        entity_handle: Option<&impl AsEntityHandle>,
+    ) -> Vec<SomeEntityHandle> {
         self.entities
             .list
             .iter()
@@ -644,7 +645,7 @@ impl System {
     ///
     /// ```
     /// use slvs::{
-    /// entity::{LineSegment, Point},
+    /// entity::{LineSegment, Point, SomeEntityHandle},
     /// System,
     /// };
     ///
@@ -663,10 +664,10 @@ impl System {
     ///
     /// sys.delete_entity(p2)
     ///     .expect("p2 is deleted from the system");
-    /// let entity_handles = sys.entity_handles(None, None);
-    /// assert!(entity_handles.iter().any(|e| Ok(p1) == e.try_into()));
-    /// assert!(!entity_handles.iter().any(|e| Ok(p2) == e.try_into()));
-    /// assert!(entity_handles.iter().any(|e| Ok(line) == e.try_into()));
+    /// let entity_handles = sys.entity_handles(None, None::<&SomeEntityHandle>);
+    /// assert!(entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
+    /// assert!(!entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
+    /// assert!(entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
     /// ```
     ///
     /// # Errors

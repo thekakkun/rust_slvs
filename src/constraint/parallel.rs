@@ -13,7 +13,7 @@ use crate::{
 define_element!(
     SLVS_C_PARALLEL,
     /// Lines `line_a` and `line_b` are parallel.
-    /// 
+    ///
     /// Note that this constraint in 3d space (`workplane` is `None`) is currently broken.
     struct Parallel {
         line_a: EntityHandle<LineSegment>,

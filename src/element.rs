@@ -147,8 +147,8 @@ mod private {
     impl Sealed for WhereDragged {}
 
     // Entities
-    impl Sealed for Box<dyn AsEntityHandle> {}
     impl<E: AsEntityData> Sealed for EntityHandle<E> {}
+    impl Sealed for SomeEntityHandle {}
     impl Sealed for ArcOfCircle {}
     impl Sealed for Circle {}
     impl Sealed for Cubic {}

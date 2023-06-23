@@ -15,7 +15,7 @@ define_element!(
     /// The normals `normal_a` and `normal_b` describe identical rotations.
     ///
     /// This constraint therefore restricts three degrees of freedom.
-    /// 
+    ///
     /// Note that this constraint in 3d space (`workplane` is `None`) is currently broken.
     struct SameOrientation {
         normal_a: EntityHandle<Normal>,

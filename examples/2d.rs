@@ -56,14 +56,14 @@ fn main() {
     let arc_start = sys
         .sketch(Point::new_on_workplane(g2, workplane, [120.0, 110.0]))
         .expect("point in 2d created");
-    let arc_finish = sys
+    let arc_end = sys
         .sketch(Point::new_on_workplane(g2, workplane, [115.0, 115.0]))
         .expect("point in 2d created");
     // And arc, centered at point arc_center, starting at point arc_start, ending at
-    // point arc_finish.
+    // point arc_end.
     let arc = sys
         .sketch(ArcOfCircle::new(
-            g2, workplane, arc_center, arc_start, arc_finish,
+            g2, workplane, arc_center, arc_start, arc_end,
         ))
         .expect("arc created");
 
@@ -121,52 +121,45 @@ fn main() {
             println!("solved okay");
             if let (
                 Point::OnWorkplane {
-                    coords: [u1, v1], ..
+                    coords: p1_coords, ..
                 },
                 Point::OnWorkplane {
-                    coords: [u2, v2], ..
+                    coords: p2_coords, ..
                 },
             ) = (
                 sys.entity_data(&p1).expect("data for p1 found"),
                 sys.entity_data(&p2).expect("data for p2 found"),
             ) {
-                println!("line from ({:.3} {:.3}) to ({:.3} {:.3})", u1, v1, u2, v2);
+                println!("line from {:.3?} to {:.3?}", p1_coords, p2_coords);
             }
 
             if let (
                 Point::OnWorkplane {
-                    coords: [arc_center_u, arc_center_v],
+                    coords: center_coords,
                     ..
                 },
                 Point::OnWorkplane {
-                    coords: [arc_start_u, arc_start_v],
+                    coords: start_coords,
                     ..
                 },
                 Point::OnWorkplane {
-                    coords: [arc_finish_u, arc_finish_v],
-                    ..
+                    coords: end_coords, ..
                 },
             ) = (
                 sys.entity_data(&arc_center)
                     .expect("data for arc_center found"),
                 sys.entity_data(&arc_start)
                     .expect("data for arc_start found"),
-                sys.entity_data(&arc_finish)
-                    .expect("data for arc_finish found"),
+                sys.entity_data(&arc_end).expect("data for arc_end found"),
             ) {
                 println!(
-                    "arc center ({:.3} {:.3}) start ({:.3} {:.3}) finish ({:.3} {:.3})",
-                    arc_center_u,
-                    arc_center_v,
-                    arc_start_u,
-                    arc_start_v,
-                    arc_finish_u,
-                    arc_finish_v
+                    "arc center {:.3?} start {:.3?} end {:.3?}",
+                    center_coords, start_coords, end_coords,
                 );
             }
 
             if let Point::OnWorkplane {
-                coords: [center_u, center_v],
+                coords: center_coords,
                 ..
             } = sys
                 .entity_data(&circle_center)
@@ -176,15 +169,11 @@ fn main() {
                     .entity_data(&circle_radius)
                     .expect("data for circle_radius found")
                     .val;
-                println!(
-                    "circle center ({:.3} {:.3}) radius {:.3}",
-                    center_u, center_v, radius
-                );
+                println!("circle center {:.3?} radius {:.3}", center_coords, radius);
             }
 
             println!("{} DOF", dof);
         }
-
         SolveResult::Fail {
             reason,
             failed_constraints,
