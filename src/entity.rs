@@ -232,7 +232,7 @@ impl From<Slvs_Entity> for SomeEntityHandle {
             SLVS_E_LINE_SEGMENT => SomeEntityHandle::LineSegment(value.h),
             SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => SomeEntityHandle::Normal(value.h),
             SLVS_E_POINT_IN_2D | SLVS_E_POINT_IN_3D => SomeEntityHandle::Point(value.h),
-            SLVS_E_WORKPLANE => SomeEntityHandle::ArcOfCircle(value.h),
+            SLVS_E_WORKPLANE => SomeEntityHandle::Workplane(value.h),
             _ => panic!("Unknown Slvs_Entity type value {}", value.type_),
         }
     }
