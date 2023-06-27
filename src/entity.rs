@@ -195,6 +195,7 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "handle")]
 pub enum SomeEntityHandle {
     ArcOfCircle(u32),
     Circle(u32),
