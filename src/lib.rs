@@ -124,10 +124,10 @@ sys.constrain(PtPtDistance::new(g2, p1, origin, 15.0, Some(workplane)))
 //     .expect("distance from p2 to origin is 18.0 units");
 
 // The arc and the circle have equal radius.
-sys.constrain(EqualRadius::new(g2, arc, circle))
+sys.constrain(EqualRadius::new_arc_and_circle(g2, arc, circle))
     .expect("arc and circle have equal radius");
 // The arc has radius 17.0 units.
-sys.constrain(Diameter::new(g2, arc, 17.0 * 2.0))
+sys.constrain(Diameter::new_arc(g2, arc, 17.0 * 2.0))
     .expect("arc has diameter of 17.0 units");
 
 // And solve.

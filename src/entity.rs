@@ -246,19 +246,19 @@ impl From<Slvs_Entity> for SomeEntityHandle {
 /// constraints.
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
-pub trait AsArc: AsEntityData {}
-impl AsArc for ArcOfCircle {}
-impl AsArc for Circle {}
+// pub trait AsArc: AsEntityData {}
+// impl AsArc for ArcOfCircle {}
+// impl AsArc for Circle {}
 
 /// An entity that is a curve with start and end points.
 ///
 /// Used as arguments when creating the [CurveCurveTangent][crate::constraint::CurveCurveTangent]
 /// constraint.
 ///
-/// This trait is sealed and cannot be implemented for types outside of `slvs`.
-pub trait AsCurve: AsEntityData {}
-impl AsCurve for ArcOfCircle {}
-impl AsCurve for Cubic {}
+// /// This trait is sealed and cannot be implemented for types outside of `slvs`.
+// pub trait AsCurve: AsEntityData {}
+// impl AsCurve for ArcOfCircle {}
+// impl AsCurve for Cubic {}
 
 /// An entity that is a 2d projection target.
 ///
@@ -266,9 +266,9 @@ impl AsCurve for Cubic {}
 /// constraint.
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
-pub trait AsProjectionTarget: AsEntityData {}
-impl AsProjectionTarget for LineSegment {}
-impl AsProjectionTarget for Normal {}
+// pub trait AsProjectionTarget: AsEntityData {}
+// impl AsProjectionTarget for LineSegment {}
+// impl AsProjectionTarget for Normal {}
 
 /// An object that holds information about an entity.
 ///

@@ -2,9 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS},
+    bindings::{
+        Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE,
+    },
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsArc, EntityHandle},
+    entity::{ArcOfCircle, Circle, EntityHandle},
     group::Group,
     System,
 };
@@ -14,69 +16,93 @@ use crate::{
 /// The entities can be either an [`ArcOfCircle`][crate::entity::ArcOfCircle] or a
 /// [`Circle`][crate::entity::Circle], in any combination.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    pub group: Group,
-    pub arc_a: EntityHandle<AA>,
-    pub arc_b: EntityHandle<AB>,
+pub enum EqualRadius {
+    Arcs {
+        group: Group,
+        arc_a: EntityHandle<ArcOfCircle>,
+        arc_b: EntityHandle<ArcOfCircle>,
+    },
+    ArcAndCircle {
+        group: Group,
+        arc: EntityHandle<ArcOfCircle>,
+        circle: EntityHandle<Circle>,
+    },
+    Circles {
+        group: Group,
+        circle_a: EntityHandle<Circle>,
+        circle_b: EntityHandle<Circle>,
+    },
 }
 
-impl<AA, AB> EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    pub fn new(group: Group, arc_a: EntityHandle<AA>, arc_b: EntityHandle<AB>) -> Self {
-        Self {
+impl EqualRadius {
+    pub fn new_arcs(
+        group: Group,
+        arc_a: EntityHandle<ArcOfCircle>,
+        arc_b: EntityHandle<ArcOfCircle>,
+    ) -> Self {
+        Self::Arcs {
             group,
             arc_a,
             arc_b,
         }
     }
-}
 
-impl<AA, AB> AsGroup for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+    pub fn new_arc_and_circle(
+        group: Group,
+        arc: EntityHandle<ArcOfCircle>,
+        circle: EntityHandle<Circle>,
+    ) -> Self {
+        Self::ArcAndCircle { group, arc, circle }
+    }
+
+    pub fn new_circles(
+        group: Group,
+        circle_a: EntityHandle<Circle>,
+        circle_b: EntityHandle<Circle>,
+    ) -> Self {
+        Self::Circles {
+            group,
+            circle_a,
+            circle_b,
+        }
     }
 }
 
-impl<AA, AB> AsSlvsType for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
+impl AsGroup for EqualRadius {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            EqualRadius::Arcs { group, .. }
+            | EqualRadius::ArcAndCircle { group, .. }
+            | EqualRadius::Circles { group, .. } => group.handle(),
+        }
+    }
+}
+
+impl AsSlvsType for EqualRadius {
     fn slvs_type(&self) -> i32 {
         SLVS_C_EQUAL_RADIUS as _
     }
 }
 
-impl<AA, AB> AsConstraintData for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
+impl AsConstraintData for EqualRadius {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.arc_a.handle(), self.arc_b.handle(), 0, 0])
+        match self {
+            EqualRadius::Arcs { arc_a, arc_b, .. } => Some([arc_a.handle(), arc_b.handle(), 0, 0]),
+            EqualRadius::ArcAndCircle { arc, circle, .. } => {
+                Some([arc.handle(), circle.handle(), 0, 0])
+            }
+            EqualRadius::Circles {
+                circle_a, circle_b, ..
+            } => Some([circle_a.handle(), circle_b.handle(), 0, 0]),
+        }
     }
 }
 
-impl<AA, AB> FromSystem for EqualRadius<AA, AB>
-where
-    AA: AsArc,
-    AB: AsArc,
-{
+impl FromSystem for EqualRadius {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -84,16 +110,121 @@ where
         let slvs_constraint = sys.slvs_constraint(element.handle())?;
 
         if SLVS_C_EQUAL_RADIUS == slvs_constraint.type_ as _ {
-            Ok(Self {
-                group: Group(slvs_constraint.group),
-                arc_a: EntityHandle::new(slvs_constraint.entityA),
-                arc_b: EntityHandle::new(slvs_constraint.entityB),
-            })
+            let radiused_a = sys.slvs_entity(slvs_constraint.entityA)?;
+            let radiused_b = sys.slvs_entity(slvs_constraint.entityB)?;
+
+            match (radiused_a.type_ as _, radiused_b.type_ as _) {
+                (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => Ok(EqualRadius::Arcs {
+                    group: Group(slvs_constraint.group),
+
+                    arc_a: EntityHandle::new(radiused_a.h),
+                    arc_b: EntityHandle::new(radiused_b.h),
+                }),
+                (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE) => Ok(EqualRadius::ArcAndCircle {
+                    group: Group(slvs_constraint.group),
+
+                    arc: EntityHandle::new(radiused_a.h),
+                    circle: EntityHandle::new(radiused_b.h),
+                }),
+                (SLVS_E_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => Ok(EqualRadius::ArcAndCircle {
+                    group: Group(slvs_constraint.group),
+
+                    arc: EntityHandle::new(radiused_b.h),
+                    circle: EntityHandle::new(radiused_a.h),
+                }),
+                (SLVS_E_CIRCLE, SLVS_E_CIRCLE) => Ok(EqualRadius::Circles {
+                    group: Group(slvs_constraint.group),
+                    circle_a: EntityHandle::new(radiused_a.h),
+                    circle_b: EntityHandle::new(radiused_b.h),
+                }),
+                _ => Err("Expected constraint to apply to arcs and circles."),
+            }
         } else {
             Err("Expected constraint to have type SLVS_C_EQUAL_RADIUS.")
         }
     }
 }
+
+// pub struct EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     pub group: Group,
+//     pub arc_a: EntityHandle<AA>,
+//     pub arc_b: EntityHandle<AB>,
+// }
+
+// impl<AA, AB> EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     pub fn new(group: Group, arc_a: EntityHandle<AA>, arc_b: EntityHandle<AB>) -> Self {
+//         Self {
+//             group,
+//             arc_a,
+//             arc_b,
+//         }
+//     }
+// }
+
+// impl<AA, AB> AsGroup for EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+// }
+
+// impl<AA, AB> AsSlvsType for EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_C_EQUAL_RADIUS as _
+//     }
+// }
+
+// impl<AA, AB> AsConstraintData for EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         None
+//     }
+
+//     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+//         Some([self.arc_a.handle(), self.arc_b.handle(), 0, 0])
+//     }
+// }
+
+// impl<AA, AB> FromSystem for EqualRadius<AA, AB>
+// where
+//     AA: AsArc,
+//     AB: AsArc,
+// {
+//     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+//     where
+//         Self: Sized,
+//     {
+//         let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+//         if SLVS_C_EQUAL_RADIUS == slvs_constraint.type_ as _ {
+//             Ok(Self {
+//                 group: Group(slvs_constraint.group),
+//                 arc_a: EntityHandle::new(slvs_constraint.entityA),
+//                 arc_b: EntityHandle::new(slvs_constraint.entityB),
+//             })
+//         } else {
+//             Err("Expected constraint to have type SLVS_C_EQUAL_RADIUS.")
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -147,7 +278,7 @@ mod tests {
             .sketch(Circle::new(g, normal, circle_center, circle_radius))
             .expect("circle created");
 
-        sys.constrain(EqualRadius::new(g, arc, circle))
+        sys.constrain(EqualRadius::new_arc_and_circle(g, arc, circle))
             .expect("constraint adde");
 
         dbg!(sys.solve(&g));

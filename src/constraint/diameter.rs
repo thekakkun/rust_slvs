@@ -2,59 +2,79 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER},
+    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsArc, EntityHandle},
+    entity::{ArcOfCircle, Circle, EntityHandle},
     group::Group,
     System,
 };
 
-/// Constrain the diameter of [`ArcOfCircle`][crate::entity::ArcOfCircle] or [`Circle`][crate::entity::Circle]
-/// to equal `diameter`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Diameter<A: AsArc> {
-    pub group: Group,
-    pub arc: EntityHandle<A>,
-    pub diameter: f64,
+pub enum Diameter {
+    Arc {
+        group: Group,
+        arc: EntityHandle<ArcOfCircle>,
+        diameter: f64,
+    },
+    Circle {
+        group: Group,
+        circle: EntityHandle<Circle>,
+        diameter: f64,
+    },
 }
 
-impl<A: AsArc> Diameter<A> {
-    pub fn new(group: Group, arc: EntityHandle<A>, diameter: f64) -> Self {
-        Self {
+impl Diameter {
+    pub fn new_arc(group: Group, arc: EntityHandle<ArcOfCircle>, diameter: f64) -> Self {
+        Self::Arc {
             group,
             arc,
             diameter,
         }
     }
-}
 
-impl<A: AsArc> AsGroup for Diameter<A> {
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+    pub fn new_circle(group: Group, circle: EntityHandle<Circle>, diameter: f64) -> Self {
+        Self::Circle {
+            group,
+            circle,
+            diameter,
+        }
     }
 }
 
-impl<A: AsArc> AsSlvsType for Diameter<A> {
+impl AsGroup for Diameter {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            Diameter::Arc { group, .. } | Diameter::Circle { group, .. } => group.handle(),
+        }
+    }
+}
+
+impl AsSlvsType for Diameter {
     fn slvs_type(&self) -> i32 {
         SLVS_C_DIAMETER as _
     }
 }
 
-impl<A: AsArc> AsConstraintData for Diameter<A> {
+impl AsConstraintData for Diameter {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.arc.handle(), 0, 0, 0])
+        match self {
+            Diameter::Arc { arc, .. } => Some([arc.handle(), 0, 0, 0]),
+            Diameter::Circle { circle, .. } => Some([circle.handle(), 0, 0, 0]),
+        }
     }
 
     fn val(&self) -> Option<f64> {
-        Some(self.diameter)
+        match self {
+            Diameter::Arc { diameter, .. } | Diameter::Circle { diameter, .. } => Some(*diameter),
+        }
     }
 }
 
-impl<A: AsArc> FromSystem for Diameter<A> {
+impl FromSystem for Diameter {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -62,16 +82,90 @@ impl<A: AsArc> FromSystem for Diameter<A> {
         let slvs_constraint = sys.slvs_constraint(element.handle())?;
 
         if SLVS_C_DIAMETER == slvs_constraint.type_ as _ {
-            Ok(Self {
-                group: Group(slvs_constraint.group),
-                arc: EntityHandle::new(slvs_constraint.entityA),
-                diameter: slvs_constraint.valA,
-            })
+            let target_entity = sys.slvs_entity(slvs_constraint.entityA)?;
+
+            match target_entity.type_ as _ {
+                SLVS_E_ARC_OF_CIRCLE => Ok(Diameter::Arc {
+                    group: Group(slvs_constraint.group),
+                    arc: EntityHandle::new(target_entity.h),
+                    diameter: slvs_constraint.valA,
+                }),
+                SLVS_E_CIRCLE => Ok(Diameter::Circle {
+                    group: Group(slvs_constraint.group),
+                    circle: EntityHandle::new(target_entity.h),
+                    diameter: slvs_constraint.valA,
+                }),
+                _ => Err("Expected constraint to apply to arc or circle."),
+            }
         } else {
             Err("Expected constraint to have type SLVS_C_DIAMETER.")
         }
     }
 }
+
+// /// Constrain the diameter of [`ArcOfCircle`][crate::entity::ArcOfCircle] or [`Circle`][crate::entity::Circle]
+// /// to equal `diameter`.
+// #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// pub struct Diameter<A: AsArc> {
+//     pub group: Group,
+//     pub arc: EntityHandle<A>,
+//     pub diameter: f64,
+// }
+
+// impl<A: AsArc> Diameter<A> {
+//     pub fn new(group: Group, arc: EntityHandle<A>, diameter: f64) -> Self {
+//         Self {
+//             group,
+//             arc,
+//             diameter,
+//         }
+//     }
+// }
+
+// impl<A: AsArc> AsGroup for Diameter<A> {
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+// }
+
+// impl<A: AsArc> AsSlvsType for Diameter<A> {
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_C_DIAMETER as _
+//     }
+// }
+
+// impl<A: AsArc> AsConstraintData for Diameter<A> {
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         None
+//     }
+
+//     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+//         Some([self.arc.handle(), 0, 0, 0])
+//     }
+
+//     fn val(&self) -> Option<f64> {
+//         Some(self.diameter)
+//     }
+// }
+
+// impl<A: AsArc> FromSystem for Diameter<A> {
+//     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+//     where
+//         Self: Sized,
+//     {
+//         let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+//         if SLVS_C_DIAMETER == slvs_constraint.type_ as _ {
+//             Ok(Self {
+//                 group: Group(slvs_constraint.group),
+//                 arc: EntityHandle::new(slvs_constraint.entityA),
+//                 diameter: slvs_constraint.valA,
+//             })
+//         } else {
+//             Err("Expected constraint to have type SLVS_C_DIAMETER.")
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -115,7 +209,7 @@ mod tests {
             .sketch(ArcOfCircle::new(g, workplane, center, start, end))
             .expect("arc created");
 
-        sys.constrain(Diameter::new(g, arc, 5.0))
+        sys.constrain(Diameter::new_arc(g, arc, 5.0))
             .expect("constraint added");
 
         dbg!(sys.solve(&g));
@@ -157,7 +251,7 @@ mod tests {
             .sketch(Circle::new(g, normal, circle_center, circle_radius))
             .expect("circle created");
 
-        sys.constrain(Diameter::new(g, circle, 5.0))
+        sys.constrain(Diameter::new_circle(g, circle, 5.0))
             .expect("constraint added");
 
         dbg!(sys.solve(&g));

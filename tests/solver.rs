@@ -26,9 +26,15 @@ fn inconsistent_constraints() {
 
     let solve_result = sys.solve(&g);
 
-    if let SolveResult::Fail { reason, .. } = solve_result {
+    if let SolveResult::Fail {
+        reason,
+        failed_constraints,
+        ..
+    } = solve_result
+    {
+        dbg!(failed_constraints);
         assert_eq!(reason, FailReason::Inconsistent);
+    } else {
+        unreachable!()
     }
-    println!("{:#?}", sys.entity_data(&p1));
-    println!("{:#?}", sys.entity_data(&p2));
 }

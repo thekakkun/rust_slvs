@@ -97,8 +97,8 @@ mod private {
     pub trait Sealed {}
 
     // Constraints
-    impl Sealed for Box<dyn AsConstraintHandle> {}
     impl<C: AsConstraintData> Sealed for ConstraintHandle<C> {}
+    impl Sealed for SomeConstraintHandle {}
     impl Sealed for Angle {}
     impl Sealed for ArcArcDifference {}
     impl Sealed for ArcArcLenRatio {}
@@ -107,34 +107,24 @@ mod private {
     impl Sealed for ArcLineTangent {}
     impl Sealed for AtMidpoint {}
     impl Sealed for CubicLineTangent {}
-    impl<CA, CB> Sealed for CurveCurveTangent<CA, CB>
-    where
-        CA: AsCurve,
-        CB: AsCurve,
-    {
-    }
-    impl<A: AsArc> Sealed for Diameter<A> {}
+    impl Sealed for CurveCurveTangent {}
+    impl Sealed for Diameter {}
     impl Sealed for EqLenPtLineD {}
     impl Sealed for EqPtLnDistances {}
     impl Sealed for EqualAngle {}
     impl Sealed for EqualLengthLines {}
     impl Sealed for EqualLineArcLen {}
-    impl<AA, AB> Sealed for EqualRadius<AA, AB>
-    where
-        AA: AsArc,
-        AB: AsArc,
-    {
-    }
+    impl Sealed for EqualRadius {}
     impl Sealed for Horizontal {}
     impl Sealed for LengthDifference {}
     impl Sealed for LengthRatio {}
     impl Sealed for Parallel {}
     impl Sealed for Perpendicular {}
     impl Sealed for PointsCoincident {}
-    impl<L: AsProjectionTarget> Sealed for ProjPtDistance<L> {}
+    impl Sealed for ProjPtDistance {}
     impl Sealed for PtInPlane {}
     impl Sealed for PtLineDistance {}
-    impl<A: AsArc> Sealed for PtOnCircle<A> {}
+    impl Sealed for PtOnCircle {}
     impl Sealed for PtOnLine {}
     impl Sealed for PtPlaneDistance {}
     impl Sealed for PtPtDistance {}

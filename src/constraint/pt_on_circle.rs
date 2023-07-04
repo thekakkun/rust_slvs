@@ -2,9 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE},
+    bindings::{
+        Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_ON_CIRCLE, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE,
+    },
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsArc, EntityHandle, Point},
+    entity::{ArcOfCircle, Circle, EntityHandle, Point},
     group::Group,
     System,
 };
@@ -14,45 +16,77 @@ use crate::{
 /// `arc` can be either a [`ArcOfCircle`][crate::entity::ArcOfCircle] or
 /// [`Circle`][crate::entity::Circle]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PtOnCircle<A: AsArc> {
-    pub group: Group,
-    pub point: EntityHandle<Point>,
-    pub arc: EntityHandle<A>,
+pub enum PtOnCircle {
+    Arc {
+        group: Group,
+        point: EntityHandle<Point>,
+        arc: EntityHandle<ArcOfCircle>,
+    },
+    Circle {
+        group: Group,
+        point: EntityHandle<Point>,
+        circle: EntityHandle<Circle>,
+    },
 }
 
-impl<A: AsArc> PtOnCircle<A> {
-    pub fn new(group: Group, point: EntityHandle<Point>, arc: EntityHandle<A>) -> Self {
-        Self { group, point, arc }
+impl PtOnCircle {
+    pub fn new_arc(
+        group: Group,
+        point: EntityHandle<Point>,
+        arc: EntityHandle<ArcOfCircle>,
+    ) -> Self {
+        Self::Arc { group, point, arc }
+    }
+
+    pub fn new_circle(
+        group: Group,
+        point: EntityHandle<Point>,
+        circle: EntityHandle<Circle>,
+    ) -> Self {
+        Self::Circle {
+            group,
+            point,
+            circle,
+        }
     }
 }
 
-impl<A: AsArc> AsGroup for PtOnCircle<A> {
+impl AsGroup for PtOnCircle {
     fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+        match self {
+            PtOnCircle::Arc { group, .. } | PtOnCircle::Circle { group, .. } => group.handle(),
+        }
     }
 }
 
-impl<A: AsArc> AsSlvsType for PtOnCircle<A> {
+impl AsSlvsType for PtOnCircle {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PT_ON_CIRCLE as _
     }
 }
 
-impl<A: AsArc> AsConstraintData for PtOnCircle<A> {
+impl AsConstraintData for PtOnCircle {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.arc.handle(), 0, 0, 0])
+        match self {
+            PtOnCircle::Arc { arc, .. } => Some([arc.handle(), 0, 0, 0]),
+            PtOnCircle::Circle { circle, .. } => Some([circle.handle(), 0, 0, 0]),
+        }
     }
 
     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
-        Some([self.point.handle(), 0])
+        match self {
+            PtOnCircle::Arc { point, .. } | PtOnCircle::Circle { point, .. } => {
+                Some([point.handle(), 0])
+            }
+        }
     }
 }
 
-impl<A: AsArc> FromSystem for PtOnCircle<A> {
+impl FromSystem for PtOnCircle {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -60,16 +94,83 @@ impl<A: AsArc> FromSystem for PtOnCircle<A> {
         let slvs_constraint = sys.slvs_constraint(element.handle())?;
 
         if SLVS_C_PT_ON_CIRCLE == slvs_constraint.type_ as _ {
-            Ok(Self {
-                group: Group(slvs_constraint.group),
-                point: EntityHandle::new(slvs_constraint.ptA),
-                arc: EntityHandle::new(slvs_constraint.entityA),
-            })
+            let arc = sys.slvs_entity(slvs_constraint.entityA)?;
+
+            match arc.type_ as _ {
+                SLVS_E_ARC_OF_CIRCLE => Ok(PtOnCircle::Arc {
+                    group: Group(slvs_constraint.group),
+                    point: EntityHandle::new(slvs_constraint.ptA),
+                    arc: EntityHandle::new(slvs_constraint.entityA),
+                }),
+                SLVS_E_CIRCLE => Ok(PtOnCircle::Circle {
+                    group: Group(slvs_constraint.group),
+                    point: EntityHandle::new(slvs_constraint.ptA),
+                    circle: EntityHandle::new(slvs_constraint.entityA),
+                }),
+                _ => Err("Expected constraint to apply an arc or circle."),
+            }
         } else {
             Err("Expected constraint to have type SLVS_C_PT_ON_CIRCLE.")
         }
     }
 }
+
+// pub struct PtOnCircle<A: AsArc> {
+//     pub group: Group,
+//     pub point: EntityHandle<Point>,
+//     pub arc: EntityHandle<A>,
+// }
+
+// impl<A: AsArc> PtOnCircle<A> {
+//     pub fn new(group: Group, point: EntityHandle<Point>, arc: EntityHandle<A>) -> Self {
+//         Self { group, point, arc }
+//     }
+// }
+
+// impl<A: AsArc> AsGroup for PtOnCircle<A> {
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+// }
+
+// impl<A: AsArc> AsSlvsType for PtOnCircle<A> {
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_C_PT_ON_CIRCLE as _
+//     }
+// }
+
+// impl<A: AsArc> AsConstraintData for PtOnCircle<A> {
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         None
+//     }
+
+//     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+//         Some([self.arc.handle(), 0, 0, 0])
+//     }
+
+//     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+//         Some([self.point.handle(), 0])
+//     }
+// }
+
+// impl<A: AsArc> FromSystem for PtOnCircle<A> {
+//     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+//     where
+//         Self: Sized,
+//     {
+//         let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+//         if SLVS_C_PT_ON_CIRCLE == slvs_constraint.type_ as _ {
+//             Ok(Self {
+//                 group: Group(slvs_constraint.group),
+//                 point: EntityHandle::new(slvs_constraint.ptA),
+//                 arc: EntityHandle::new(slvs_constraint.entityA),
+//             })
+//         } else {
+//             Err("Expected constraint to have type SLVS_C_PT_ON_CIRCLE.")
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -119,7 +220,7 @@ mod tests {
             .sketch(ArcOfCircle::new(g, workplane, center, start, end))
             .expect("arc created");
 
-        sys.constrain(PtOnCircle::new(g, point, arc))
+        sys.constrain(PtOnCircle::new_arc(g, point, arc))
             .expect("constraint added");
 
         dbg!(sys.solve(&g));
@@ -182,7 +283,7 @@ mod tests {
             .sketch(Circle::new(g, normal, circle_center, circle_radius))
             .expect("circle created");
 
-        sys.constrain(PtOnCircle::new(g, point, circle))
+        sys.constrain(PtOnCircle::new_circle(g, point, circle))
             .expect("constraint added");
 
         dbg!(sys.solve(&g));

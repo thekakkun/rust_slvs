@@ -2,9 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PROJ_PT_DISTANCE},
+    bindings::{
+        Slvs_hEntity, Slvs_hGroup, SLVS_C_PROJ_PT_DISTANCE, SLVS_E_LINE_SEGMENT,
+        SLVS_E_NORMAL_IN_2D, SLVS_E_NORMAL_IN_3D,
+    },
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsProjectionTarget, EntityHandle, Point},
+    entity::{EntityHandle, LineSegment, Normal, Point},
     group::Group,
     System,
 };
@@ -15,23 +18,32 @@ use crate::{
 /// Here, `line` can be a [`LineSegment`][crate::entity::LineSegment] or
 /// [`Normal`][crate::entity::Normal].
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ProjPtDistance<L: AsProjectionTarget> {
-    pub group: Group,
-    pub point_a: EntityHandle<Point>,
-    pub point_b: EntityHandle<Point>,
-    pub line: EntityHandle<L>,
-    pub distance: f64,
-}
-
-impl<L: AsProjectionTarget> ProjPtDistance<L> {
-    pub fn new(
+pub enum ProjPtDistance {
+    Line {
         group: Group,
         point_a: EntityHandle<Point>,
         point_b: EntityHandle<Point>,
-        line: EntityHandle<L>,
+        line: EntityHandle<LineSegment>,
+        distance: f64,
+    },
+    Normal {
+        group: Group,
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
+        normal: EntityHandle<Normal>,
+        distance: f64,
+    },
+}
+
+impl ProjPtDistance {
+    pub fn new_line(
+        group: Group,
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
+        line: EntityHandle<LineSegment>,
         distance: f64,
     ) -> Self {
-        Self {
+        Self::Line {
             group,
             point_a,
             point_b,
@@ -39,38 +51,73 @@ impl<L: AsProjectionTarget> ProjPtDistance<L> {
             distance,
         }
     }
-}
-impl<L: AsProjectionTarget> AsGroup for ProjPtDistance<L> {
-    fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+
+    pub fn new_normal(
+        group: Group,
+        point_a: EntityHandle<Point>,
+        point_b: EntityHandle<Point>,
+        normal: EntityHandle<Normal>,
+        distance: f64,
+    ) -> Self {
+        Self::Normal {
+            group,
+            point_a,
+            point_b,
+            normal,
+            distance,
+        }
     }
 }
 
-impl<L: AsProjectionTarget> AsSlvsType for ProjPtDistance<L> {
+impl AsGroup for ProjPtDistance {
+    fn group(&self) -> Slvs_hGroup {
+        match self {
+            ProjPtDistance::Line { group, .. } | ProjPtDistance::Normal { group, .. } => {
+                group.handle()
+            }
+        }
+    }
+}
+
+impl AsSlvsType for ProjPtDistance {
     fn slvs_type(&self) -> i32 {
         SLVS_C_PROJ_PT_DISTANCE as _
     }
 }
 
-impl<L: AsProjectionTarget> AsConstraintData for ProjPtDistance<L> {
+impl AsConstraintData for ProjPtDistance {
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.line.handle(), 0, 0, 0])
+        match self {
+            ProjPtDistance::Line { line, .. } => Some([line.handle(), 0, 0, 0]),
+            ProjPtDistance::Normal { normal, .. } => Some([normal.handle(), 0, 0, 0]),
+        }
     }
 
     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
-        Some([self.point_a.handle(), self.point_b.handle()])
+        match self {
+            ProjPtDistance::Line {
+                point_a, point_b, ..
+            }
+            | ProjPtDistance::Normal {
+                point_a, point_b, ..
+            } => Some([point_a.handle(), point_b.handle()]),
+        }
     }
 
     fn val(&self) -> Option<f64> {
-        Some(self.distance)
+        match self {
+            ProjPtDistance::Line { distance, .. } | ProjPtDistance::Normal { distance, .. } => {
+                Some(*distance)
+            }
+        }
     }
 }
 
-impl<L: AsProjectionTarget> FromSystem for ProjPtDistance<L> {
+impl FromSystem for ProjPtDistance {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -78,18 +125,106 @@ impl<L: AsProjectionTarget> FromSystem for ProjPtDistance<L> {
         let slvs_constraint = sys.slvs_constraint(element.handle())?;
 
         if SLVS_C_PROJ_PT_DISTANCE == slvs_constraint.type_ as _ {
-            Ok(Self {
-                group: Group(slvs_constraint.group),
-                point_a: EntityHandle::new(slvs_constraint.ptA),
-                point_b: EntityHandle::new(slvs_constraint.ptB),
-                line: EntityHandle::new(slvs_constraint.entityA),
-                distance: slvs_constraint.valA,
-            })
+            let projection_target = sys.slvs_entity(slvs_constraint.entityA)?;
+
+            match projection_target.type_ as _ {
+                SLVS_E_LINE_SEGMENT => Ok(ProjPtDistance::Line {
+                    group: Group(slvs_constraint.group),
+                    point_a: EntityHandle::new(slvs_constraint.ptA),
+                    point_b: EntityHandle::new(slvs_constraint.ptB),
+                    line: EntityHandle::new(slvs_constraint.entityA),
+                    distance: slvs_constraint.valA,
+                }),
+                SLVS_E_NORMAL_IN_2D | SLVS_E_NORMAL_IN_3D => Ok(ProjPtDistance::Normal {
+                    group: Group(slvs_constraint.group),
+                    point_a: EntityHandle::new(slvs_constraint.ptA),
+                    point_b: EntityHandle::new(slvs_constraint.ptB),
+                    normal: EntityHandle::new(slvs_constraint.entityA),
+                    distance: slvs_constraint.valA,
+                }),
+                _ => Err("Expected constraint to apply to line segment or normal."),
+            }
         } else {
             Err("Expected constraint to have type SLVS_C_PROJ_PT_DISTANCE.")
         }
     }
 }
+
+// pub struct ProjPtDistance<L: AsProjectionTarget> {
+//     pub group: Group,
+//     pub point_a: EntityHandle<Point>,
+//     pub point_b: EntityHandle<Point>,
+//     pub line: EntityHandle<L>,
+//     pub distance: f64,
+// }
+
+// impl<L: AsProjectionTarget> ProjPtDistance<L> {
+//     pub fn new(
+//         group: Group,
+//         point_a: EntityHandle<Point>,
+//         point_b: EntityHandle<Point>,
+//         line: EntityHandle<L>,
+//         distance: f64,
+//     ) -> Self {
+//         Self {
+//             group,
+//             point_a,
+//             point_b,
+//             line,
+//             distance,
+//         }
+//     }
+// }
+// impl<L: AsProjectionTarget> AsGroup for ProjPtDistance<L> {
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+// }
+
+// impl<L: AsProjectionTarget> AsSlvsType for ProjPtDistance<L> {
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_C_PROJ_PT_DISTANCE as _
+//     }
+// }
+
+// impl<L: AsProjectionTarget> AsConstraintData for ProjPtDistance<L> {
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         None
+//     }
+
+//     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+//         Some([self.line.handle(), 0, 0, 0])
+//     }
+
+//     fn points(&self) -> Option<[Slvs_hEntity; 2]> {
+//         Some([self.point_a.handle(), self.point_b.handle()])
+//     }
+
+//     fn val(&self) -> Option<f64> {
+//         Some(self.distance)
+//     }
+// }
+
+// impl<L: AsProjectionTarget> FromSystem for ProjPtDistance<L> {
+//     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+//     where
+//         Self: Sized,
+//     {
+//         let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+//         if SLVS_C_PROJ_PT_DISTANCE == slvs_constraint.type_ as _ {
+//             Ok(Self {
+//                 group: Group(slvs_constraint.group),
+//                 point_a: EntityHandle::new(slvs_constraint.ptA),
+//                 point_b: EntityHandle::new(slvs_constraint.ptB),
+//                 line: EntityHandle::new(slvs_constraint.entityA),
+//                 distance: slvs_constraint.valA,
+//             })
+//         } else {
+//             Err("Expected constraint to have type SLVS_C_PROJ_PT_DISTANCE.")
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -138,7 +273,7 @@ mod tests {
             .expect("line created");
 
         let dist = 92.0;
-        sys.constrain(ProjPtDistance::new(g, point_a, point_b, line, dist))
+        sys.constrain(ProjPtDistance::new_line(g, point_a, point_b, line, dist))
             .expect("constraint added");
 
         dbg!(sys.solve(&g));
@@ -191,8 +326,10 @@ mod tests {
             .expect("normal created");
 
         let dist = 63.0;
-        sys.constrain(ProjPtDistance::new(g, point_a, point_b, normal, dist))
-            .expect("constraint added");
+        sys.constrain(ProjPtDistance::new_normal(
+            g, point_a, point_b, normal, dist,
+        ))
+        .expect("constraint added");
 
         dbg!(sys.solve(&g));
 

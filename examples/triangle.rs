@@ -60,14 +60,14 @@ fn main() {
 
     // The workplane needs to be specified when constraining
     // two points on a workplane to be coincident.
-    sys.constrain(PointsCoincident::new(g2, p1b, p2a, Some(workplane)))
+    sys.constrain(PointsCoincident::new(g2, p1b, p2a, None))
         .expect("coincidence between two points in 2d");
     sys.constrain(PointsCoincident::new(g2, p2b, p3a, None))
         .expect("coincidence between two points in 3d");
     sys.constrain(PointsCoincident::new(g2, p3b, p1a, None))
         .expect("coincidence between 2d and 3d point");
 
-    sys.constrain(PointsCoincident::new(g2, origin, p1a, None))
+    sys.constrain(PointsCoincident::new(g2, origin, p1a, Some(workplane)))
         .expect("p1a on origin");
     sys.constrain(Vertical::from_line(g2, workplane, l1))
         .expect("l1 is vertical on workplane");

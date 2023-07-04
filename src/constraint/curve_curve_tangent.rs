@@ -2,9 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use super::AsConstraintData;
 use crate::{
-    bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT},
+    bindings::{
+        Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CUBIC,
+    },
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
-    entity::{AsCurve, EntityHandle, Workplane},
+    entity::{ArcOfCircle, Cubic, EntityHandle, Workplane},
     group::Group,
     System,
 };
@@ -18,86 +20,150 @@ use crate::{
 /// `to_curve_a_end` and `to_curve_b_end` control which end of the curves the constraint
 /// applies to.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
-    pub group: Group,
-    pub workplane: EntityHandle<Workplane>,
-    pub curve_a: EntityHandle<CA>,
-    pub curve_b: EntityHandle<CB>,
-    pub to_curve_a_end: bool,
-    pub to_curve_b_end: bool,
-}
-
-impl<CA, CB> CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
-    pub fn new(
+pub enum CurveCurveTangent {
+    Arcs {
         group: Group,
         workplane: EntityHandle<Workplane>,
-        curve_a: EntityHandle<CA>,
-        curve_b: EntityHandle<CB>,
-        to_curve_a_end: bool,
-        to_curve_b_end: bool,
+        arc_a: EntityHandle<ArcOfCircle>,
+        arc_b: EntityHandle<ArcOfCircle>,
+        to_arc_a_end: bool,
+        to_arc_b_end: bool,
+    },
+    ArcAndCubic {
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        arc: EntityHandle<ArcOfCircle>,
+        cubic: EntityHandle<Cubic>,
+        to_arc_end: bool,
+        to_cubic_end: bool,
+    },
+    Cubics {
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        cubic_a: EntityHandle<Cubic>,
+        cubic_b: EntityHandle<Cubic>,
+        to_cubic_a_end: bool,
+        to_cubic_b_end: bool,
+    },
+}
+
+impl CurveCurveTangent {
+    pub fn new_arcs(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        arc_a: EntityHandle<ArcOfCircle>,
+        arc_b: EntityHandle<ArcOfCircle>,
+        to_arc_a_end: bool,
+        to_arc_b_end: bool,
     ) -> Self {
-        Self {
+        Self::Arcs {
             group,
             workplane,
-            curve_a,
-            curve_b,
-            to_curve_a_end,
-            to_curve_b_end,
+            arc_a,
+            arc_b,
+            to_arc_a_end,
+            to_arc_b_end,
+        }
+    }
+
+    pub fn new_arc_and_cubic(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        arc: EntityHandle<ArcOfCircle>,
+        cubic: EntityHandle<Cubic>,
+        to_arc_end: bool,
+        to_cubic_end: bool,
+    ) -> Self {
+        Self::ArcAndCubic {
+            group,
+            workplane,
+            arc,
+            cubic,
+            to_arc_end,
+            to_cubic_end,
+        }
+    }
+
+    pub fn new_cubics(
+        group: Group,
+        workplane: EntityHandle<Workplane>,
+        cubic_a: EntityHandle<Cubic>,
+        cubic_b: EntityHandle<Cubic>,
+        to_cubic_a_end: bool,
+        to_cubic_b_end: bool,
+    ) -> Self {
+        Self::Cubics {
+            group,
+            workplane,
+            cubic_a,
+            cubic_b,
+            to_cubic_a_end,
+            to_cubic_b_end,
         }
     }
 }
 
-impl<CA, CB> AsGroup for CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
+impl AsGroup for CurveCurveTangent {
     fn group(&self) -> Slvs_hGroup {
-        self.group.handle()
+        match self {
+            CurveCurveTangent::Arcs { group, .. }
+            | CurveCurveTangent::ArcAndCubic { group, .. }
+            | CurveCurveTangent::Cubics { group, .. } => group.handle(),
+        }
     }
 }
 
-impl<CA, CB> AsSlvsType for CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
+impl AsSlvsType for CurveCurveTangent {
     fn slvs_type(&self) -> i32 {
         SLVS_C_CURVE_CURVE_TANGENT as _
     }
 }
 
-impl<CA, CB> AsConstraintData for CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
+impl AsConstraintData for CurveCurveTangent {
     fn workplane(&self) -> Option<Slvs_hEntity> {
-        Some(self.workplane.handle())
+        match self {
+            CurveCurveTangent::Arcs { workplane, .. }
+            | CurveCurveTangent::ArcAndCubic { workplane, .. }
+            | CurveCurveTangent::Cubics { workplane, .. } => Some(workplane.handle()),
+        }
     }
 
     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
-        Some([self.curve_a.handle(), self.curve_b.handle(), 0, 0])
+        match self {
+            CurveCurveTangent::Arcs { arc_a, arc_b, .. } => {
+                Some([arc_a.handle(), arc_b.handle(), 0, 0])
+            }
+            CurveCurveTangent::ArcAndCubic { arc, cubic, .. } => {
+                Some([arc.handle(), cubic.handle(), 0, 0])
+            }
+            CurveCurveTangent::Cubics {
+                cubic_a, cubic_b, ..
+            } => Some([cubic_a.handle(), cubic_b.handle(), 0, 0]),
+        }
     }
 
     fn others(&self) -> [bool; 2] {
-        [self.to_curve_a_end, self.to_curve_b_end]
+        match self {
+            CurveCurveTangent::Arcs {
+                to_arc_a_end,
+                to_arc_b_end,
+                ..
+            } => [*to_arc_a_end, *to_arc_b_end],
+            CurveCurveTangent::ArcAndCubic {
+                to_arc_end,
+                to_cubic_end,
+                ..
+            } => [*to_arc_end, *to_cubic_end],
+            CurveCurveTangent::Cubics {
+                to_cubic_a_end,
+                to_cubic_b_end,
+                ..
+            } => [*to_cubic_a_end, *to_cubic_b_end],
+        }
     }
 }
 
-impl<CA, CB> FromSystem for CurveCurveTangent<CA, CB>
-where
-    CA: AsCurve,
-    CB: AsCurve,
-{
+impl FromSystem for CurveCurveTangent {
     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
     where
         Self: Sized,
@@ -105,19 +171,150 @@ where
         let slvs_constraint = sys.slvs_constraint(element.handle())?;
 
         if SLVS_C_CURVE_CURVE_TANGENT == slvs_constraint.type_ as _ {
-            Ok(Self {
-                group: Group(slvs_constraint.group),
-                workplane: EntityHandle::new(slvs_constraint.wrkpl),
-                curve_a: EntityHandle::new(slvs_constraint.entityA),
-                curve_b: EntityHandle::new(slvs_constraint.entityB),
-                to_curve_a_end: slvs_constraint.other != 0,
-                to_curve_b_end: slvs_constraint.other2 != 0,
-            })
+            let curve_a = sys.slvs_entity(slvs_constraint.entityA)?;
+            let curve_b = sys.slvs_entity(slvs_constraint.entityB)?;
+
+            match (curve_a.type_ as _, curve_b.type_ as _) {
+                (SLVS_E_ARC_OF_CIRCLE, SLVS_E_ARC_OF_CIRCLE) => Ok(CurveCurveTangent::Arcs {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    arc_a: EntityHandle::new(curve_a.h),
+                    arc_b: EntityHandle::new(curve_b.h),
+                    to_arc_a_end: slvs_constraint.other != 0,
+                    to_arc_b_end: slvs_constraint.other2 != 0,
+                }),
+                (SLVS_E_ARC_OF_CIRCLE, SLVS_E_CUBIC) => Ok(CurveCurveTangent::ArcAndCubic {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    arc: EntityHandle::new(curve_a.h),
+                    cubic: EntityHandle::new(curve_b.h),
+                    to_arc_end: slvs_constraint.other != 0,
+                    to_cubic_end: slvs_constraint.other2 != 0,
+                }),
+                (SLVS_E_CUBIC, SLVS_E_ARC_OF_CIRCLE) => Ok(CurveCurveTangent::ArcAndCubic {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    arc: EntityHandle::new(curve_b.h),
+                    cubic: EntityHandle::new(curve_a.h),
+                    to_arc_end: slvs_constraint.other != 0,
+                    to_cubic_end: slvs_constraint.other2 != 0,
+                }),
+                (SLVS_E_CUBIC, SLVS_E_CUBIC) => Ok(CurveCurveTangent::Cubics {
+                    group: Group(slvs_constraint.group),
+                    workplane: EntityHandle::new(slvs_constraint.wrkpl),
+                    cubic_a: EntityHandle::new(curve_a.h),
+                    cubic_b: EntityHandle::new(curve_b.h),
+                    to_cubic_a_end: slvs_constraint.other != 0,
+                    to_cubic_b_end: slvs_constraint.other2 != 0,
+                }),
+                _ => Err("Expected constraint to apply to arcs and cubics."),
+            }
         } else {
             Err("Expected constraint to have type SLVS_C_CURVE_CURVE_TANGENT.")
         }
     }
 }
+
+// pub struct CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     pub group: Group,
+//     pub workplane: EntityHandle<Workplane>,
+//     pub curve_a: EntityHandle<CA>,
+//     pub curve_b: EntityHandle<CB>,
+//     pub to_curve_a_end: bool,
+//     pub to_curve_b_end: bool,
+// }
+
+// impl<CA, CB> CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     pub fn new(
+//         group: Group,
+//         workplane: EntityHandle<Workplane>,
+//         curve_a: EntityHandle<CA>,
+//         curve_b: EntityHandle<CB>,
+//         to_curve_a_end: bool,
+//         to_curve_b_end: bool,
+//     ) -> Self {
+//         Self {
+//             group,
+//             workplane,
+//             curve_a,
+//             curve_b,
+//             to_curve_a_end,
+//             to_curve_b_end,
+//         }
+//     }
+// }
+
+// impl<CA, CB> AsGroup for CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     fn group(&self) -> Slvs_hGroup {
+//         self.group.handle()
+//     }
+// }
+
+// impl<CA, CB> AsSlvsType for CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     fn slvs_type(&self) -> i32 {
+//         SLVS_C_CURVE_CURVE_TANGENT as _
+//     }
+// }
+
+// impl<CA, CB> AsConstraintData for CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     fn workplane(&self) -> Option<Slvs_hEntity> {
+//         Some(self.workplane.handle())
+//     }
+
+//     fn entities(&self) -> Option<[Slvs_hEntity; 4]> {
+//         Some([self.curve_a.handle(), self.curve_b.handle(), 0, 0])
+//     }
+
+//     fn others(&self) -> [bool; 2] {
+//         [self.to_curve_a_end, self.to_curve_b_end]
+//     }
+// }
+
+// impl<CA, CB> FromSystem for CurveCurveTangent<CA, CB>
+// where
+//     CA: AsCurve,
+//     CB: AsCurve,
+// {
+//     fn from_system(sys: &System, element: &impl AsHandle) -> Result<Self, &'static str>
+//     where
+//         Self: Sized,
+//     {
+//         let slvs_constraint = sys.slvs_constraint(element.handle())?;
+
+//         if SLVS_C_CURVE_CURVE_TANGENT == slvs_constraint.type_ as _ {
+//             Ok(Self {
+//                 group: Group(slvs_constraint.group),
+//                 workplane: EntityHandle::new(slvs_constraint.wrkpl),
+//                 curve_a: EntityHandle::new(slvs_constraint.entityA),
+//                 curve_b: EntityHandle::new(slvs_constraint.entityB),
+//                 to_curve_a_end: slvs_constraint.other != 0,
+//                 to_curve_b_end: slvs_constraint.other2 != 0,
+//             })
+//         } else {
+//             Err("Expected constraint to have type SLVS_C_CURVE_CURVE_TANGENT.")
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -186,7 +383,7 @@ mod tests {
             ))
             .expect("arc created");
 
-        sys.constrain(CurveCurveTangent::new(
+        sys.constrain(CurveCurveTangent::new_arcs(
             g, workplane, arc_a, arc_b, false, false,
         ))
         .expect("constraint added");
@@ -282,7 +479,7 @@ mod tests {
             ))
             .expect("cubic created");
 
-        sys.constrain(CurveCurveTangent::new(
+        sys.constrain(CurveCurveTangent::new_cubics(
             g, workplane, cubic_a, cubic_b, false, false,
         ))
         .expect("constraint added");
