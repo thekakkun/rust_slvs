@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::{AsEntityData, Distance, EntityHandle, Normal, Point};
+use super::{AsEntityData, Distance, EntityHandle, Normal, Point, SomeEntityHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CIRCLE},
     define_element,
@@ -28,6 +28,10 @@ define_element!(
 );
 
 impl AsEntityData for Circle {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::Circle(handle)
+    }
+
     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
         Some([self.center.handle(), 0, 0, 0])
     }

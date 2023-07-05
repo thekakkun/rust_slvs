@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{
         Slvs_hEntity, Slvs_hGroup, SLVS_C_CURVE_CURVE_TANGENT, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CUBIC,
@@ -120,6 +120,10 @@ impl AsSlvsType for CurveCurveTangent {
 }
 
 impl AsConstraintData for CurveCurveTangent {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::CurveCurveTangent(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             CurveCurveTangent::Arcs { workplane, .. }

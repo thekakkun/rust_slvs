@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Point};
+use super::{AsEntityData, EntityHandle, Point, SomeEntityHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_LINE_SEGMENT},
     define_element,
@@ -21,6 +21,10 @@ define_element!(
 );
 
 impl AsEntityData for LineSegment {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::LineSegment(handle)
+    }
+
     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
         Some([self.point_a.handle(), self.point_b.handle(), 0, 0])
     }

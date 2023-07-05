@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_SYMMETRIC_VERT},
     define_element,
@@ -22,6 +22,10 @@ define_element!(
 );
 
 impl AsConstraintData for SymmetricVert {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::SymmetricVert(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         Some(self.workplane.handle())
     }

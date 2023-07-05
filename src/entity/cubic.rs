@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Point};
+use super::{AsEntityData, EntityHandle, Point, SomeEntityHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_CUBIC},
     define_element,
@@ -27,6 +27,10 @@ define_element!(
 );
 
 impl AsEntityData for Cubic {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::Cubic(handle)
+    }
+
     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
         Some([
             self.start_point.handle(),

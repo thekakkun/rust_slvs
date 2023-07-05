@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_DIAMETER, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
@@ -56,6 +56,10 @@ impl AsSlvsType for Diameter {
 }
 
 impl AsConstraintData for Diameter {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::Diameter(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }

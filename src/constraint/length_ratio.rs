@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_LENGTH_RATIO},
     define_element,
@@ -23,6 +23,10 @@ define_element!(
 );
 
 impl AsConstraintData for LengthRatio {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::LengthRatio(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         self.workplane.map(|workplane| workplane.handle())
     }

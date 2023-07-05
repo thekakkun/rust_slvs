@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_HORIZONTAL},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
@@ -72,6 +72,10 @@ impl AsSlvsType for Horizontal {
 }
 
 impl AsConstraintData for Horizontal {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::Horizontal(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Horizontal::Points { workplane, .. } | Horizontal::Line { workplane, .. } => {

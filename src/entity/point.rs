@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Workplane};
+use super::{AsEntityData, EntityHandle, SomeEntityHandle, Workplane};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_POINT_IN_2D, SLVS_E_POINT_IN_3D},
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
@@ -62,6 +62,10 @@ impl AsSlvsType for Point {
 }
 
 impl AsEntityData for Point {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::Point(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         match self {
             Point::OnWorkplane { workplane, .. } => Some(workplane.handle()),

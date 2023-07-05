@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AsEntityData, EntityHandle, Normal, Point};
+use super::{AsEntityData, EntityHandle, Normal, Point, SomeEntityHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_E_WORKPLANE},
     define_element,
@@ -24,6 +24,10 @@ define_element!(
 );
 
 impl AsEntityData for Workplane {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::Workplane(handle)
+    }
+
     fn points(&self) -> Option<[Slvs_hEntity; 4]> {
         Some([self.origin.handle(), 0, 0, 0])
     }

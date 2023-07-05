@@ -108,128 +108,6 @@ use crate::{
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsConstraintHandle: AsHandle {}
 
-// impl AsAny for Box<dyn AsConstraintHandle> {
-//     fn as_any(&self) -> &dyn std::any::Any {
-//         self.as_ref().as_any()
-//     }
-// }
-
-// impl AsHandle for Box<dyn AsConstraintHandle> {
-//     fn handle(&self) -> u32 {
-//         self.as_ref().handle()
-//     }
-// }
-
-// impl AsConstraintHandle for Box<dyn AsConstraintHandle> {
-//     fn type_name(&self) -> &'static str {
-//         self.as_ref().type_name()
-//     }
-// }
-
-// impl Debug for Box<dyn AsConstraintHandle> {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.debug_struct("ConstraintHandle")
-//             .field("handle", &self.handle())
-//             .field("type", &self.type_name())
-//             .finish()
-//     }
-// }
-
-// impl From<Slvs_Constraint> for Box<dyn AsConstraintHandle> {
-//     fn from(value: Slvs_Constraint) -> Self {
-//         match value.type_ as _ {
-//             SLVS_C_POINTS_COINCIDENT => {
-//                 Box::new(ConstraintHandle::<PointsCoincident>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_PT_PT_DISTANCE => Box::new(ConstraintHandle::<PtPtDistance>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_PT_PLANE_DISTANCE => Box::new(ConstraintHandle::<PtPlaneDistance>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_PT_LINE_DISTANCE => Box::new(ConstraintHandle::<PtLineDistance>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_PT_IN_PLANE => {
-//                 Box::new(ConstraintHandle::<PtInPlane>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_PT_ON_LINE => {
-//                 Box::new(ConstraintHandle::<PtOnLine>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_EQUAL_LENGTH_LINES => {
-//                 Box::new(ConstraintHandle::<EqualLengthLines>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_LENGTH_RATIO => Box::new(ConstraintHandle::<LengthRatio>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_EQ_LEN_PT_LINE_D => Box::new(ConstraintHandle::<EqLenPtLineD>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_EQ_PT_LN_DISTANCES => Box::new(ConstraintHandle::<PtLineDistance>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_EQUAL_ANGLE => Box::new(ConstraintHandle::<EqualAngle>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_EQUAL_LINE_ARC_LEN => {
-//                 Box::new(ConstraintHandle::<EqualLineArcLen>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_SYMMETRIC => {
-//                 Box::new(ConstraintHandle::<Symmetric>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_SYMMETRIC_HORIZ => Box::new(ConstraintHandle::<SymmetricHoriz>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_SYMMETRIC_VERT => Box::new(ConstraintHandle::<SymmetricVert>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_SYMMETRIC_LINE => Box::new(ConstraintHandle::<SymmetricLine>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_AT_MIDPOINT => Box::new(ConstraintHandle::<AtMidpoint>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_HORIZONTAL => Box::new(ConstraintHandle::<Horizontal>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_VERTICAL => {
-//                 Box::new(ConstraintHandle::<Vertical>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_SAME_ORIENTATION => Box::new(ConstraintHandle::<SameOrientation>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_ANGLE => {
-//                 Box::new(ConstraintHandle::<Angle>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_PARALLEL => {
-//                 Box::new(ConstraintHandle::<Parallel>::new(value.h)) as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_PERPENDICULAR => Box::new(ConstraintHandle::<Perpendicular>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_ARC_LINE_TANGENT => Box::new(ConstraintHandle::<ArcLineTangent>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_CUBIC_LINE_TANGENT => {
-//                 Box::new(ConstraintHandle::<CubicLineTangent>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_WHERE_DRAGGED => Box::new(ConstraintHandle::<WhereDragged>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_LENGTH_DIFFERENCE => {
-//                 Box::new(ConstraintHandle::<LengthDifference>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_ARC_ARC_LEN_RATIO => Box::new(ConstraintHandle::<ArcArcLenRatio>::new(value.h))
-//                 as Box<dyn AsConstraintHandle>,
-//             SLVS_C_ARC_LINE_LEN_RATIO => {
-//                 Box::new(ConstraintHandle::<ArcLineLenRatio>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_ARC_ARC_DIFFERENCE => {
-//                 Box::new(ConstraintHandle::<ArcArcDifference>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_ARC_LINE_DIFFERENCE => {
-//                 Box::new(ConstraintHandle::<ArcLineDifference>::new(value.h))
-//                     as Box<dyn AsConstraintHandle>
-//             }
-//             SLVS_C_PT_FACE_DISTANCE | SLVS_C_PT_ON_FACE => {
-//                 panic!("Face entity not defined for library.")
-//             }
-//             _ => panic!("Unknown Slvs_Constraint type value {}", value.type_),
-//         }
-//     }
-// }
-
 /// Wrapper for a constraint handle.
 ///
 /// The `phantom` member holds information about what type of constraint it references.
@@ -249,32 +127,12 @@ impl<C: AsConstraintData> ConstraintHandle<C> {
     }
 }
 
-// impl<C: AsConstraintData + 'static> AsAny for ConstraintHandle<C> {
-//     fn as_any(&self) -> &dyn std::any::Any {
-//         self
-//     }
-// }
-
 impl<C: AsConstraintData> AsConstraintHandle for ConstraintHandle<C> {}
 impl<C: AsConstraintData> AsHandle for ConstraintHandle<C> {
     fn handle(&self) -> u32 {
         self.handle
     }
 }
-
-// impl<C: AsConstraintData + Copy + 'static> TryFrom<&Box<dyn AsConstraintHandle>>
-//     for ConstraintHandle<C>
-// {
-//     type Error = &'static str;
-
-//     fn try_from(value: &Box<dyn AsConstraintHandle>) -> Result<Self, Self::Error> {
-//         if let Some(constraint_handle) = value.as_any().downcast_ref::<ConstraintHandle<C>>() {
-//             Ok(*constraint_handle)
-//         } else {
-//             Err("Can only downcast boxed value into same type")
-//         }
-//     }
-// }
 
 impl<C: AsConstraintData + 'static> TryFrom<SomeConstraintHandle> for ConstraintHandle<C> {
     type Error = &'static str;
@@ -547,6 +405,12 @@ impl AsHandle for SomeConstraintHandle {
     }
 }
 
+impl<C: AsConstraintData> From<ConstraintHandle<C>> for SomeConstraintHandle {
+    fn from(value: ConstraintHandle<C>) -> Self {
+        C::to_some_handle(value.handle())
+    }
+}
+
 impl From<Slvs_Constraint> for SomeConstraintHandle {
     fn from(value: Slvs_Constraint) -> Self {
         match value.type_ as _ {
@@ -593,6 +457,8 @@ impl From<Slvs_Constraint> for SomeConstraintHandle {
 ///
 /// This trait is sealed and cannot be implemented for types outside of `slvs`.
 pub trait AsConstraintData: private::Sealed + AsGroup + AsSlvsType + FromSystem {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle;
+
     fn workplane(&self) -> Option<Slvs_hEntity>;
 
     fn val(&self) -> Option<f64> {

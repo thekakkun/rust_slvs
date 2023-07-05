@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsEntityData;
+use super::{AsEntityData, SomeEntityHandle};
 use crate::{
     bindings::{Slvs_hGroup, SLVS_E_DISTANCE},
     define_element,
@@ -20,6 +20,10 @@ define_element!(
 );
 
 impl AsEntityData for Distance {
+    fn to_some_handle(handle: u32) -> SomeEntityHandle {
+        SomeEntityHandle::Distance(handle)
+    }
+
     fn param_vals(&self) -> [Option<f64>; 4] {
         [Some(self.val), None, None, None]
     }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{
         Slvs_hEntity, Slvs_hGroup, SLVS_C_EQUAL_RADIUS, SLVS_E_ARC_OF_CIRCLE, SLVS_E_CIRCLE,
@@ -85,6 +85,10 @@ impl AsSlvsType for EqualRadius {
 }
 
 impl AsConstraintData for EqualRadius {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::EqualRadius(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }

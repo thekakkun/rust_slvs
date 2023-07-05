@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_PT_IN_PLANE},
     define_element,
@@ -19,6 +19,10 @@ define_element!(
     }
 );
 impl AsConstraintData for PtInPlane {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::PtInPlane(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }

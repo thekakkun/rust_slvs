@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AsConstraintData;
+use super::{AsConstraintData, SomeConstraintHandle};
 use crate::{
     bindings::{Slvs_hEntity, Slvs_hGroup, SLVS_C_ARC_ARC_LEN_RATIO},
     define_element,
@@ -21,6 +21,10 @@ define_element!(
 );
 
 impl AsConstraintData for ArcArcLenRatio {
+    fn to_some_handle(handle: u32) -> SomeConstraintHandle {
+        SomeConstraintHandle::ArcArcLenRatio(handle)
+    }
+
     fn workplane(&self) -> Option<Slvs_hEntity> {
         None
     }
