@@ -84,9 +84,6 @@ mod symmetric_vert;
 mod vertical;
 mod where_dragged;
 
-use serde::{Deserialize, Serialize};
-use std::{any::TypeId, fmt::Debug, marker::PhantomData};
-
 use crate::{
     bindings::{
         Slvs_Constraint, Slvs_hEntity, SLVS_C_ANGLE, SLVS_C_ARC_ARC_DIFFERENCE,
@@ -102,6 +99,14 @@ use crate::{
     },
     element::{AsGroup, AsHandle, AsSlvsType, FromSystem},
 };
+use serde::{Deserialize, Serialize};
+use std::{
+    any::TypeId,
+    cmp::Ordering,
+    fmt::Debug,
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+};
 
 /// An object wrapping a handle for a constraint
 ///
@@ -111,9 +116,7 @@ pub trait AsConstraintHandle: AsHandle {}
 /// Wrapper for a constraint handle.
 ///
 /// The `phantom` member holds information about what type of constraint it references.
-#[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Default, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct ConstraintHandle<C: AsConstraintData> {
     /// The constraint handle
     pub handle: u32,
@@ -133,6 +136,31 @@ impl<C: AsConstraintData> AsConstraintHandle for ConstraintHandle<C> {}
 impl<C: AsConstraintData> AsHandle for ConstraintHandle<C> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+impl<C: AsConstraintData> Eq for ConstraintHandle<C> {}
+impl<C: AsConstraintData> PartialEq for ConstraintHandle<C> {
+    fn eq(&self, other: &Self) -> bool {
+        self.handle == other.handle
+    }
+}
+
+impl<C: AsConstraintData> Ord for ConstraintHandle<C> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.handle.cmp(&other.handle)
+    }
+}
+impl<C: AsConstraintData> PartialOrd for ConstraintHandle<C> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<C: AsConstraintData + 'static> Hash for ConstraintHandle<C> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.handle.hash(state);
+        TypeId::of::<C>().hash(state);
     }
 }
 

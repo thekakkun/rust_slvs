@@ -29,7 +29,13 @@ mod point;
 mod workplane;
 
 use serde::{Deserialize, Serialize};
-use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+use std::{
+    any::TypeId,
+    cmp::Ordering,
+    fmt::Debug,
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+};
 
 use crate::{
     bindings::{
@@ -50,9 +56,7 @@ pub trait AsEntityHandle: AsHandle {}
 /// The `phantom` member holds information about what type of entity it references,
 /// which is used to check that entity definitions receive the correct type of entity
 /// handle.
-#[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Default, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct EntityHandle<E: AsEntityData> {
     /// The entity handle
     pub handle: u32,
@@ -72,6 +76,31 @@ impl<E: AsEntityData> AsEntityHandle for EntityHandle<E> {}
 impl<E: AsEntityData> AsHandle for EntityHandle<E> {
     fn handle(&self) -> u32 {
         self.handle
+    }
+}
+
+impl<E: AsEntityData> Eq for EntityHandle<E> {}
+impl<E: AsEntityData> PartialEq for EntityHandle<E> {
+    fn eq(&self, other: &Self) -> bool {
+        self.handle == other.handle
+    }
+}
+
+impl<E: AsEntityData> Ord for EntityHandle<E> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.handle.cmp(&other.handle)
+    }
+}
+impl<E: AsEntityData> PartialOrd for EntityHandle<E> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<E: AsEntityData + 'static> Hash for EntityHandle<E> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.handle.hash(state);
+        TypeId::of::<E>().hash(state);
     }
 }
 
