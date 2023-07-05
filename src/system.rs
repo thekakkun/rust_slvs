@@ -261,13 +261,13 @@ impl System {
     ///     .sketch(LineSegment::new(g1, p1, p2))
     ///     .expect("line 1 belongs in g1, references p1 and p2");
     ///
-    /// let entity_handles = sys.entity_handles(None, None::<&SomeEntityHandle>);
+    /// let entity_handles = sys.entity_handles(None, None);
     /// assert!(entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
     /// assert!(entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
     /// assert!(entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
     ///
     /// // p2 is the only entity in g2
-    /// let g2_entity_handles = sys.entity_handles(Some(&g2), None::<&SomeEntityHandle>);
+    /// let g2_entity_handles = sys.entity_handles(Some(&g2), None);
     /// assert!(!g2_entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
     /// assert!(g2_entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
     /// assert!(!g2_entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
@@ -281,7 +281,7 @@ impl System {
     pub fn entity_handles(
         &self,
         group: Option<&Group>,
-        entity_handle: Option<&impl AsEntityHandle>,
+        entity_handle: Option<&dyn AsEntityHandle>,
     ) -> Vec<SomeEntityHandle> {
         self.entities
             .list
@@ -350,7 +350,7 @@ impl System {
     /// ```
     /// use slvs::{
     ///     constraint::{PointsCoincident, PtPtDistance},
-    ///     entity::Point,
+    ///     entity::{Point, SomeEntityHandle},
     ///     System,
     /// };
     ///
@@ -373,7 +373,7 @@ impl System {
     ///     .constrain(PtPtDistance::new(g, p2, p3, 10.0, None))
     ///     .expect("p2 and p3 are 10 units apart");
     ///
-    /// let constraint_handles = sys.constraint_handles(None, None);
+    /// let constraint_handles = sys.constraint_handles(None,None);
     /// assert!(constraint_handles
     ///     .iter()
     ///     .any(|c| Ok(p_coincident) == (*c).try_into()));
@@ -657,7 +657,7 @@ impl System {
     ///
     /// sys.delete_entity(p2)
     ///     .expect("p2 is deleted from the system");
-    /// let entity_handles = sys.entity_handles(None, None::<&SomeEntityHandle>);
+    /// let entity_handles = sys.entity_handles(None, None);
     /// assert!(entity_handles.iter().any(|e| Ok(p1) == (*e).try_into()));
     /// assert!(!entity_handles.iter().any(|e| Ok(p2) == (*e).try_into()));
     /// assert!(entity_handles.iter().any(|e| Ok(line) == (*e).try_into()));
