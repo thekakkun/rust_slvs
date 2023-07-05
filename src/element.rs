@@ -57,7 +57,7 @@ macro_rules! define_element {
                 $field_name:ident: $field_type:ty,
             )*
         }) => {
-        #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
         $(#[$doc])*
         pub struct $name {
             #[doc = concat!("The group that `", stringify!($name), "` belongs to.")]

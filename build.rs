@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 extern crate bindgen;
-use bindgen::CargoCallbacks;
+use bindgen::callbacks::ParseCallbacks;
 use dunce::canonicalize;
 
 fn main() {
@@ -107,7 +107,7 @@ fn main() {
         .clang_arg("c++")
         .clang_arg("-std=c++11")
         .clang_arg("-fvisibility=default")
-        .parse_callbacks(Box::new(CargoCallbacks))
+        .parse_callbacks(Box::new(Callback))
         .generate()
         .expect("Unable to generate bindings");
 
@@ -115,4 +115,18 @@ fn main() {
     bindings
         .write_to_file(out_path)
         .expect("Couldn't write bindings.");
+}
+
+#[derive(Debug)]
+struct Callback;
+
+impl ParseCallbacks for Callback {
+    fn add_derives(&self, _info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
+        match _info.name {
+            "Slvs_Param" | "Slvs_Entity" | "Slvs_Constraint" => {
+                vec!["serde::Serialize".into(), "serde::Deserialize".into()]
+            }
+            _ => vec![],
+        }
+    }
 }

@@ -25,7 +25,7 @@ use crate::{
 /// 4 parameters. An extra constraint is therefore generated implicitly, so that
 /// `w^2 + x^2 + y^2 + z^2 = 1`
 /// See the [module-level documentation][crate] for usage example.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum Normal {
     /// A normal within a workplane. This is identical to the workplane's normal.
     OnWorkplane {

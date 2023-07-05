@@ -25,7 +25,7 @@ use crate::{
 /// This object is used to store the list of structs expected by the C library.
 /// See the [header file](https://github.com/solvespace/solvespace/blob/master/include/slvs.h)
 /// for what these structs should look like.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Elements<T> {
     pub list: Vec<T>,
     next_h: u32,
@@ -54,7 +54,7 @@ impl<T> Default for Elements<T> {
 }
 
 /// Object stores all data regarding parameters, entities, and constraints.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct System {
     /// Groups in the system. Not used within the SolveSpace library, but useful
     /// to see what groups exist in the system.
@@ -842,7 +842,7 @@ impl SolverGuard {
 pub const SOLVE_TOLERANCE: f64 = 10e-6;
 
 /// Information on the results of [`System::solve`].
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum SolveResult {
     /// Solver was able to find a solution to the constraints within tolerance.
     ///
@@ -951,7 +951,7 @@ pub enum SolveResult {
 ///     println!("{:#?}", sys.entity_data(&p2));
 /// }
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum FailReason {
     Inconsistent,
     /// The conditions required to ensure that [Newton's method](https://en.wikipedia.org/wiki/Newton's_method)

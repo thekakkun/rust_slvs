@@ -111,7 +111,9 @@ pub trait AsConstraintHandle: AsHandle {}
 /// Wrapper for a constraint handle.
 ///
 /// The `phantom` member holds information about what type of constraint it references.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Default, Serialize, Deserialize,
+)]
 pub struct ConstraintHandle<C: AsConstraintData> {
     /// The constraint handle
     pub handle: u32,
@@ -320,7 +322,7 @@ impl<C: AsConstraintData> From<Slvs_Constraint> for ConstraintHandle<C> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 #[serde(tag = "type", content = "handle")]
 pub enum SomeConstraintHandle {
     Angle(u32),

@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// A point on a workplane or free in 3d.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum Point {
     /// A point within a workplane, defined by the workplane and two parameters within
     /// the coordinate system of the workplane.

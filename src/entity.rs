@@ -50,7 +50,9 @@ pub trait AsEntityHandle: AsHandle {}
 /// The `phantom` member holds information about what type of entity it references,
 /// which is used to check that entity definitions receive the correct type of entity
 /// handle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Default, Serialize, Deserialize,
+)]
 pub struct EntityHandle<E: AsEntityData> {
     /// The entity handle
     pub handle: u32,
@@ -117,7 +119,7 @@ impl<E: AsEntityData> From<Slvs_Entity> for EntityHandle<E> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 #[serde(tag = "type", content = "handle")]
 pub enum SomeEntityHandle {
     ArcOfCircle(u32),

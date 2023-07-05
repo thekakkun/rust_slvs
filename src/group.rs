@@ -15,7 +15,9 @@ use serde::{Deserialize, Serialize};
 use crate::element::AsHandle;
 
 /// A wrapper for the group handle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
 pub struct Group(pub u32);
 
 impl AsHandle for Group {
